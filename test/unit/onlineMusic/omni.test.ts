@@ -435,6 +435,41 @@ describe('the level an audio URL was handed out at', () => {
     });
 });
 
+// A preview clip may begin somewhere inside its song rather than at its start. Playback reads the
+// start by the URL its deck holds, the same way it reads whether the URL is a clip at all.
+describe('where a preview clip starts in its song', () => {
+    const clipProvider = (clipStartMs?: number): OnlineMusicProvider => ({
+        ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+        playback: {
+            getSongDetail: async mediaId => song(providerId, String(mediaId)),
+            getAudioSource: async target => ({
+                url: `https://${providerId}/${target.sourceRef?.mediaId}`,
+                fetchedAt: 1,
+                quality: 'standard',
+                preview: true,
+                ...(clipStartMs ? { clipStartMs } : {}),
+            }),
+        },
+    });
+
+    it('is remembered with the URL it was handed out under', async () => {
+        registerOnlineMusicProvider(clipProvider(208320));
+
+        await omni.getAudioSource(song(providerId, 'clip'), 'standard');
+
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/clip`)).toBe(208320);
+    });
+
+    it('is zero for a clip that starts at the beginning and for a URL no provider handed out', async () => {
+        registerOnlineMusicProvider(clipProvider());
+
+        await omni.getAudioSource(song(providerId, 'from-start'), 'standard');
+
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/from-start`)).toBe(0);
+        expect(omni.previewClipStartMsOfAudioSource('blob:http://localhost/0b8f')).toBe(0);
+    });
+});
+
 // What a provider knows of a failed request is left on the error it threw, and the error goes on as it is.
 describe('a request for audio or for a collection\'s tracks that fails', () => {
     const refused = new Error('E_SEVENTH 7');
