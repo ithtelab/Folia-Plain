@@ -11,6 +11,7 @@ import { isMainAppSurface } from '../../utils/appSurface';
 import { usePlayerOverlayReservation } from '../../hooks/usePlayerOverlayLayout';
 import type { FoliumLayoutRect } from '../../mods/folium/contract';
 import { useIsPlayerBottomBarHost } from '../floating-player/PlayerBottomBarLayoutContext';
+import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
 
 // Shared outer shell for all visualizers.
 // This is where we keep background layering, font injection, and the hover-only back button
@@ -235,9 +236,10 @@ const VisualizerShell = forwardRef<HTMLDivElement, VisualizerShellProps>(({
                         event.stopPropagation();
                         resolvedOnBack();
                     }}
-                    className="absolute top-6 left-6 z-30 h-10 w-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md bg-black/20 hover:bg-white/10 text-white/60 pointer-events-auto"
-                    style={{ pointerEvents: isBackButtonVisible ? 'auto' : 'none' }}
+                    className="liquid-glass-host liquid-glass-button absolute top-6 left-6 z-30 h-10 w-10 rounded-full flex items-center justify-center pointer-events-auto"
+                    style={{ pointerEvents: isBackButtonVisible ? 'auto' : 'none', color: resolvedIsDaylight ? '#202228' : '#f8f9fc' }}
                 >
+                    <LiquidGlassSurface isDaylight={resolvedIsDaylight} active={isBackButtonVisible} />
                     <ChevronLeft size={20} />
                 </motion.button>
             )}

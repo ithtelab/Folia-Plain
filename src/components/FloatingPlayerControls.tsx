@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Play, Pause } from 'lucide-react';
 import { MotionValue } from 'framer-motion';
 import ProgressBar from './ProgressBar';
@@ -16,6 +16,7 @@ import { usePlayerChromeSettingsStore } from '../stores/usePlayerChromeSettingsS
 import { PLAYER_BOTTOM_BAR_BASE_OFFSET_PX, clampPlayerBottomBarOffset, resolvePlayerBottomBarMaxOffset } from '../utils/playerBottomBarLayout';
 import type { PlayerControlSlotActionId, PlayerControlSlotContext } from './floating-player/playerControlSlotActions';
 import { usePlayerOverlayObstacle } from '../hooks/usePlayerOverlayLayout';
+import LiquidGlassSurface from './shared/liquid-glass/LiquidGlassSurface';
 
 export interface TrackNavigation {
     /** 当前曲目的稳定身份，用于识别「确实换歌了」；相邻两首同名时标题字符串不变，不能拿标题判断 */
@@ -121,11 +122,11 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
     onCommitBottomBarOffset,
 }) => {
     const { t } = useTranslation();
+    const reducedMotion = useReducedMotion();
+    const layoutTransition = reducedMotion ? { duration: 0 } : CONTROL_LAYOUT_SPRING;
     const { ref: layoutRef, invalidate: invalidateLayout } = usePlayerOverlayObstacle('player-controls', 'playback', !isHidden);
     // const isDaylight = theme?.name === 'Daylight Default'; // Deprecated, passed as prop
-    const glassBgExpanded = isDaylight ? 'bg-white/60 border border-white/20 shadow-xl' : 'bg-black/40 border border-white/5';
-    const glassBgCollapsed = isDaylight ? 'bg-white/40 border border-white/20 shadow-lg hover:bg-white/50' : 'bg-black/20 border border-white/5 hover:bg-black/30';
-    const trackColor = isDaylight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
+    const trackColor = isDaylight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.2)';
     // Button bg logic
     const buttonBg = isDaylight ? { backgroundColor: primaryColor, color: 'var(--bg-color)' } : { backgroundColor: primaryColor, color: 'var(--bg-color)' }; // Keep primary for play button, looks good
 
@@ -367,7 +368,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                         onUpdate={invalidateLayout}
                         onLayoutAnimationComplete={invalidateLayout}
                         layout
-                        transition={{ layout: CONTROL_LAYOUT_SPRING }}
+                        transition={{ layout: layoutTransition }}
                         onClick={handleClick}
                         // 用原生 pointer 事件而不是 framer-motion 的 drag：位移已经由 playerBottomBarLiveOffset
                         // 经外层 lift 表达，再让 drag 往这个节点写一份 y 会叠加成两倍位移；
@@ -378,13 +379,14 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                         onPointerUp={handlePositionDragEnd}
                         onPointerCancel={handlePositionDragEnd}
                         style={{ touchAction: isPositioning ? 'none' : undefined }}
-                        className={`backdrop-blur-xl shadow-2xl overflow-hidden rounded-full relative transition-colors duration-300
+                        className={`liquid-glass-host liquid-player-bar rounded-full relative
                             ${isPositioning ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-                            ${showExpanded ? `p-3 ${glassBgExpanded} w-full` : `px-4 py-2 ${glassBgCollapsed} ${COLLAPSED_WIDTH_CLASS}`}`}
+                            ${showExpanded ? 'p-3 w-full' : `px-4 py-2 ${COLLAPSED_WIDTH_CLASS}`}`}
                     >
+                        <LiquidGlassSurface isDaylight={isDaylight} active={!isHidden} />
                         <motion.div
                             layout
-                            transition={{ layout: CONTROL_LAYOUT_SPRING }}
+                            transition={{ layout: layoutTransition }}
                             // 定位模式下 seek 和所有按钮一起失效：这时胶囊是个被拖的物体，不是控件。
                             className={`w-full ${isPositioning ? 'pointer-events-none select-none' : ''}`}
                         >
@@ -502,6 +504,7 @@ const ExpandedView: React.FC<ExpandedViewProps> = ({
     slotSecondary,
     slotContext,
 }) => {
+    const { t } = useTranslation();
     return (
         <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
             {/* Desktop Layout - responsive grid positions apply from the sm breakpoint */}
@@ -538,7 +541,8 @@ const ExpandedView: React.FC<ExpandedViewProps> = ({
                     onTogglePlay();
                 }}
                 disabled={!canTogglePlay || controlsDisabled}
-                className={`col-start-2 row-start-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-none bg-(--text-primary) text-black shadow-lg transition-transform sm:col-start-1 sm:row-start-1 sm:row-span-2 ${controlsDisabled ? 'cursor-not-allowed opacity-45' : 'hover:scale-105'}`}
+                aria-label={t(playerState === PlayerState.PLAYING ? 'player.pause' : 'player.play')}
+                className={`col-start-2 row-start-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-none bg-(--text-primary) text-black shadow-sm transition-transform motion-reduce:transition-none sm:col-start-1 sm:row-start-1 sm:row-span-2 ${controlsDisabled ? 'cursor-not-allowed opacity-45' : 'hover:scale-[1.035] active:scale-95 motion-reduce:transform-none'}`}
                 style={{ backgroundColor: primaryColor, color: 'var(--bg-color)' }}
             >
                 {playerState === PlayerState.PLAYING ? (

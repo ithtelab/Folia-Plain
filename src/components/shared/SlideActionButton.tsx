@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
+import LiquidGlassSurface from './liquid-glass/LiquidGlassSurface';
 
 // src/components/shared/SlideActionButton.tsx
 // The player-style round action button with a second action on a leftward slide: tap the button for
@@ -81,9 +82,10 @@ export const SlideActionButton: React.FC<SlideActionButtonProps> = ({
         const progress = Math.min(1, Math.abs(dragX) / TRIGGER_DISTANCE);
         button.style.transition = 'none';
         button.style.transform = `translateX(${dragX}px)`;
-        button.style.filter = `brightness(${1 + progress * 0.18})`;
         const primaryIcon = button.querySelector('svg');
         if (primaryIcon) {
+            // Filtering the host would make it a backdrop root and cut off the real glass sample.
+            primaryIcon.style.filter = `brightness(${1 + progress * 0.18})`;
             primaryIcon.style.transform = `rotate(${progress * -180}deg)`;
             primaryIcon.style.scale = String(1 - progress * 0.1);
         }
@@ -131,12 +133,12 @@ export const SlideActionButton: React.FC<SlideActionButtonProps> = ({
         resetDestinationFeedback();
         button.style.transition = mode === 'release' ? 'transform 160ms ease-out, filter 160ms ease-out, box-shadow 160ms ease-out, background-color 160ms ease-out, color 160ms ease-out' : '';
         button.style.transform = '';
-        button.style.filter = '';
         button.style.boxShadow = '';
         button.style.backgroundColor = '';
         button.style.color = '';
         const primaryIcon = button.querySelector('svg');
         if (primaryIcon) {
+            primaryIcon.style.filter = '';
             primaryIcon.style.transition = '';
             primaryIcon.style.transform = '';
             primaryIcon.style.scale = '';
@@ -212,11 +214,12 @@ export const SlideActionButton: React.FC<SlideActionButtonProps> = ({
                     onActivate();
                 }}
                 style={{ touchAction: 'none' }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg backdrop-blur-md transform border-none absolute right-0 top-0 z-10 disabled:opacity-40 disabled:cursor-default ${isDaylight ? 'bg-white/70 text-zinc-900' : 'bg-black/40 text-white'}`}
+                className={`liquid-glass-host liquid-glass-button w-12 h-12 rounded-full flex items-center justify-center transition-[transform,box-shadow] duration-300 transform border-none absolute right-0 top-0 z-10 disabled:opacity-40 disabled:cursor-default ${isDaylight ? 'text-zinc-900' : 'text-white'}`}
                 title={title}
                 aria-label={title}
             >
                 <Icon size={20} />
+                <LiquidGlassSurface isDaylight={isDaylight} />
             </button>
         </div>
     );

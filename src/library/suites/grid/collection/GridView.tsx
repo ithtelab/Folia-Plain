@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { motion, useMotionValue, animate, AnimatePresence, useDragControls, useIsPresent } from 'framer-motion';
 import { ChevronLeft, Crosshair, Disc, Download, Play, Plus, Loader2, Heart, ListPlus, Pencil, RefreshCw, Trash2, Star, Tags } from 'lucide-react';
 import GridPanelToggleIndicator from '../shared/GridPanelToggleIndicator';
+import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
 import { useTranslation } from 'react-i18next';
 import { SongResult, type LocalSong, type StatusMessage, Theme, type UnifiedSong } from '../../../../types';
 import { isSongUnavailable } from '../../../../services/onlineMusic/songAvailability';
@@ -1625,12 +1626,9 @@ export const GridView: React.FC<GridViewProps> = ({
                 // 返回按钮表示看完了（onDone）：宿主清掉浏览会话、让每套 suite 忘掉布局记录（网格的 sessionStorage
                 // 记录经 entry 的 layout.forget），再返回。Escape 与浏览器后退保留（onBack）。P4.5 起不在这里清。
                 onClick={onDone}
-                className="absolute left-6 top-5 w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-105 active:scale-95 z-[70]"
-                style={{
-                    backgroundColor: isDaylight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
-                    backdropFilter: 'blur(8px)',
-                }}
+                className="liquid-glass-host liquid-glass-button absolute left-6 top-5 w-10 h-10 rounded-full flex items-center justify-center z-[70]"
             >
+                <LiquidGlassSurface isDaylight={isDaylight} />
                 <ChevronLeft size={20} />
             </button>
 
@@ -1661,12 +1659,12 @@ export const GridView: React.FC<GridViewProps> = ({
                     if (!hasCutInPanel) return;
                     setShowCutInPanel(!showCutInPanel);
                 }}
-                className={`group/grid-title absolute left-1/2 top-5 -translate-x-1/2 z-[70] text-center flex flex-col items-center select-none transition-all px-5 py-2 rounded-2xl backdrop-blur-md ${hasCutInPanel ? 'cursor-pointer hover:scale-[1.01] active:scale-98' : ''}`}
+                className={`liquid-glass-host group/grid-title absolute left-1/2 top-5 -translate-x-1/2 z-[70] text-center flex flex-col items-center select-none px-5 py-2 rounded-2xl ${hasCutInPanel ? 'cursor-pointer' : ''}`}
                 style={{
-                    backgroundColor: 'color-mix(in srgb, var(--bg-color) 20%, transparent)',
                     color: 'var(--text-primary)',
                 }}
             >
+                <LiquidGlassSurface isDaylight={isDaylight} radius={16} />
                 <h2 className="text-lg font-bold tracking-tight flex items-center gap-1.5 justify-center">
                     {infoCollection?.name || collectionName || title}
                     {hasCutInPanel && <GridPanelToggleIndicator isOpen={showCutInPanel} />}

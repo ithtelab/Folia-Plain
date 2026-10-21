@@ -29,12 +29,12 @@ const PlayerControlSlotButton: React.FC<PlayerControlSlotButtonProps> = ({
     const disabled = slot.disabled || controlsDisabled;
     const label = t(slot.labelKey);
 
-    // 三段视觉：已开启（循环非 off / 已喜爱）高亮，不可用压暗，其余是低透明度的常态。
+    // 三段视觉：已开启（循环非 off / 已喜爱）高亮，不可用压暗，其余保持可辨识的透明度。
     const stateClass = disabled
         ? 'cursor-not-allowed opacity-20'
         : slot.active
             ? (isDaylight ? 'bg-black/10 text-black' : 'bg-white/20')
-            : `opacity-40 hover:opacity-100 ${isDaylight ? 'hover:bg-black/5' : 'hover:bg-white/10'}`;
+            : `opacity-75 hover:opacity-100 ${isDaylight ? 'hover:bg-black/5' : 'hover:bg-white/10'}`;
 
     return (
         <button

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, useDeferredVa
 import { motion, useMotionValue, animate, AnimatePresence, useDragControls } from 'framer-motion';
 import { Check, ChevronLeft, Disc, Eye, EyeOff, ListFilter, X } from 'lucide-react';
 import GridPanelToggleIndicator from '../shared/GridPanelToggleIndicator';
+import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../types';
 import { useFoliaHexViewport } from '../shared/useFoliaHexViewport';
@@ -993,12 +994,9 @@ export const GridMap: React.FC<GridMapProps> = ({
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-5 z-[70] bg-gradient-to-b from-black/10 to-transparent">
                 <button
                     onClick={onBack}
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-lg hover:scale-105 active:scale-95"
-                    style={{
-                        backgroundColor: isDaylight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
-                        backdropFilter: 'blur(8px)',
-                    }}
+                    className="liquid-glass-host liquid-glass-button relative w-10 h-10 rounded-full flex items-center justify-center pointer-events-auto"
                 >
+                    <LiquidGlassSurface isDaylight={isDaylight} />
                     <ChevronLeft size={20} />
                 </button>
 
@@ -1012,12 +1010,12 @@ export const GridMap: React.FC<GridMapProps> = ({
                             openCutInPanel();
                         }
                     }}
-                    className="group/grid-title text-center flex flex-col items-center select-none pointer-events-auto cursor-pointer hover:scale-[1.01] active:scale-98 transition-all px-5 py-2 rounded-2xl backdrop-blur-md disabled:cursor-default disabled:hover:scale-100"
+                    className="liquid-glass-host relative group/grid-title text-center flex flex-col items-center select-none pointer-events-auto cursor-pointer px-5 py-2 rounded-2xl disabled:cursor-default"
                     style={{
-                        backgroundColor: 'color-mix(in srgb, var(--bg-color) 20%, transparent)',
                         color: 'var(--text-primary)',
                     }}
                 >
+                    <LiquidGlassSurface isDaylight={isDaylight} radius={16} />
                     <h2 className="flex items-center justify-center gap-1.5 text-lg font-bold tracking-tight">
                         {title}
                         {hasCutInPanel && <GridPanelToggleIndicator isOpen={showCutInPanel} />}
