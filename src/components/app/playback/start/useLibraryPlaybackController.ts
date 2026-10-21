@@ -1109,14 +1109,16 @@ export function useLibraryPlaybackController({
             await saveLocalSong(updatedLocalSong);
             await loadLocalSongs();
             if (isStillPlaying(currentSong)) {
-                void onPlayLocalSong(updatedLocalSong, localSongs, { unifiedQueue: playQueue });
+                // The store's queue after those waits, not this render's: a whole-queue write (a mod's
+                // replaceQueue) or an edit made while the lyrics were saved is what the reload lands in.
+                void onPlayLocalSong(updatedLocalSong, localSongs, { unifiedQueue: usePlaybackStore.getState().playQueue });
             }
             setStatusMsg({ type: 'success', text: isTranslation ? 'Translation lyrics updated' : 'Lyrics updated' });
         } catch (error) {
             console.error('Failed to save local lyrics', error);
             setStatusMsg({ type: 'error', text: 'Failed to save lyrics' });
         }
-    }, [currentSong, loadLocalSongs, localSongs, onPlayLocalSong, playQueue, resolveLatestLocalSongRecord, setStatusMsg]);
+    }, [currentSong, loadLocalSongs, localSongs, onPlayLocalSong, resolveLatestLocalSongRecord, setStatusMsg]);
 
     const handleChangeLyricsSource = useCallback(async (source: 'local' | 'embedded' | 'online') => {
         if (!isLocalPlaybackSong(currentSong)) return;
@@ -1183,7 +1185,8 @@ export function useLibraryPlaybackController({
                 const updatedList = await getLocalSongs();
                 const found = updatedList.find(song => song.id === matchedFor.localRef.songId);
                 if (found && isStillPlaying(matchedFor)) {
-                    await onPlayLocalSong(found, localSongs, { unifiedQueue: playQueue });
+                    // The store's queue after the reads above, as for uploaded lyrics.
+                    await onPlayLocalSong(found, localSongs, { unifiedQueue: usePlaybackStore.getState().playQueue });
                     reloaded = true;
                 }
             }
@@ -1196,7 +1199,7 @@ export function useLibraryPlaybackController({
                 setStatusMsg({ type: 'success', text: t('status.matchSuccessful') || 'Match successful' });
             }
         }
-    }, [closeLyricMatchOf, loadLocalSongs, localSongs, onPlayLocalSong, playQueue, setStatusMsg]);
+    }, [closeLyricMatchOf, loadLocalSongs, localSongs, onPlayLocalSong, setStatusMsg]);
 
     // The match window switched the instrumental mark: it closes, and the records and the lyrics shown are
     // refreshed (onRefreshLocalSongs changes them where they are), without playing the song again.

@@ -454,6 +454,7 @@ describe('the handoff to a rebuilt window and the current song', () => {
     } as unknown as WindowPlaybackHandoff);
     const restoreFrom = async (snapshot: PlaybackSnapshot | null, askedMeanwhile: SongResult | null = null, duringTheRead?: () => void) => {
         const { refs, watch, setLyrics } = watchWithRefs();
+        const persistLastPlaybackCache = vi.fn(async (_song: SongResult | null, _queue: SongResult[]) => undefined);
         askForSong(null);
         vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} });
         vi.stubGlobal('window', { electron: { consumeWindowPlaybackHandoff: async () => {
@@ -487,12 +488,12 @@ describe('the handoff to a rebuilt window and the current song', () => {
             currentOnlineAudioUrlFetchedAtRef: refs.currentOnlineAudioUrlFetchedAtRef,
             applyTransparentPlayerBackground: vi.fn(),
             restoreCachedThemeForSong: vi.fn(async () => 'none'),
-            persistLastPlaybackCache: vi.fn(async () => undefined),
+            persistLastPlaybackCache,
         } as never);
         // The effect that asks the main process for the handoff: the only one that makes this call.
         effectNaming('consumeWindowPlaybackHandoff()')();
         await settle();
-        return { refs, watch };
+        return { refs, watch, persistLastPlaybackCache };
     };
 
     it('makes the handed-over song current, the store and the key together', async () => {
@@ -537,6 +538,17 @@ describe('the handoff to a rebuilt window and the current song', () => {
         expect(usePlaybackStore.getState().isFmMode).toBe(false);
         expect(refs.currentSongRef.current).toBe('online:bodian:x1');
         expect(usePlaybackStore.getState().audioSrc).toBe('https://audio.test/x1');
+    });
+
+    it('saves the mod\'s queue once the handed-over song is current: the replacement found no song to save it with', async () => {
+        // An online song without replay gain: the source's restore saves nothing of its own.
+        const modQueue = [otherSong];
+        const { persistLastPlaybackCache } = await restoreFrom(snapshotOf(onlineSong), null, () => {
+            noteWholeQueueWrite();
+            replacePlayQueue(modQueue, false);
+        });
+
+        expect(persistLastPlaybackCache).toHaveBeenLastCalledWith(onlineSong, modQueue);
     });
 
     it('leaves no song current when none was handed over', async () => {

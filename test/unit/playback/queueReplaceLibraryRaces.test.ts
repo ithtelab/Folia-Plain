@@ -9,6 +9,8 @@ import type { NavidromeSong } from '@/types/navidrome';
 // where the new queue holds it, and saves and fetches around the new queue. A play of a list of its own
 // (a click in the local library) still writes its list, and adding a local song to the queue adds it to
 // the queue as it is after the add's waits.
+// The reloads of the playing local song after its lyrics changed (an upload, a match) land in the queue as
+// it is after their own saves and reads, too.
 // Written like currentSongLibraryRoutes.test.ts: the hooks run without a renderer, the store is the
 // real one, and the library, the file access and the Navidrome server are stubs held by gates.
 
@@ -20,6 +22,10 @@ const env = vi.hoisted(() => ({
     coverAssetGate: null as Promise<unknown> | null,
     /** Holds the reading of a Navidrome song's match data. */
     matchCacheGate: null as Promise<unknown> | null,
+    /** Holds the saving of a local song's record (new lyrics). */
+    saveGate: null as Promise<unknown> | null,
+    /** Holds the reading of the local library's records. */
+    listGate: null as Promise<unknown> | null,
 }));
 
 vi.mock('react', () => ({
@@ -47,9 +53,9 @@ vi.mock('@/services/db', () => ({
     getFromCache: async () => null,
     saveToCache: async () => {},
     removeFromCache: async () => {},
-    getLocalSongs: async () => env.songs,
+    getLocalSongs: async () => { await env.listGate; return env.songs; },
     getLocalSong: async (id: string) => (env.songs as Array<{ id: string }>).find(song => song.id === id) ?? null,
-    saveLocalSong: async () => {},
+    saveLocalSong: async () => { await env.saveGate; },
     getFromCacheWithMigration: async () => { await env.matchCacheGate; return null; },
 }));
 vi.mock('@/services/localMusicService', () => ({
@@ -161,6 +167,8 @@ beforeEach(() => {
     env.fileGate.clear();
     env.coverAssetGate = null;
     env.matchCacheGate = null;
+    env.saveGate = null;
+    env.listGate = null;
     prefetchNearbySongs.mockClear();
     useStatusMessageStore.setState({ message: null });
     useAudioSettingsStore.setState({ queueAddBehavior: 'append' });
@@ -322,6 +330,51 @@ describe('a Navidrome song played from the queue, landing after the queue was re
         await play;
 
         expect(keys(store().playQueue)).toEqual(['navidrome:n1', 'navidrome:n2']);
+    });
+});
+
+describe('reloading the local song that plays once its lyrics changed', () => {
+    it('after lyrics are uploaded, lands in a queue replaced whole while they were saved, not in the queue seen before', async () => {
+        setPlayQueue([q1, q2]);
+        makeSongCurrent(q1);
+        const { library, persistLastPlaybackCache } = mount();
+        const save = deferred();
+        env.saveGate = save.promise;
+        const update = library.handleUpdateLocalLyrics('[00:00.00]la', false, 'l1.lrc');
+        await settle();
+
+        const replaced = [x, { ...q1 }, y];
+        replaceWhole(replaced);
+        save.resolve();
+        await update;
+        // The reload is not awaited by the upload: wait for its landing.
+        await vi.waitFor(() => expect(persistLastPlaybackCache).toHaveBeenCalled());
+
+        const landed = store().playQueue;
+        expect(keys(landed)).toEqual(keys(replaced));
+        expect(landed[0]).toBe(x);
+        expect(landed[2]).toBe(y);
+        expect(persistLastPlaybackCache).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'L1' }), landed);
+    });
+
+    it('after a lyric match, lands in a queue replaced whole while the library was read again', async () => {
+        setPlayQueue([q1, q2]);
+        makeSongCurrent(q1);
+        const { library } = mount();
+        const list = deferred();
+        env.listGate = list.promise;
+        const complete = library.handleLyricMatchComplete(q1);
+        await settle();
+
+        const replaced = [x, { ...q1 }, y];
+        replaceWhole(replaced);
+        list.resolve();
+        await complete;
+
+        const landed = store().playQueue;
+        expect(keys(landed)).toEqual(keys(replaced));
+        expect(landed[0]).toBe(x);
+        expect(landed[2]).toBe(y);
     });
 });
 

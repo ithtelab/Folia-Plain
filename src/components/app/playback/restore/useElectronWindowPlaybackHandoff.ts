@@ -275,6 +275,10 @@ export function useElectronWindowPlaybackHandoff({
         if (!queueRewritten) {
             setPlayQueue(restoredQueue);
             setIsFmMode(snapshot.isFmMode);
+        } else {
+            // Saved again now that a song is current, as the session restore does: the replacement's own save
+            // found none, so it kept nothing, and the source's restore saves only on some of its paths.
+            void persistLastPlaybackCache(snapshot.currentSong, usePlaybackStore.getState().playQueue);
         }
         setIsLyricsLoading(false);
         setPlayerState(snapshot.playerState);

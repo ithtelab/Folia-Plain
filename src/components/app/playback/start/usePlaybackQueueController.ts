@@ -1136,7 +1136,9 @@ export function usePlaybackQueueController({
 
         // An emptied queue still has to stop playback at the end of the current track; returning
         // early here left the audio element `ended` while playerState stayed PLAYING.
-        if (!currentSong || playQueue.length === 0) {
+        // A step from a song that never became current (the skip after a first play failed, once the
+        // queue was replaced whole) names it in `fromSong`, and needs no current song to step from.
+        if ((!currentSong && !options?.fromSong) || playQueue.length === 0) {
             if (options?.allowStopOnMissing) {
                 stopAtQueueEnd();
             }
