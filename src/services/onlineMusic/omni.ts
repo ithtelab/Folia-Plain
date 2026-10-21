@@ -22,8 +22,11 @@ import type {
     OnlineAuthProvider,
     OnlineFailureOperation,
     OnlineMusicProvider,
+    OnlineSearchProvider,
     PersonalFmRequestOptions,
     ProviderCatalogEntityKind,
+    ProviderSearchContext,
+    ProviderSongCatalogRefs,
     ProviderLikedSongIds,
     LoginDiagnosticLine,
     LoginLocalService,
@@ -67,6 +70,7 @@ import { createAccountMoments } from './account/readMoments';
 import type { AccountMoment } from './account/readMoments';
 import { createAccountReads } from './account/accountRead';
 import { withoutCredentials } from './rawResponse';
+import { resolveSongCatalogRefSet } from './catalogRefs';
 import type { AccountReadOutcome, AccountReadReason } from './account/accountRead';
 
 // src/services/onlineMusic/omni.ts
@@ -178,6 +182,19 @@ const runRequest = async <T>(provider: OnlineMusicProvider, operation: OnlineFai
 };
 
 const emptyPage = <T>(offset: number): OmniPage<T> => ({ items: [], hasMore: false, nextOffset: offset });
+
+// A search with the caller's context (`ProviderSearchContext`) where it gave one, handed on as it
+// is; a search without one reaches the provider as the host's own searches always have.
+const searchWith = (
+    search: OnlineSearchProvider,
+    query: string,
+    page: PageInput,
+    context?: ProviderSearchContext,
+): Promise<OmniPage<UnifiedSong>> => (
+    context
+        ? search.searchSongs(query, page.limit, page.offset, context)
+        : search.searchSongs(query, page.limit, page.offset)
+);
 
 // 点赞状态改完要落盘：只更内存的话，重启后靠快照 hydration 的那一帧会恢复旧心形，
 // 后台刷新再失败就一直是旧的。
@@ -485,17 +502,24 @@ export const omni = {
         return provider?.shortName || provider?.displayName || providerId;
     },
 
-    async searchSongs(query: string, page: PageInput): Promise<OmniPage<UnifiedSong>> {
+    // `context.session` keeps a caller's paging apart from the host's own (`ProviderSearchContext`);
+    // without it the search is the host UI's.
+    async searchSongs(query: string, page: PageInput, context?: ProviderSearchContext): Promise<OmniPage<UnifiedSong>> {
         return withActiveProvider(async provider => {
             if (!providerSupports(provider, 'search') || !provider.search) return emptyPage(page.offset);
-            return provider.search.searchSongs(query, page.limit, page.offset);
+            return searchWith(provider.search, query, page, context);
         });
     },
 
-    async searchProviderSongs(providerId: OmniProviderId, query: string, page: PageInput): Promise<OmniPage<UnifiedSong>> {
+    async searchProviderSongs(
+        providerId: OmniProviderId,
+        query: string,
+        page: PageInput,
+        context?: ProviderSearchContext,
+    ): Promise<OmniPage<UnifiedSong>> {
         const provider = requireOnlineMusicProvider(providerId);
         if (!providerSupports(provider, 'search') || !provider.search) return emptyPage(page.offset);
-        return provider.search.searchSongs(query, page.limit, page.offset);
+        return searchWith(provider.search, query, page, context);
     },
 
     // 平台的记号（一个字和一种颜色）。平台没有声明就回 null，界面自己从它的短名取。
@@ -802,6 +826,22 @@ export const omni = {
         return requireOnlineMusicProvider(providerId).playback?.getSongDetail(id) ?? null;
     },
 
+    // Songs by id at one provider, in the order of `ids`: null for an id it has no song by. A
+    // provider that looks many up in one request (`playback.getSongDetails`) is asked so; any other
+    // is asked `getSongDetail` for one id after another, never two at a time: how many requests run
+    // at once is the caller's to limit.
+    async getSongDetails(providerId: OmniProviderId, ids: MediaId[]): Promise<(UnifiedSong | null)[]> {
+        const playback = requireOnlineMusicProvider(providerId).playback;
+        if (!playback || ids.length === 0) return ids.map(() => null);
+        if (playback.getSongDetails) {
+            const songs = await playback.getSongDetails(ids);
+            return ids.map((_, index) => songs[index] ?? null);
+        }
+        const songs: (UnifiedSong | null)[] = [];
+        for (const id of ids) songs.push(await playback.getSongDetail(id));
+        return songs;
+    },
+
     canPlaySong(song: SongResult): boolean {
         return Boolean(getOnlineMusicProviderForSong(song)?.playback);
     },
@@ -896,15 +936,19 @@ export const omni = {
         await provider.playbackReports.reportPlayback(song, report);
     },
 
-    async getLyrics(song: SongResult, context?: { userId?: MediaId | null }): Promise<OmniLyricsResult> {
+    // `extensionHooks: false` answers the lyrics as the provider gave them, chorus marked, before any
+    // extension layer rewrites them: a reader that is itself such a layer would otherwise call itself.
+    async getLyrics(song: SongResult, context?: { userId?: MediaId | null; extensionHooks?: boolean }): Promise<OmniLyricsResult> {
         const provider = providerForSong(song);
         if (!provider.lyrics) return unsupported(provider.id, 'lyrics');
-        const providerUserId = useOnlineProviderAccountStore.getState().accounts[provider.id]?.user?.id ?? context?.userId;
-        const providerResult = await provider.lyrics.getLyrics(song, { ...context, userId: providerUserId });
+        const { extensionHooks = true, ...providerContext } = context ?? {};
+        const providerUserId = useOnlineProviderAccountStore.getState().accounts[provider.id]?.user?.id ?? providerContext.userId;
+        const providerResult = await provider.lyrics.getLyrics(song, { ...providerContext, userId: providerUserId });
         const resolved = (await resolveProviderLyricsChorus(providerResult, {
             providerId: provider.id,
             songId: song.id,
         })).result;
+        if (!extensionHooks) return resolved;
         // Extension layers (Folium omni hooks) may rewrite the lyrics after the provider answered.
         return applyOmniLyricsHook(song, resolved);
     },
@@ -1158,6 +1202,19 @@ export const omni = {
         const source = getPlaybackSourceRef(song);
         if (source.kind !== 'online') return song;
         return getOnlineMusicProvider(source.providerId)?.catalog?.resolveSongCatalogRefs?.(song) ?? song;
+    },
+
+    // The catalog refs a song's album and artists open as at its provider (catalogRefs.ts), each
+    // with the name the song gives it, from one lookup. Only the kinds the provider has (its
+    // `albums` / `artists` capabilities); none for a song that is not online. May ask the provider.
+    async getSongCatalogRefs(song: UnifiedSong): Promise<ProviderSongCatalogRefs> {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return { album: null, artists: [] };
+        const provider = getOnlineMusicProvider(source.providerId);
+        return resolveSongCatalogRefSet(song, {
+            album: providerSupports(provider, 'albums'),
+            artists: providerSupports(provider, 'artists'),
+        });
     },
 
     getSongPageUrl(song: SongResult): string | null {

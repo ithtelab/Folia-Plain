@@ -19,6 +19,20 @@ export interface ProviderCatalogRef {
     id: MediaId;
 }
 
+/** A catalog ref of a song's album or artist, with the name the song gives that album or artist. */
+export interface ProviderNamedCatalogRef extends ProviderCatalogRef {
+    name: string;
+}
+
+/**
+ * What a song's album and artists open as at its provider (`omni.getSongCatalogRefs`): null, and
+ * left out of `artists`, for one the provider cannot open.
+ */
+export interface ProviderSongCatalogRefs {
+    album: ProviderNamedCatalogRef | null;
+    artists: ProviderNamedCatalogRef[];
+}
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
@@ -58,6 +72,11 @@ export interface ProviderCapabilities {
     playbackReports?: boolean;
     /** The provider has a recommendation page of its own, read through `explore`. */
     explore?: boolean;
+    /**
+     * The provider can look a song up by id with `playback.getSongDetail`; absent reads as true
+     * wherever `playback` is there.
+     */
+    songDetail?: boolean;
 }
 
 export interface ProviderAvailability {
@@ -325,12 +344,30 @@ export class OnlineProviderError extends Error {
     }
 }
 
+/**
+ * Who is searching. `session` tells apart callers whose paging must not disturb each other; absent
+ * is the host's own UI.
+ */
+export interface ProviderSearchContext {
+    session?: string;
+}
+
 export interface OnlineSearchProvider {
-    searchSongs(query: string, limit: number, offset: number): Promise<ProviderPage<UnifiedSong>>;
+    /**
+     * A provider that keeps what it read of a search between its pages keeps it apart for each
+     * `context.session`; one that keeps nothing between pages ignores the context.
+     */
+    searchSongs(query: string, limit: number, offset: number, context?: ProviderSearchContext): Promise<ProviderPage<UnifiedSong>>;
 }
 
 export interface OnlinePlaybackProvider {
     getSongDetail(id: MediaId): Promise<UnifiedSong | null>;
+    /**
+     * Songs by id, many in one request, in the order of `ids`: null for an id the platform has no
+     * song by. Left out where the platform looks songs up one at a time; `omni.getSongDetails`
+     * then asks `getSongDetail` for each.
+     */
+    getSongDetails?(ids: MediaId[]): Promise<(UnifiedSong | null)[]>;
     // 拿不到地址而知道为什么的抛错（provider 的 `describeFailure` 说它的意思）；null 是没有地址、也没有可说的。
     getAudioSource(song: SongResult, quality: AudioQualityPreference): Promise<ProviderAudioSource | null>;
     /**

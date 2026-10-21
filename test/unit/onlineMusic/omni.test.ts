@@ -639,3 +639,165 @@ describe('omni like mutations', () => {
         expect(account.likedSongIds.map(String)).toEqual(['7']);
     });
 });
+
+// What Folium's `folium.omni` reads through: songs by id many at a time, lyrics before the
+// extension layers, a song's album and artists, and searches kept apart by caller.
+describe('omni reads for callers beside the host UI', () => {
+    afterEach(() => installOmniResultHooks(null));
+
+    it('asks a provider that looks many songs up at once once, in the order of the ids', async () => {
+        const getSongDetail = vi.fn(async (mediaId: string | number) => song(providerId, String(mediaId)));
+        const getSongDetails = vi.fn(async (ids: (string | number)[]) => ids.map(id => (id === 'gone' ? null : song(providerId, String(id)))));
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: { getSongDetail, getSongDetails, getAudioSource: async () => null },
+        });
+
+        const songs = await omni.getSongDetails(providerId, ['b', 'gone', 'a']);
+
+        expect(songs.map(found => found?.name ?? null)).toEqual([`${providerId}:b`, null, `${providerId}:a`]);
+        expect(getSongDetails).toHaveBeenCalledTimes(1);
+        expect(getSongDetails).toHaveBeenCalledWith(['b', 'gone', 'a']);
+        expect(getSongDetail).not.toHaveBeenCalled();
+    });
+
+    it('asks any other provider for one song after another, never two at a time', async () => {
+        let running = 0;
+        let most = 0;
+        const getSongDetail = vi.fn(async (mediaId: string | number) => {
+            running += 1;
+            most = Math.max(most, running);
+            await new Promise(resolve => setTimeout(resolve, 1));
+            running -= 1;
+            return mediaId === 'gone' ? null : song(providerId, String(mediaId));
+        });
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: { getSongDetail, getAudioSource: async () => null },
+        });
+
+        const songs = await omni.getSongDetails(providerId, ['x', 'gone', 'y']);
+
+        expect(songs.map(found => found?.name ?? null)).toEqual([`${providerId}:x`, null, `${providerId}:y`]);
+        expect(getSongDetail.mock.calls.map(([id]) => id)).toEqual(['x', 'gone', 'y']);
+        expect(most).toBe(1);
+        await expect(omni.getSongDetails(providerId, [])).resolves.toEqual([]);
+    });
+
+    it('answers nothing found for every id of a provider that plays nothing', async () => {
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: undefined,
+        });
+        await expect(omni.getSongDetails(providerId, ['1', '2'])).resolves.toEqual([null, null]);
+    });
+
+    it('reads lyrics past the extension layers with extensionHooks: false, and through them by default', async () => {
+        const getLyrics = vi.fn(async (_song: unknown, _context?: unknown) => ({ lyrics: null, mainText: 'provider text', isPureMusic: true }));
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            lyrics: { getLyrics },
+        });
+        const hook = vi.fn(async (_song: unknown, result: object) => ({ ...result, mainText: 'rewritten', lyrics: null, isPureMusic: false }));
+        installOmniResultHooks({ lyrics: hook });
+
+        const plain = await omni.getLyrics(song(providerId), { extensionHooks: false });
+        expect(plain).toMatchObject({ mainText: 'provider text', isPureMusic: true });
+        expect(hook).not.toHaveBeenCalled();
+        // The option is Omni's own: the provider is asked as it always is.
+        expect(Object.keys(getLyrics.mock.calls[0][1] as object)).not.toContain('extensionHooks');
+
+        await expect(omni.getLyrics(song(providerId))).resolves.toMatchObject({ mainText: 'rewritten' });
+        expect(hook).toHaveBeenCalledTimes(1);
+    });
+
+    it('hands the caller\'s search session to the provider as it is, and none for the host\'s own search', async () => {
+        const searchSongs = vi.fn(async (..._args: unknown[]) => ({ items: [song(providerId)], hasMore: false, nextOffset: 1 }));
+        registerOnlineMusicProvider(provider(providerId, { searchSongs }));
+        useOnlineProviderAccountStore.getState().setActiveProviderId(providerId);
+        const context = { session: 'folium:mod-a' };
+
+        await omni.searchSongs('query', { limit: 10, offset: 0 }, context);
+        await omni.searchProviderSongs(providerId, 'query', { limit: 5, offset: 5 }, context);
+        await omni.searchProviderSongs(providerId, 'query', { limit: 5, offset: 0 });
+
+        expect(searchSongs.mock.calls).toEqual([
+            ['query', 10, 0, context],
+            ['query', 5, 5, context],
+            ['query', 5, 0],
+        ]);
+        expect(searchSongs.mock.calls[0][3]).toBe(context);
+    });
+
+    describe('a song\'s album and artists', () => {
+        const catalogCapabilities = { ...capabilities, albums: true, artists: true };
+        const listed = (owner: string): UnifiedSong => ({
+            ...song(owner, 's1'),
+            album: { id: 'shown-album', name: 'Album' },
+            artists: [{ id: 'shown-a', name: 'A' }, { id: 'shown-b', name: 'B' }, { id: 'shown-a2', name: 'a ' }],
+        });
+        const resolved = (owner: string): UnifiedSong => ({
+            ...listed(owner),
+            album: { id: 'album-1', name: 'Album', catalogRef: { providerId: owner, kind: 'album', id: 'album-1' } },
+            artists: [
+                { id: 'artist-a', name: 'A', catalogRef: { providerId: owner, kind: 'artist', id: 'artist-a' } },
+                { id: 'artist-b', name: 'B', catalogRef: { providerId: owner, kind: 'artist', id: 'artist-b' } },
+            ],
+        });
+
+        it('reads them with one answer of the provider\'s resolver, each ref once, with its name', async () => {
+            const resolveSongCatalogRefs = vi.fn(async (_target: UnifiedSong) => resolved(providerId));
+            registerOnlineMusicProvider({
+                ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+                capabilities: catalogCapabilities,
+                catalog: { resolveSongCatalogRefs },
+            });
+
+            await expect(omni.getSongCatalogRefs(listed(providerId))).resolves.toEqual({
+                album: { providerId, kind: 'album', id: 'album-1', name: 'Album' },
+                artists: [
+                    { providerId, kind: 'artist', id: 'artist-a', name: 'A' },
+                    { providerId, kind: 'artist', id: 'artist-b', name: 'B' },
+                ],
+            });
+            expect(resolveSongCatalogRefs).toHaveBeenCalledTimes(1);
+        });
+
+        it('takes the ids the song carries where the provider has no resolver', async () => {
+            registerOnlineMusicProvider({
+                ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+                capabilities: catalogCapabilities,
+            });
+            const target: UnifiedSong = { ...listed(providerId), artists: [{ id: 'shown-a', name: 'A' }, { id: '', name: 'Nobody' }] };
+
+            await expect(omni.getSongCatalogRefs(target)).resolves.toEqual({
+                album: { providerId, kind: 'album', id: 'shown-album', name: 'Album' },
+                artists: [{ providerId, kind: 'artist', id: 'shown-a', name: 'A' }],
+            });
+        });
+
+        it('leaves out the kinds the provider does not have, and asks nothing where it has neither', async () => {
+            const resolveSongCatalogRefs = vi.fn(async (_target: UnifiedSong) => resolved(providerId));
+            registerOnlineMusicProvider({
+                ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+                capabilities: { ...capabilities, albums: true, artists: false },
+                catalog: { resolveSongCatalogRefs },
+            });
+            await expect(omni.getSongCatalogRefs(listed(providerId))).resolves.toMatchObject({ album: { id: 'album-1' }, artists: [] });
+
+            unregisterOnlineMusicProvider(providerId);
+            registerOnlineMusicProvider({
+                ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+                catalog: { resolveSongCatalogRefs },
+            });
+            resolveSongCatalogRefs.mockClear();
+            await expect(omni.getSongCatalogRefs(listed(providerId))).resolves.toEqual({ album: null, artists: [] });
+            expect(resolveSongCatalogRefs).not.toHaveBeenCalled();
+        });
+
+        it('answers none for a song that is not online', async () => {
+            const local = { ...listed(providerId), sourceRef: { kind: 'local', mediaId: 's1' } } as UnifiedSong;
+            await expect(omni.getSongCatalogRefs(local)).resolves.toEqual({ album: null, artists: [] });
+        });
+    });
+});
