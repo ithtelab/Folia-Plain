@@ -398,6 +398,8 @@ declare global {
     | 'unsupported';
 
   interface ElectronUpdateStatus {
+    repository?: string;
+    downloadSource?: 'mirror' | 'github' | null;
     status: ElectronUpdateStatusValue;
     supported: boolean;
     updateCheckSupported: boolean;
@@ -849,6 +851,7 @@ declare global {
       resetCacheDirectory: () => Promise<ElectronCacheDirectoryResult>;
       getUpdateStatus: () => Promise<ElectronUpdateStatus>;
       checkForUpdates: () => Promise<ElectronUpdateStatus>;
+      openUpdateMirrorDownload: (version?: string | null) => Promise<boolean>;
       markUpdateSeen: (version?: string | null) => Promise<ElectronUpdateStatus>;
       openUpdateReleasePage: (version?: string | null) => Promise<boolean>;
       openExternalUrl: (url: string) => Promise<boolean>;

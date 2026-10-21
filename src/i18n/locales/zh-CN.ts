@@ -626,6 +626,12 @@ export default {
       "settings-local-library-watch": { "title": "本地文件夹监视设置", "description": "打开已导入本地文件夹的自动扫描设置" },
       "local-library-auto-scan-toggle": { "title": "自动扫描本地文件夹", "description": "开启或关闭已导入本地文件夹的自动重新扫描" },
       "settings-desktop": { "title": "桌面端设置", "description": "打开桌面应用设置" },
+      "playlist-view-grid": { "title": "歌单以封面网格打开", "description": "在网格界面中用封面网格浏览歌单" },
+      "playlist-view-lattice": { "title": "歌单以拼贴打开", "description": "在网格界面中用队列同款拼贴浏览歌单" },
+      "download-update-mirror": {
+        "title": "国内加速下载更新",
+        "description": "通过 GH-Proxy 下载本项目的新版本安装包"
+      },
       "settings-update-channel": { "title": "更新通道", "description": "选择桌面端发布通道" },
       "desktop-toggle-voice-input-pause": { "title": "语音输入时暂停", "description": "切换语音输入时自动暂停播放" },
       "desktop-toggle-prevent-display-sleep": { "title": "播放时阻止休眠", "description": "播放音乐时保持显示器唤醒" },
@@ -2014,21 +2020,23 @@ export default {
     "enableAutoUpdateDesc": "发现新版本后自动下载更新。",
     "manualUpdateOnlyDesc": "仍会检查新版本，升级需要下载完整安装包。",
     "updateChannel": "更新通道",
-    "updateChannelRealeco": "Realeco · 正式版",
+    "updateChannelRealeco": "Folia Plain · 稳定版",
     "updateChannelLimo": "Limo · Nightly",
     "updateChannelCielo": "Cielo · Canary",
     "updateChannelInternal": "内部构建",
     "updateUnsupportedSystem": "当前系统不支持自动更新。",
     "updateUnsupportedChannel": "此内部构建不支持自动更新。",
-    "autoUpdateGithubNotice": "自动更新需要能够访问 GitHub；网络不稳定时可能无法下载更新。",
-    "updateCheckGithubNotice": "版本检查需要能够访问 GitHub；发现更新后会提供完整安装包入口。",
+    "autoUpdateGithubNotice": "更新仅来自 ithtelab/Folia-Plain。安装包优先使用第三方 GH-Proxy 加速，失败后改用 GitHub 直连。",
+    "updateCheckGithubNotice": "版本检查来自 ithtelab/Folia-Plain，需能访问 GitHub；发现更新后提供本项目的下载入口。",
     "openReleasePage": "打开发布页",
     "downloadChina": "国内下载",
+    "mirrorDownload": "国内加速（GH-Proxy）",
+    "updateRepositoryNotice": "更新仓库：ithtelab/Folia-Plain",
     "downloadSources": "下载来源",
     "quarkDrive": "夸克网盘",
     "baiduDrive": "百度网盘",
-    "githubRelease": "GitHub",
-    "fullInstallerGithub": "完整安装包（GitHub）",
+    "githubRelease": "GitHub · 本项目",
+    "fullInstallerGithub": "GitHub · 完整安装包",
     "aurPackage": "通过 AUR 升级",
     "downloadUpdate": "下载更新",
     "restartToInstallUpdate": "重启安装",
@@ -2787,6 +2795,10 @@ export default {
     "openaiApiUrlDesc": "OpenAI 兼容接口不等于 OpenAI 官方接口，可以使用 DeepSeek 等兼容 OpenAI 格式的模型服务。",
     "save": "保存",
     "visualizerMode": "动画模式",
+    "playlistViewStyle": "歌单打开方式",
+    "playlistViewStyleDesc": "网格界面中，歌单可用封面网格或队列同款拼贴打开。专辑保持原样；浏览歌单不会替换播放队列。",
+    "playlistViewGrid": "封面网格",
+    "playlistViewLattice": "拼贴",
     "grid3dCardStyle": "歌单卡片样式",
     "grid3dCardStyleDesc": "选择首页歌单卡片样式：纯图片封面或经典的拍立得文本卡片。",
     "grid3dCardStyleImage": "纯图片封面",
@@ -2994,9 +3006,9 @@ export default {
     "downloadingProgress": "正在下载({{percent}}%)",
     "chinaDownload": "网盘下载",
     "goToGithubRelease": "前往Github下载页",
-    "chinaDownloadHint": "提示：下载需直连 GitHub（可能较慢），国内环境推荐使用夸克或百度网盘。",
+    "chinaDownloadHint": "国内加速由第三方 GH-Proxy 提供，只转发本项目的 GitHub 安装包；也可以选择 GitHub 直连。",
     "macManualUpdateNotice": "提示：macOS 版本需要下载完整安装包手动覆盖更新。",
-    "linuxManualUpdateNotice": "提示：Linux 不支持自动更新。请下载完整的 deb、rpm 或 tar.gz 包手动升级；仅正式版且通过 AUR 安装的用户可使用包管理器升级 folia-major-bin。",
+    "linuxManualUpdateNotice": "Linux 请从本项目下载完整的 deb、rpm 或 tar.gz 包手动升级。",
     "manualUpdateNotice": "提示：当前平台暂不支持自动更新，请下载安装包手动覆盖更新。",
     "unofficialBuildNotice": "本地或第三方构建：此版本并非由 Folia Plain 仓库的 CI 发布。请先联系构建提供者，问题反馈与发行版请使用本分支的 GitHub 仓库。",
     "selfHostedBuildNotice": "自部署版本：由部署者构建并托管，音乐平台的后端服务也由部署者配置。请先联系部署者，确认是应用问题后再反馈到 Folia Plain 仓库。",
@@ -3201,7 +3213,7 @@ export default {
       "intro": "Folia Plain 0.7.22 带来统一的液态玻璃材质，更清楚的底部播放器、更少误触的窗口顶栏，以及新的应用与音乐平台图标。",
       "liquidGlass": {
         "title": "会流动的液态玻璃",
-        "description": "导航、搜索、播放器、歌曲卡片和登录入口等使用背景模糊、边缘折射与流动反光。导航和播放条缓慢流动，其他控件交互时才流动；搜索框去掉粗黑边框。降低 UI 微动效或减少透明度时会简化效果，图形能力不足时保留静态材质。"
+        "description": "导航、搜索、播放器、歌曲卡片和登录入口等使用背景模糊与边缘折射，亮色材质减轻白色填充，圆角边缘更平滑。导航保留缓慢流动；底部播放条完全静态，悬停、点击和拖动也不流动。其他控件按交互流动，降低动效或透明度时简化效果。"
       },
       "clearerPlayer": {
         "title": "更清楚的底部播放器",
@@ -3214,6 +3226,14 @@ export default {
       "appIcons": {
         "title": "新的应用与平台图标",
         "description": "采用新的 Folia Plain 应用图标，覆盖安装包、桌面、托盘、网页与 PWA。六个音乐平台使用真实 App 图标，平台切换入口的比例与留白也作了调整。"
+      },
+      "ownUpdates": {
+        "title": "自己的更新源与国内加速",
+        "description": "更新仅来自 ithtelab/Folia-Plain，移除上游网盘与 AUR 入口。Windows 安装包优先通过第三方 GH-Proxy 加速，失败后改用 GitHub 直连；更新信息和文件校验值仍读取本项目 GitHub。下载菜单也提供国内加速入口。"
+      },
+      "playlistCollage": {
+        "title": "歌单也可以用拼贴打开",
+        "description": "在设置 → 主页与歌单中选择封面网格或队列同款拼贴。默认保留封面网格，专辑不受影响。拼贴支持搜索、播放与加入队列；只浏览歌单不会替换正在播放的队列。"
       }
     },
     "v0_7_21": {

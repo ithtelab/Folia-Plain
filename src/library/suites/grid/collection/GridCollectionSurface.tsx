@@ -4,6 +4,7 @@ import { useGridMorphPlan } from '../transitions/useGridMorphPlan';
 import { useGridStayPlayback } from '../shared/useGridStayPlayback';
 import { useNavigationPageKey } from '../../../../components/app/playing-song-locator/useNavigationPageKey';
 import GridView from './GridView';
+import { useHomeLayoutSettingsStore } from '../../../../stores/useHomeLayoutSettingsStore';
 
 // src/library/suites/grid/collection/GridCollectionSurface.tsx
 // 网格的集合 surface：把宿主交给任何 suite 的同一份输入（core/suite/suite.contract 的 LibraryCollectionSurfaceProps）
@@ -28,6 +29,8 @@ const GridCollectionSurface: React.FC<LibraryCollectionSurfaceProps> = ({
     onOpenArtist,
 }) => {
     const morphPlan = useGridMorphPlan();
+    const playlistViewStyle = useHomeLayoutSettingsStore(state => state.playlistViewStyle);
+    const collage = collection.type === 'playlist' && playlistViewStyle === 'lattice';
     const navigationKey = useNavigationPageKey();
     const stayPlayback = useGridStayPlayback(playback.playTrack, playback);
     // 卡片上的专辑 / 歌手链接只在网格声明了 open-album / open-artist 时出现（声明 ∩ 曲目上能解析出的目录引用）。
@@ -36,6 +39,8 @@ const GridCollectionSurface: React.FC<LibraryCollectionSurfaceProps> = ({
 
     return (
         <GridView
+            key={collage ? 'collage' : 'grid'}
+            collage={collage}
             title={collection.name}
             subtitle={subtitle}
             collection={collection}
@@ -56,7 +61,7 @@ const GridCollectionSurface: React.FC<LibraryCollectionSurfaceProps> = ({
             theme={theme}
             isDaylight={isDaylight}
             isInteractive={isInteractive}
-            morphPlan={morphPlan}
+            morphPlan={collage ? null : morphPlan}
             navigationKey={navigationKey}
             declaredActions={declaredActions}
         />

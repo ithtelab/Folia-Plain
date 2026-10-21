@@ -31,7 +31,7 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
                 u_contour: 0, u_shiftRed: 0.3, u_shiftBlue: 0.3, u_isImage: false, u_shape: 0,
                 u_fit: 1, u_scale: 8, u_rotation: 0, u_originX: 0.5, u_originY: 0.5,
                 u_offsetX: 0.1, u_offsetY: -0.1, u_worldWidth: 0, u_worldHeight: 0,
-            }, PAPER_SHADER_CONTEXT_ATTRIBUTES, 0, 0, 1, 128_000);
+            }, PAPER_SHADER_CONTEXT_ATTRIBUTES, 0, 0, 2, 128_000);
         } catch (error) {
             console.warn('[LiquidGlass] Flow unavailable; keeping the static material.', error);
             for (const canvas of element.querySelectorAll('canvas')) {

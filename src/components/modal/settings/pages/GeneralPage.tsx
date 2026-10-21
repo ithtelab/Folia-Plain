@@ -138,8 +138,6 @@ const GeneralPage: React.FC = () => {
                                 ? [{ value: 'internal', label: t('options.updateChannelInternal') }]
                                 : [
                                     { value: 'realeco', label: t('options.updateChannelRealeco') },
-                                    { value: 'limo', label: t('options.updateChannelLimo') },
-                                    { value: 'cielo', label: t('options.updateChannelCielo') },
                                 ]}
                             onChange={channel => void update.onUpdateChannelChange(channel as 'realeco' | 'limo' | 'cielo')}
                         />

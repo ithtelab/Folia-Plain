@@ -114,6 +114,7 @@ contextBridge.exposeInMainWorld('electron', {
     resetCacheDirectory: () => ipcRenderer.invoke('reset-cache-directory'),
     getUpdateStatus: () => ipcRenderer.invoke('updates-get-status'),
     checkForUpdates: () => ipcRenderer.invoke('updates-check'),
+    openUpdateMirrorDownload: (version) => ipcRenderer.invoke('updates-open-mirror-download', version),
     markUpdateSeen: (version) => ipcRenderer.invoke('updates-mark-seen', version),
     openUpdateReleasePage: (version) => ipcRenderer.invoke('updates-open-release-page', version),
     openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),

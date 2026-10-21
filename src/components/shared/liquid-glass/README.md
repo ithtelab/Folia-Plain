@@ -26,8 +26,8 @@ text-colour classification. Custom theme colours continue to come from existing 
 
 ## Runtime and integration
 
-The map is built on the CPU only after dimensions settle for 100 ms. Textures are capped at
-1024 × 256 and use CSS size, independent of display density. During resizing the old map stretches
+The map is built on the CPU only after dimensions settle for 100 ms. Small controls use 2× sampling
+and a soft coverage edge; textures remain capped at 1024 × 256, independent of display density. During resizing the old map stretches
 with the surface until the new one is ready. There is no screen capture or network asset.
 
 The flowing rim reuses the installed Paper liquid-metal shader and runtime, following the user's
@@ -38,7 +38,7 @@ black outline. Do not use a CSS blend mode on the WebGL layer: Chromium then sto
 sibling backdrop filter. A stripe comparison with flow enabled/hidden verified the blur remains
 active after this fix. This follows background colour without screenshots, pixel readbacks or React
 sampling. No new dependency is installed.
-Each small GPU surface is capped at 128,000 pixels with antialias/depth buffers disabled.
+Each small GPU surface uses 2× sampling up to the same 128,000-pixel cap, with antialias/depth buffers disabled.
 
 `useLiquidGlassMotion` observes the host's pointer/focus and layout changes. Short-lived springs
 drive the decorative material's compression, rebound, highlight position and actual backdrop
@@ -47,8 +47,9 @@ do not transform, so hit testing, progress gestures and titlebar clearance stay 
 fills settle separately while the existing shared-layout animation moves between tabs.
 
 Spring frames stop when they converge; stationary hover also settles. The separate shader uses
-`flow="ambient"` only for home navigation and the player: slow idle reflections, faster hover/focus
-and press. All other hosts default to `flow="interactive"` and stop their shader clock when neither
+`flow="ambient"` only for home navigation: slow idle reflections, faster hover/focus
+and press. The bottom player passes `interactive={false}`: no flow or pointer/press deformation,
+including hover and dragging. All other hosts default to `flow="interactive"` and stop their shader clock when neither
 hovered nor focused. Blur pauses the clock, out-of-viewport surfaces pause through Paper's observer,
 and hidden documents or accessibility fallbacks unmount the flow. WebGL failure leaves static
 glass intact. Unmount disposes the runtime and explicitly releases its GPU context.

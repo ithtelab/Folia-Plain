@@ -5,9 +5,13 @@
 
 import { create } from 'zustand';
 import i18n from '../i18n/config';
-import { getStoredBoolean, setStoredBoolean } from './storagePrimitives';
+import { getStoredBoolean, getStoredString, setStoredBoolean, setStoredString } from './storagePrimitives';
 import { useHomeCardPositionStore } from './useHomeCardPositionStore';
 import { setStatusMessage } from './useStatusMessageStore';
+
+const PLAYLIST_VIEW_STYLE_KEY = 'playlist_view_style';
+// Like the library suite choice, this is a browsing preference rather than a visual tuning value.
+export type PlaylistViewStyle = 'grid' | 'lattice';
 
 const readStoredHomeLayoutStyle = (): 'carousel' | 'grid' => {
     if (typeof window === 'undefined') {
@@ -31,6 +35,8 @@ const readStoredGrid3dCardStyle = (): 'image' | 'card' => {
 };
 
 export type HomeLayoutSettingsState = {
+    playlistViewStyle: PlaylistViewStyle;
+    setPlaylistViewStyle: (style: PlaylistViewStyle) => void;
     rememberHomeCardPosition: boolean;
     handleToggleRememberHomeCardPosition: (remember: boolean) => void;
     grid3dCardStyle: 'image' | 'card';
@@ -51,6 +57,12 @@ export type HomeLayoutSettingsState = {
 };
 
 export const useHomeLayoutSettingsStore = create<HomeLayoutSettingsState>((set, get) => ({
+    playlistViewStyle: getStoredString(PLAYLIST_VIEW_STYLE_KEY, 'grid') === 'lattice' ? 'lattice' : 'grid',
+    setPlaylistViewStyle: (style) => {
+        const value = style === 'lattice' ? 'lattice' : 'grid';
+        setStoredString(PLAYLIST_VIEW_STYLE_KEY, value);
+        set({ playlistViewStyle: value });
+    },
     rememberHomeCardPosition: getStoredBoolean('remember_home_card_position', true),
     handleToggleRememberHomeCardPosition: (remember) => {
         set({ rememberHomeCardPosition: remember });

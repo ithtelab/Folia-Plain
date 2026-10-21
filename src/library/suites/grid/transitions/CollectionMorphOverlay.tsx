@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 import { useCollectionNavigationStore, type CollectionNavigationSnapshot } from '../../../../stores/useCollectionNavigationStore';
 import { planForOpening, reportMorphCapture, useCollectionMorphStore } from './collectionMorphStore';
+import { useHomeLayoutSettingsStore } from '../../../../stores/useHomeLayoutSettingsStore';
 import { FLIGHT_MS, HANDOVER_MS, flightPictureKeyframes, flightTurn, planFlight, type MorphFlightTitle } from './morphFlight';
 import {
     COLLECTION_MORPH_Z_INDEX,
@@ -242,6 +243,12 @@ export const CollectionMorphOverlay: React.FC<CollectionMorphOverlayProps> = ({ 
         }
         const store = useCollectionMorphStore.getState();
         store.ackPending();
+        // A collage has no central grid hero for the captured cover to land on.
+        if (navigation.stack.at(-1)?.type === 'playlist'
+            && useHomeLayoutSettingsStore.getState().playlistViewStyle === 'lattice') {
+            store.consume();
+            return;
+        }
         // Remember the top-level source card: the flight back lands on exactly this
         // home card when the user backs out later. Nested opens (song card →
         // album/artist) must NOT overwrite it — the eventual top-level back still

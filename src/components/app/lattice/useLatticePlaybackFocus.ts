@@ -14,6 +14,7 @@ import { answerWallLocate, useWallPageKey } from './wallLocate';
 export type ActiveLatticePoster = { instance: QueueInstance; tile: LatticeTile };
 
 type PlaybackFocusOptions = {
+    pageKey?: string;
     currentSong: SongResult | null;
     /** The tile the wall opens on, whatever is playing: the one it was left on for a collection's page. Null for any other opening. */
     startTileId: string | null;
@@ -29,6 +30,7 @@ type PlaybackFocusOptions = {
 };
 
 export const useLatticePlaybackFocus = ({
+    pageKey: collectionPageKey,
     currentSong,
     startTileId,
     ready,
@@ -93,10 +95,13 @@ export const useLatticePlaybackFocus = ({
     // "Locate the playing song", asked of this wall by its corner button and by what stands for
     // it (wallLocate.ts): the song's tile grows and the camera goes to it, or the locator says
     // that the song is not here. Answered once the wall has measured itself, as it centres.
-    const pageKey = useWallPageKey();
+    const wallPageKey = useWallPageKey();
+    const pageKey = collectionPageKey ?? wallPageKey;
     const locateRequest = usePlayingSongLocatorStore(state => state.request);
     useEffect(() => {
+        // A collection page handles missing songs, hidden matches and pages still arriving.
+        if (collectionPageKey && !tiles.some(tile => tile.id === locateRequest?.songKey)) return;
         if (ready) answerWallLocate(locateRequest, pageKey, tiles, showTile);
-    }, [locateRequest, pageKey, ready, showTile, tiles]);
+    }, [collectionPageKey, locateRequest, pageKey, ready, showTile, tiles]);
 
 };

@@ -14,11 +14,23 @@ import { librarySuitePickerSurface } from '../surfaces/librarySuitePickerSurface
 import { libraryWallLookCommands } from './libraryWallLookCommands';
 import { openCurrentPagePonder } from '../../../services/ponder/pagePonderTarget';
 import { copyText } from '../../../utils/system/clipboard';
+import { useHomeLayoutSettingsStore } from '../../../stores/useHomeLayoutSettingsStore';
 
 // src/components/command-palette/commands/settingsCommands.ts
 // Commands in the `settings` group: settings subviews, app toggles, theme, sync, and desktop-only switches.
 
 export const settingsCommands: CommandPaletteCommand[] = [
+    ...(['grid', 'lattice'] as const).map(style => defineCommand({
+        id: `playlist-view-${style}`,
+        group: 'settings',
+        title: style === 'grid' ? 'Open playlists as cover grids' : 'Open playlists as collages',
+        description: 'Choose how playlists open in the grid library interface',
+        keywords: ['playlist layout', 'collage browsing', '歌单打开方式', '歌单拼贴'],
+        execute: () => {
+            useHomeLayoutSettingsStore.getState().setPlaylistViewStyle(style);
+            return true;
+        },
+    })),
     createSettingsCommand('settings-help', 'Open Help', 'Open help and shortcuts', ['help', '帮助'], 'help', null, { executeShortcut: 'h' }),
     {
         id: 'ponder-current-page',
@@ -304,6 +316,16 @@ export const settingsCommands: CommandPaletteCommand[] = [
     ),
     createSettingsCommand('settings-desktop', 'Desktop settings', 'Open desktop app settings', ['desktop', 'electron', '桌面', '桌面端'], 'options', 'desktop', { platform: ['electron'] }),
     createSettingsAnchorCommand('settings-update-channel', 'Update channel', 'Choose the desktop app release channel', ['release channel', 'realeco', 'limo', 'cielo', '更新通道', '发布通道'], 'updateCheck', { platform: ['electron'] }),
+    defineCommand({
+        id: 'download-update-mirror', group: 'settings', platform: ['win'],
+        title: 'Download update with China relay', description: 'Open this project’s installer using the GH-Proxy relay',
+        keywords: ['download accelerator', 'github relay', '国内加速', '更新下载'],
+        execute: async () => {
+            const status = await window.electron?.getUpdateStatus();
+            if (!status?.availableVersion) return false;
+            return await window.electron?.openUpdateMirrorDownload(status.availableVersion) ?? false;
+        },
+    }),
     {
         id: 'desktop-toggle-voice-input-pause',
         platform: ['win'],

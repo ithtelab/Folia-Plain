@@ -1,11 +1,11 @@
 import { WallTitle } from '../../wall/WallTitle';
-import { lazy, memo, Suspense, useMemo } from 'react';
+import { lazy, memo, Suspense, useMemo, type ReactNode } from 'react';
 import { motion, type TransformProperties } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRef, type KeyboardEvent, type MouseEvent, type MutableRefObject, type PointerEvent } from 'react';
 import type { ReflowTile } from '../../wall/layout';
-import type { LatticeTile } from './latticeModel';
+import type { LatticeSongTile, LatticeTile } from './latticeModel';
 import { useLatticeChromeDisclosure } from './useLatticeChromeDisclosure';
 import LatticePlaybackControls from './LatticePlaybackControls';
 import { useLatticeExpansionSettled } from './useLatticeExpansionSettled';
@@ -77,6 +77,7 @@ type LatticePosterProps = {
     onTogglePlayback: () => void;
     onSeek: (time: number) => void;
     onOpenPlayer: () => void;
+    renderSongControls?: (tile: LatticeSongTile) => ReactNode;
 };
 
 // Lift for the card under the pointer or the wall's keyboard cursor. It scales the whole article,
@@ -157,6 +158,7 @@ function LatticePoster({
     onTogglePlayback,
     onSeek,
     onOpenPlayer,
+    renderSongControls,
 }: LatticePosterProps) {
     countRender('LatticePoster');
     const { t } = useTranslation();
@@ -351,7 +353,7 @@ function LatticePoster({
                                 </button>
                             </div>
                         </div>
-                    ) : (
+                    ) : renderSongControls ? renderSongControls(tile) : (
                         <LatticePlaybackControls
                             revealed={chrome.revealed}
                             tile={tile}

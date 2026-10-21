@@ -39,6 +39,7 @@ const O = {
     tabLocal: option(HOME, 'showHomeTabLocal', 'options.showHomeTabLocal'),
     cardStyle: option(HOME, 'grid3dCardStyle', 'options.grid3dCardStyle'),
     rememberPosition: option(HOME, 'rememberHomeCardPosition', 'options.rememberHomeCardPosition'),
+    playlistView: option(HOME, 'playlistViewStyle', 'options.playlistViewStyle'),
     fullBleedCover: option(GRID, 'gridViewFullBleedCover', 'options.gridViewFullBleedCover'),
     squareCard: option(GRID, 'gridViewSquareCard', 'options.gridViewSquareCard'),
     minCardScale: option(GRID, 'gridViewMinCardScale', 'options.gridViewMinCardScale'),
@@ -52,6 +53,8 @@ const percent = (value: number) => `${Math.round(value * 100)}%`;
 const HomePage: React.FC = () => {
     const { t } = useTranslation();
     const activeSuiteId = useActiveLibrarySuiteId();
+    const playlistViewStyle = useHomeLayoutSettingsStore(state => state.playlistViewStyle);
+    const setPlaylistViewStyle = useHomeLayoutSettingsStore(state => state.setPlaylistViewStyle);
     const home = useHomeLayoutSettingsStore(useShallow(state => ({
         tabPlaylist: state.showHomeTabPlaylist,
         tabRadio: state.showHomeTabRadio,
@@ -99,6 +102,16 @@ const HomePage: React.FC = () => {
             <BravaisWallGroup />
 
             <Group def={HOME}>
+                <Row option={O.playlistView} note={t('options.playlistViewStyleDesc')}>
+                    <Segmented
+                        value={playlistViewStyle}
+                        options={[
+                            { value: 'grid', label: t('options.playlistViewGrid') },
+                            { value: 'lattice', label: t('options.playlistViewLattice') },
+                        ]}
+                        onChange={setPlaylistViewStyle}
+                    />
+                </Row>
                 {/* The entries are one option: one row, a chip for each, named and ordered as the home screen has them. */}
                 <Row option={O.tabs}>
                     <Chips

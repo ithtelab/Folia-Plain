@@ -8,7 +8,8 @@ export interface GlassLensMap {
 
 /** Encode edge normals in R/G and the optical rim's coverage in B. The centre stays flat. */
 export function createGlassLensMap(width: number, height: number, radius: number): GlassLensMap {
-    const density = Math.min(0.75, 1024 / width, 256 / height);
+    // Supersample small controls instead of magnifying a subpixel-resolution rounded rim.
+    const density = Math.min(2, 1024 / width, 256 / height);
     const mapWidth = Math.max(1, Math.ceil(width * density));
     const mapHeight = Math.max(1, Math.ceil(height * density));
     const pixels = new Uint8ClampedArray(mapWidth * mapHeight * 4);
@@ -28,7 +29,8 @@ export function createGlassLensMap(width: number, height: number, radius: number
             const length = Math.hypot(ox, oy);
             const distance = corner - length - Math.min(Math.max(qx, qy), 0);
             const depth = Math.max(0, Math.min(1, distance / rim));
-            const coverage = distance >= 0 ? 1 - depth * depth * (3 - 2 * depth) : 0;
+            const edge = Math.max(0, Math.min(1, distance * density + 0.5));
+            const coverage = edge * edge * (3 - 2 * edge) * (1 - depth * depth * (3 - 2 * depth));
             // A smooth meniscus pulls the scene inward at the rim, without rippling its centre.
             const bend = Math.sin(depth * Math.PI) * coverage;
             const nx = length > 0 ? ox / length : qx > qy ? 1 : 0;

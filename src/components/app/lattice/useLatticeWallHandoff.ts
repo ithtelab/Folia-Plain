@@ -37,6 +37,7 @@ const STATIC: LatticePosterHandoff = { kind: 'static' };
 type PosterRect = Omit<ReflowTile, 'instanceId'>;
 
 export const useLatticeWallHandoff = ({
+    enabled = true,
     containerRef,
     cameraRef,
     applyCamera,
@@ -47,6 +48,8 @@ export const useLatticeWallHandoff = ({
     focused,
     waitingForFocus,
 }: {
+    /** Collection collages reuse the field but are not a peer in the queue/home handoff. */
+    enabled?: boolean;
     containerRef: RefObject<HTMLDivElement | null>;
     cameraRef: MutableRefObject<LatticeCamera>;
     applyCamera: (camera: LatticeCamera, updateBounds?: boolean) => void;
@@ -58,7 +61,7 @@ export const useLatticeWallHandoff = ({
     /** 正在播放那首该展开、但播放跟随还没把它摆出来（进来时等它，相机才是最终的样子）。 */
     waitingForFocus: boolean;
 }) => {
-    const session = useWallHandoffStore(state => state.session);
+    const session = useWallHandoffStore(state => enabled ? state.session : null);
     const role = resolveWallHandoffRole(session, 'lattice');
     const flip = session?.mode === 'flip';
     const phase = session?.phase ?? null;
@@ -79,13 +82,13 @@ export const useLatticeWallHandoff = ({
     // Lattice 的 peer：回资料库墙时波次从展开 / 键盘聚焦的那张海报开始。
     const latestRef = useRef({ activePoster, layout, focused });
     latestRef.current = { activePoster, layout, focused };
-    useEffect(() => useWallHandoffStore.getState().registerLatticePeer({
+    useEffect(() => enabled ? useWallHandoffStore.getState().registerLatticePeer({
         getOrigin: () => {
             const { activePoster: active, layout: rects, focused: keyboard } = latestRef.current;
             const rect = active ? rects.get(active.instance.instanceId) ?? active.instance : keyboard;
             return rect && containerRef.current ? rectCenter(toClient(rect)) : null;
         },
-    }), [containerRef, toClient]);
+    }) : undefined, [containerRef, enabled, toClient]);
 
     // 进 Lattice · closing：量好尺寸、正在播放那首摆好之后报准备好（淡入淡出交叉也等这一步再淡入）。
     useEffect(() => {

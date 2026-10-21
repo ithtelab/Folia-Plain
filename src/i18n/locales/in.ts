@@ -626,6 +626,12 @@ export default {
       "settings-local-library-watch": { "title": "Pengaturan pantauan folder lokal", "description": "Buka pengaturan pemindaian otomatis untuk folder lokal yang diimpor" },
       "local-library-auto-scan-toggle": { "title": "Pindai otomatis folder lokal", "description": "Aktifkan atau matikan pemindaian ulang otomatis folder lokal yang diimpor" },
       "settings-desktop": { "title": "Pengaturan desktop", "description": "Buka pengaturan aplikasi desktop" },
+      "playlist-view-grid": { "title": "Buka playlist sebagai grid sampul", "description": "Jelajahi playlist sebagai grid sampul di antarmuka pustaka grid" },
+      "playlist-view-lattice": { "title": "Buka playlist sebagai kolase", "description": "Jelajahi playlist sebagai kolase seperti antrean di antarmuka pustaka grid" },
+      "download-update-mirror": {
+        "title": "Unduh pembaruan dengan relay Tiongkok",
+        "description": "Unduh pemasang baru proyek ini melalui GH-Proxy"
+      },
       "settings-update-channel": { "title": "Saluran pembaruan", "description": "Pilih saluran rilis aplikasi desktop" },
       "desktop-toggle-voice-input-pause": { "title": "Jeda input suara", "description": "Alihkan jeda pemutaran saat input suara aktif" },
       "desktop-toggle-prevent-display-sleep": { "title": "Cegah layar tidur saat pemutaran", "description": "Jaga layar tetap menyala selama musik diputar" },
@@ -2014,21 +2020,23 @@ export default {
     "enableAutoUpdateDesc": "Unduh pembaruan secara otomatis setelah versi baru ditemukan.",
     "manualUpdateOnlyDesc": "Versi baru tetap diperiksa, tetapi pembaruan memerlukan installer lengkap.",
     "updateChannel": "Saluran Pembaruan",
-    "updateChannelRealeco": "Realeco · Stabil",
+    "updateChannelRealeco": "Folia Plain · Stabil",
     "updateChannelLimo": "Limo · Nightly",
     "updateChannelCielo": "Cielo · Canary",
     "updateChannelInternal": "Internal",
     "updateUnsupportedSystem": "Pembaruan otomatis tidak tersedia di sistem saat ini.",
     "updateUnsupportedChannel": "Pembaruan otomatis tidak tersedia untuk build internal ini.",
-    "autoUpdateGithubNotice": "Pembaruan otomatis membutuhkan akses ke GitHub; jika jaringan tidak stabil, pastikan proxy sistem tetap aktif.",
-    "updateCheckGithubNotice": "Pemeriksaan versi memerlukan akses ke GitHub. Saat pembaruan ditemukan, aplikasi akan menautkan installer lengkap.",
+    "autoUpdateGithubNotice": "Pembaruan hanya berasal dari ithtelab/Folia-Plain. Unduhan pemasang memakai relay pihak ketiga GH-Proxy terlebih dahulu, lalu mencoba GitHub langsung jika gagal.",
+    "updateCheckGithubNotice": "Pemeriksaan versi memakai ithtelab/Folia-Plain di GitHub. Tautan unduhan proyek ini muncul jika ada pembaruan.",
     "openReleasePage": "Buka Halaman Rilis",
     "downloadChina": "Unduh CN",
+    "mirrorDownload": "Relay Tiongkok (GH-Proxy)",
+    "updateRepositoryNotice": "Repositori pembaruan: ithtelab/Folia-Plain",
     "downloadSources": "Unduh dari",
     "quarkDrive": "Quark Drive",
     "baiduDrive": "Baidu Drive",
-    "githubRelease": "GitHub",
-    "fullInstallerGithub": "Installer lengkap (GitHub)",
+    "githubRelease": "GitHub · Proyek ini",
+    "fullInstallerGithub": "GitHub · Pemasang lengkap",
     "aurPackage": "Perbarui melalui AUR",
     "downloadUpdate": "Unduh Pembaruan",
     "restartToInstallUpdate": "Restart untuk Menginstal",
@@ -2786,6 +2794,10 @@ export default {
     "geminiApiKeyDesc": "Backend API Netease berjalan lokal.",
     "openaiApiUrlDesc": "API yang kompatibel dengan OpenAI tidak selalu merupakan API resmi OpenAI. Anda dapat memakai penyedia dan model kompatibel seperti DeepSeek.",
     "save": "Simpan",
+    "playlistViewStyle": "Buka playlist sebagai",
+    "playlistViewStyleDesc": "Di antarmuka grid, pilih grid sampul atau kolase seperti antrean. Album tetap sama. Menjelajah tidak mengubah antrean pemutaran.",
+    "playlistViewGrid": "Grid sampul",
+    "playlistViewLattice": "Kolase",
     "grid3dCardStyle": "Gaya Kartu Grid 3D",
     "grid3dCardStyleDesc": "Pilih tampilan setiap kartu di grid 3D: hanya gambar sampul atau kartu teks Polaroid klasik.",
     "grid3dCardStyleImage": "Hanya Gambar Sampul",
@@ -2993,9 +3005,9 @@ export default {
     "downloadingProgress": "Mengunduh ({{percent}}%)",
     "chinaDownload": "Unduh CN",
     "goToGithubRelease": "Buka halaman rilis GitHub",
-    "chinaDownloadHint": "Catatan: Unduhan GitHub mungkin lambat di Tiongkok. Gunakan Quark Drive atau Baidu Drive sebagai gantinya.",
+    "chinaDownloadHint": "Akselerasi Tiongkok memakai relay pihak ketiga GH-Proxy untuk pemasang GitHub proyek ini. Unduhan langsung GitHub tetap tersedia.",
     "macManualUpdateNotice": "Catatan: macOS memerlukan pengunduhan installer lengkap secara manual untuk memperbarui.",
-    "linuxManualUpdateNotice": "Linux tidak mendukung pembaruan otomatis. Unduh paket deb, rpm, atau tar.gz lengkap untuk memperbarui secara manual; hanya instalasi AUR stabil yang boleh memperbarui folia-major-bin melalui pengelola paket.",
+    "linuxManualUpdateNotice": "Di Linux, unduh paket lengkap deb, rpm, atau tar.gz proyek ini dan perbarui secara manual.",
     "manualUpdateNotice": "Catatan: Pembaruan otomatis tidak didukung di platform ini. Silakan unduh paket secara manual.",
     "unofficialBuildNotice": "Build lokal atau pihak ketiga: versi ini tidak dirilis oleh CI repositori Folia Plain. Hubungi penyedianya terlebih dahulu; gunakan repositori GitHub fork ini untuk masalah dan rilis.",
     "selfHostedBuildNotice": "Self-hosted: dibangun dan di-hosting oleh penyedia, termasuk backend platform musik. Hubungi penyedia terlebih dahulu, lalu laporkan masalah aplikasi ke repositori Folia Plain.",
@@ -3201,7 +3213,7 @@ export default {
       "intro": "Folia Plain 0.7.22 menghadirkan material Liquid Glass yang seragam, kontrol pemutar bawah yang lebih jelas, lebih sedikit salah klik pada bilah judul, serta ikon aplikasi dan platform musik yang diperbarui.",
       "liquidGlass": {
         "title": "Liquid Glass yang mengalir",
-        "description": "Navigasi, pencarian, pemutar, kartu lagu, dan tombol masuk memadukan latar buram, pembiasan tepi, dan pantulan yang mengalir. Navigasi dan pemutar mengalir perlahan saat diam; kontrol lain bergerak saat digunakan. Bingkai hitam tebal pada pencarian dihapus. Pengurangan gerakan UI atau transparansi menyederhanakan efek; kaca statis tetap tersedia saat dukungan grafis terbatas."
+        "description": "Navigasi, pencarian, pemutar, kartu lagu, dan tombol masuk memakai latar buram dan pembiasan tepi. Kaca terang memiliki lapisan putih lebih tipis dan sudut lebih halus. Navigasi mengalir perlahan; pemutar bawah sepenuhnya statis, termasuk saat disorot, diklik, atau diseret. Kontrol lain bergerak saat digunakan, dengan efek sederhana untuk pengurangan gerakan atau transparansi."
       },
       "clearerPlayer": {
         "title": "Kontrol pemutar lebih jelas",
@@ -3214,6 +3226,14 @@ export default {
       "appIcons": {
         "title": "Ikon aplikasi dan platform baru",
         "description": "Ikon Folia Plain baru digunakan pada pemasang, jendela desktop, baki sistem, situs web, dan PWA. Enam platform musik menggunakan ikon aplikasi aslinya, dengan ukuran dan jarak yang diperbaiki pada pemilih platform."
+      },
+      "ownUpdates": {
+        "title": "Pembaruan kami dengan relay Tiongkok",
+        "description": "Pembaruan hanya berasal dari ithtelab/Folia-Plain. Tautan drive dan AUR proyek asal dihapus. Pemasang Windows memakai relay pihak ketiga GH-Proxy terlebih dahulu, lalu mencoba GitHub langsung jika gagal. Metadata dan checksum tetap berasal dari GitHub proyek ini. Menu unduhan juga menyediakan relay."
+      },
+      "playlistCollage": {
+        "title": "Jelajahi playlist sebagai kolase",
+        "description": "Pilih grid sampul atau kolase seperti antrean di Pengaturan → Beranda & Playlist. Grid sampul tetap bawaan dan album tidak terpengaruh. Kolase mendukung pencarian, pemutaran dan penambahan ke antrean; menjelajah tidak mengubah antrean pemutaran."
       }
     },
     "v0_7_21": {

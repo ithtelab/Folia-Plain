@@ -1,4 +1,4 @@
-import { AppWindow, Image, Music2, Sparkles } from 'lucide-react';
+import { AppWindow, Download, Image, LayoutGrid, Music2, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -23,5 +23,7 @@ export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
         { id: 'clearerPlayer', icon: Music2 },
         { id: 'saferTitlebar', icon: AppWindow },
         { id: 'appIcons', icon: Image },
+        { id: 'ownUpdates', icon: Download },
+        { id: 'playlistCollage', icon: LayoutGrid },
     ],
 };

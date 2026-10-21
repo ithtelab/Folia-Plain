@@ -72,6 +72,7 @@ const {
   parseUpdateMetadataVersion,
   resolveReleaseChannel,
 } = require('./updateChannels.cjs');
+const { createMirrorUpdateProvider, createUpdateDownloadRunner, getMirrorInstallerUrl } = require('./updateDownloads.cjs');
 const { resolveCacheLimit, selectEvictions } = require('./audioCachePrune.cjs');
 const { removeAudioCacheFileOfSize } = require('./audioCacheRemove.cjs');
 const { createAnalysisHost } = require('./analysis/host.cjs');
@@ -3608,15 +3609,17 @@ function getPackagedReleaseChannel() {
 }
 
 function getCurrentReleaseChannel() {
-  return resolveReleaseChannel(
+  const selected = resolveReleaseChannel(
     app.getVersion(),
     store.get(UPDATE_CHANNEL_SETTING_KEY) || getPackagedReleaseChannel(),
   );
+  // Plain publishes stable releases; migrate inherited rolling-channel choices without changing keys.
+  return selected.id === 'internal' ? selected : resolveReleaseChannel(app.getVersion(), 'realeco');
 }
 
 function normalizeUpdateChannelSelection(value) {
   const channel = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  return channel === 'realeco' || channel === 'limo' || channel === 'cielo' ? channel : null;
+  return channel === 'realeco' ? channel : null;
 }
 
 function getUpdateCheckSupportReason() {
@@ -3672,7 +3675,20 @@ const updateState = {
   error: null,
   lastCheckedAt: null,
   downloadProgress: null,
+  repository: productIdentity.repository,
+  downloadSource: null,
 };
+let updateDownloadSource = 'mirror';
+let plainUpdateProvider = null;
+const runUpdateDownload = createUpdateDownloadRunner({
+  download: () => ensureAutoUpdater().downloadUpdate(),
+  setSource: (source) => {
+    updateDownloadSource = source;
+    ensureAutoUpdater().disableDifferentialDownload = source === 'mirror';
+    setUpdateState({ status: 'downloading', error: null, downloadProgress: null, downloadSource: source });
+  },
+  onFallback: (error) => console.warn('[Updater] Relay download failed; retrying our GitHub release directly.', error),
+});
 
 function getUpdateStatus() {
   const availableVersion = updateState.availableVersion;
@@ -3803,14 +3819,18 @@ function configureAutoUpdaterChannel(updater) {
   const releaseChannel = getCurrentReleaseChannel();
   updater.channel = releaseChannel.updaterChannel;
   updater.allowPrerelease = releaseChannel.allowPrerelease;
+  updater.allowDowngrade = false;
+  updater.disableWebInstaller = true;
 
   const providerConfig = getUpdateProviderConfig(releaseChannel, FOLIA_GITHUB_REPOSITORY);
   if (providerConfig) {
-    updater.setFeedURL(providerConfig);
+    plainUpdateProvider ??= createMirrorUpdateProvider();
+    updater.setFeedURL({ ...providerConfig, provider: 'custom', updateProvider: plainUpdateProvider, resolveDownloadSource: () => updateDownloadSource });
   }
 }
 
 async function downloadAvailableUpdate() {
+  if (updateState.status === 'downloaded') return getUpdateStatus();
   if (isDevUpdatePreviewEnabled()) {
     setUpdateState({ status: 'downloaded', error: null, downloadProgress: null });
     return getUpdateStatus();
@@ -3835,13 +3855,13 @@ async function downloadAvailableUpdate() {
     await checkForUpdates({ manual: true });
   }
 
-  if (!updateState.availableVersion) {
+  if (!updateState.availableVersion || updateState.status === 'downloaded') {
     return getUpdateStatus();
   }
 
   try {
     setUpdateState({ status: 'downloading', error: null, downloadProgress: null });
-    await updater.downloadUpdate();
+    await runUpdateDownload();
   } catch (error) {
     setUpdateState({
       status: 'error',
@@ -3854,6 +3874,7 @@ async function downloadAvailableUpdate() {
 }
 
 async function checkForUpdates({ manual = false } = {}) {
+  if (updateState.status === 'downloading' || updateState.status === 'downloaded') return getUpdateStatus();
   if (isDevUpdatePreviewEnabled()) {
     const availableVersion = getDevUpdatePreviewVersion();
     setUpdateState({
@@ -3892,8 +3913,9 @@ async function checkForUpdates({ manual = false } = {}) {
       throw new Error('Failed to initialize auto updater.');
     }
 
-    updater.autoDownload = getAutoUpdateEnabled();
+    updater.autoDownload = false;
     await updater.checkForUpdates();
+    if (getAutoUpdateEnabled() && updateState.status === 'available') await downloadAvailableUpdate();
   } catch (error) {
     setUpdateState({
       status: 'error',
@@ -6413,6 +6435,13 @@ ipcMain.handle('updates-mark-seen', (event, version) => {
 
 ipcMain.handle('updates-open-release-page', (event, version) => {
   return openUpdateReleasePage(version);
+});
+
+ipcMain.handle('updates-open-mirror-download', async (event, version) => {
+  const url = getMirrorInstallerUrl(version || updateState.availableVersion, process.platform, process.arch);
+  if (!url) return openUpdateReleasePage(version);
+  await shell.openExternal(url);
+  return true;
 });
 
 ipcMain.handle('open-external-url', (event, url) => {

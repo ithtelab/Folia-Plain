@@ -2,7 +2,6 @@ import React, { useId, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Menu, Progress, Reveal, Row } from '../kit';
-import { openOutsideLink } from '../../../../utils/system/outsideLink';
 import { useSettingsPage } from './settingsPageContext';
 
 // src/components/modal/settings/pages/FoundUpdateRow.tsx
@@ -11,7 +10,6 @@ import { useSettingsPage } from './settingsPageContext';
 // itself can do with it: download it, show how far the download has come, restart to install. It
 // unfolds once the update check has found a version.
 
-const AUR_PACKAGE_URL = 'https://aur.archlinux.org/packages/folia-major-bin';
 
 type FoundUpdateRowProps = {
     /** Under the row above it: indented. */
@@ -36,9 +34,7 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
     const isDownloading = updateStatus?.status === 'downloading';
     const isDownloaded = updateStatus?.status === 'downloaded';
     const isLinuxBuild = updateStatus?.platform === 'linux';
-    const isStableChannel = electronSettings.UPDATE_CHANNEL === 'realeco';
-    // The two drives are offered for the stable channel, and not on Linux.
-    const offersDrives = isStableChannel && !isLinuxBuild;
+    const offersMirror = updateStatus?.platform === 'win32';
     // What a found version needs from the listener where the app cannot update itself.
     const manualNotice = updateStatus?.platform === 'darwin'
         ? t('options.macManualUpdateNotice')
@@ -47,22 +43,19 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
             : autoUpdateSupported ? null : t('options.manualUpdateNotice');
 
     const sources = [
-        ...(offersDrives ? [
-            { id: 'quark', label: t('options.quarkDrive'), onSelect: () => void update.onOpenChinaDownload() },
-            { id: 'baidu', label: t('options.baiduDrive'), onSelect: () => void update.onOpenBaiduDownload() },
+        ...(offersMirror ? [
+            { id: 'mirror', label: t('options.mirrorDownload'), onSelect: () => void window.electron?.openUpdateMirrorDownload(version) },
         ] : []),
         {
             id: 'github',
             label: t(autoUpdateSupported ? 'options.githubRelease' : 'options.fullInstallerGithub'),
             onSelect: () => void window.electron?.openUpdateReleasePage(version),
         },
-        ...(isLinuxBuild && isStableChannel ? [
-            { id: 'aur', label: t('options.aurPackage'), onSelect: () => openOutsideLink(AUR_PACKAGE_URL) },
-        ] : []),
     ].map(source => ({ ...source, end: <ExternalLink size={14} /> }));
     const notes = [
         ...(manualNotice ? [manualNotice] : []),
-        ...(offersDrives ? [t('options.chinaDownloadHint')] : []),
+        t('options.updateRepositoryNotice'),
+        ...(offersMirror ? [t('options.chinaDownloadHint')] : []),
     ];
     // The updater gives no usable percent while it does not know the size.
     const reported = updateStatus?.downloadProgress?.percent;

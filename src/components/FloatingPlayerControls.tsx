@@ -386,7 +386,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                             ${isPositioning ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
                             ${showExpanded ? 'p-3 w-full' : `px-4 py-2 ${COLLAPSED_WIDTH_CLASS}`}`}
                     >
-                        <LiquidGlassSurface isDaylight={isDaylight} active={!isHidden} interactive={!isPositioning && !controlsDisabled} flow="ambient" />
+                        <LiquidGlassSurface isDaylight={isDaylight} active={!isHidden} interactive={false} />
                         <motion.div
                             layout
                             transition={{ layout: layoutTransition }}

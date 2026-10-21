@@ -626,6 +626,12 @@ export default {
       "settings-local-library-watch": { "title": "Local folder watch settings", "description": "Open the auto scan settings for imported local folders" },
       "local-library-auto-scan-toggle": { "title": "Auto scan local folders", "description": "Turn automatic rescanning of imported local folders on or off" },
       "settings-desktop": { "title": "Desktop settings", "description": "Open desktop app settings" },
+      "playlist-view-grid": { "title": "Open playlists as cover grids", "description": "Browse playlists as cover grids in the grid library interface" },
+      "playlist-view-lattice": { "title": "Open playlists as collages", "description": "Browse playlists as queue-style collages in the grid library interface" },
+      "download-update-mirror": {
+        "title": "Download update with China relay",
+        "description": "Download this project’s new installer through GH-Proxy"
+      },
       "settings-update-channel": { "title": "Update channel", "description": "Choose the desktop app release channel" },
       "desktop-toggle-voice-input-pause": { "title": "Voice input pause", "description": "Toggle pausing playback during voice input" },
       "desktop-toggle-prevent-display-sleep": { "title": "Prevent display sleep during playback", "description": "Keep the display awake while music is playing" },
@@ -2014,21 +2020,23 @@ export default {
     "enableAutoUpdateDesc": "Automatically download updates after a new version is found.",
     "manualUpdateOnlyDesc": "New versions are still found, but upgrading needs a full installer.",
     "updateChannel": "Update Channel",
-    "updateChannelRealeco": "Realeco · Stable",
+    "updateChannelRealeco": "Folia Plain · Stable",
     "updateChannelLimo": "Limo · Nightly",
     "updateChannelCielo": "Cielo · Canary",
     "updateChannelInternal": "Internal",
     "updateUnsupportedSystem": "Automatic updates are unavailable on the current system.",
     "updateUnsupportedChannel": "Automatic updates are unavailable for this internal build.",
-    "autoUpdateGithubNotice": "Auto update needs access to GitHub; if the network is unstable, keep a system proxy enabled.",
-    "updateCheckGithubNotice": "Version checks need access to GitHub. When an update is found, the app links to the full installer.",
+    "autoUpdateGithubNotice": "Updates come only from ithtelab/Folia-Plain. Installer downloads use the third-party GH-Proxy relay first and retry GitHub directly if it fails.",
+    "updateCheckGithubNotice": "Version checks use ithtelab/Folia-Plain on GitHub. This project’s download links appear when an update is found.",
     "openReleasePage": "Open Release Page",
     "downloadChina": "CN Download",
+    "mirrorDownload": "China relay (GH-Proxy)",
+    "updateRepositoryNotice": "Update repository: ithtelab/Folia-Plain",
     "downloadSources": "Download from",
     "quarkDrive": "Quark Drive",
     "baiduDrive": "Baidu Drive",
-    "githubRelease": "GitHub",
-    "fullInstallerGithub": "Full installer (GitHub)",
+    "githubRelease": "GitHub · This project",
+    "fullInstallerGithub": "GitHub · Full installer",
     "aurPackage": "Upgrade through AUR",
     "downloadUpdate": "Download Update",
     "restartToInstallUpdate": "Restart to Install",
@@ -2786,6 +2794,10 @@ export default {
     "geminiApiKeyDesc": "Netease API backend runs locally.",
     "openaiApiUrlDesc": "An OpenAI-compatible API is not necessarily the official OpenAI API. You can use compatible providers and models such as DeepSeek.",
     "save": "Save",
+    "playlistViewStyle": "Open playlists as",
+    "playlistViewStyleDesc": "In the grid interface, browse playlists as cover grids or queue-style collages. Albums stay unchanged. Browsing leaves the play queue intact.",
+    "playlistViewGrid": "Cover grid",
+    "playlistViewLattice": "Collage",
     "grid3dCardStyle": "3D Grid Card Style",
     "grid3dCardStyleDesc": "Choose the appearance of each card in the 3D grid: cover image only or classic Polaroid text cards.",
     "grid3dCardStyleImage": "Cover Image Only",
@@ -2993,9 +3005,9 @@ export default {
     "downloadingProgress": "Downloading ({{percent}}%)",
     "chinaDownload": "CN Download",
     "goToGithubRelease": "Go to GitHub release page",
-    "chinaDownloadHint": "Note: GitHub downloads may be slow in China. Use Quark Drive or Baidu Drive instead.",
+    "chinaDownloadHint": "China acceleration uses the third-party GH-Proxy relay for this project’s GitHub installer. Direct GitHub downloads remain available.",
     "macManualUpdateNotice": "Note: macOS requires downloading the full installer manually to update.",
-    "linuxManualUpdateNotice": "Linux does not support automatic updates. Download the complete deb, rpm, or tar.gz package to upgrade manually; only stable AUR installations should upgrade folia-major-bin through the package manager.",
+    "linuxManualUpdateNotice": "On Linux, download this project’s complete deb, rpm or tar.gz package and upgrade manually.",
     "manualUpdateNotice": "Note: Automatic update is not supported on this platform. Please download the package manually.",
     "unofficialBuildNotice": "Local or third-party build: this version was not released by the Folia Plain repository's CI. Contact its provider first; use this fork's GitHub repository for issues and releases.",
     "selfHostedBuildNotice": "Self-hosted: built and hosted by the deployer, including the music platform backends. Contact the deployer first, then report application issues to the Folia Plain repository.",
@@ -3201,7 +3213,7 @@ export default {
       "intro": "Folia Plain 0.7.22 brings a shared Liquid Glass material, clearer bottom playback controls, fewer accidental titlebar interactions, and refreshed app and music-provider icons.",
       "liquidGlass": {
         "title": "Flowing Liquid Glass",
-        "description": "Navigation, search, playback, song cards and sign-in controls combine background blur, edge refraction and flowing highlights. Navigation and the player flow slowly at rest; other controls react to interaction. Search loses its heavy black outline. Reduced UI motion or transparency simplifies the effects, with static glass available when graphics support is limited."
+        "description": "Navigation, search, playback, song cards and sign-in controls use background blur and edge refraction. Light glass has less white tint and smoother rounded edges. Navigation flows slowly; the bottom player stays completely static, including hover, clicks and dragging. Other controls flow during interaction, with simpler effects for reduced motion or transparency."
       },
       "clearerPlayer": {
         "title": "Clearer playback controls",
@@ -3214,6 +3226,14 @@ export default {
       "appIcons": {
         "title": "New app and provider icons",
         "description": "The new Folia Plain icon appears in installers, desktop windows, the tray, the website and the PWA. Six music providers use their real app icons, with better proportions and spacing in the provider switcher."
+      },
+      "ownUpdates": {
+        "title": "Our updates, with a China relay",
+        "description": "Updates come only from ithtelab/Folia-Plain. Upstream drive and AUR links are removed. Windows installers use the third-party GH-Proxy relay first, then retry GitHub directly if it fails. Update metadata and file checksums still come from our GitHub repository. The download menu also offers the relay."
+      },
+      "playlistCollage": {
+        "title": "Browse playlists as collages",
+        "description": "Choose cover grids or queue-style collages under Settings → Home & Playlists. Cover grids remain the default and albums are unaffected. Collages support filtering, playback and enqueueing; browsing leaves your play queue intact."
       }
     },
     "v0_7_21": {

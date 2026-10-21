@@ -88,6 +88,8 @@ import {
 } from '../../../core/shared/useLibraryBrowseSessionStore';
 import { useLocalTrackSortStore } from '../../../core/directory/useLocalTrackSortStore';
 
+const PlaylistCollage = React.lazy(() => import('./PlaylistCollage'));
+
 interface GridViewProps {
     title: string;
     subtitle?: string;
@@ -97,6 +99,8 @@ interface GridViewProps {
     /** 返回按钮：看完了（宿主清会话与布局记录再返回）。 */
     onDone: () => void;
     onSelectTrack?: (track: SongResult, queue: SongResult[]) => void;
+    /** Playlist-only alternate field; resource, filtering and collection actions stay on this page. */
+    collage?: boolean;
     onSelectCollection?: (item: any) => void;
     onAddTrackToQueue?: (track: SongResult) => void;
     /** fb3：「留在原处」时正在播放的那首的卡片画成暂停 / 继续（useGridStayPlayback.markFor）；不给就是普通的播放键。 */
@@ -254,6 +258,7 @@ export const GridView: React.FC<GridViewProps> = ({
     onBack,
     onDone,
     onSelectTrack,
+    collage = false,
     onSelectCollection,
     onAddTrackToQueue,
     trackPlaybackMark,
@@ -460,6 +465,7 @@ export const GridView: React.FC<GridViewProps> = ({
     const handleLocalTrackSortFieldChange = useLocalTrackSortStore(state => state.setField);
     const handleLocalTrackSortDirectionChange = useLocalTrackSortStore(state => state.setDirection);
     const [isEditMode, setIsEditMode] = useState(false);
+    const showCollage = collage && !isEditMode;
     const [editableTitle, setEditableTitle] = useState(title);
     const [isPlaylistPickerOpen, setIsPlaylistPickerOpen] = useState(false);
     const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
@@ -924,6 +930,7 @@ export const GridView: React.FC<GridViewProps> = ({
     }, [baseCoords, collectionView.findEntryIndex, commitFocusedIndex, dragX, dragY, gridItems.length, matchIndexes, updateRenderedIndexesForViewport]);
 
     const handleViewportWheel = useCallback((event: WheelEvent) => {
+        if (showCollage) return;
         if (gridItems.length === 0 || event.ctrlKey) return;
         if (event.target instanceof Element && event.target.closest('[data-wheel-scroll-region]')) return;
 
@@ -950,6 +957,7 @@ export const GridView: React.FC<GridViewProps> = ({
         animate(dragY, clampedY, { type: 'spring', stiffness: 560, damping: 48, mass: 0.65 });
         scheduleFocusedIndexCommit(240);
     }, [
+        showCollage,
         containerSize.height,
         dragX,
         dragY,
@@ -1072,6 +1080,7 @@ export const GridView: React.FC<GridViewProps> = ({
     }, [baseCoords, containerSize, layoutConfig.spacingX, layoutConfig.spacingY, morphHeroIndex, entranceKind]);
 
     const memoizedCards = useMemo(() => {
+        if (showCollage) return [];
         return renderedIndexes.map((idx) => {
             const item = gridItems[idx];
             const coord = baseCoords[idx];
@@ -1245,6 +1254,7 @@ export const GridView: React.FC<GridViewProps> = ({
             );
         });
     }, [
+        showCollage,
         renderedIndexes,
         gridItems,
         baseCoords,
@@ -1346,7 +1356,7 @@ export const GridView: React.FC<GridViewProps> = ({
 
     // Setup arrow keyboard navigation
     useEffect(() => {
-        if (!isActive) return;
+        if (!isActive || showCollage) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target;
@@ -1426,6 +1436,7 @@ export const GridView: React.FC<GridViewProps> = ({
         isDeleteFolderOpen,
         isEditMode,
         isActive,
+        showCollage,
         isPlaylistPickerOpen,
         mode,
         onSelectCollection,
@@ -1524,6 +1535,8 @@ export const GridView: React.FC<GridViewProps> = ({
             return;
         }
         if (step.answer === true) {
+            // The wall owns centring a collage poster. This page still owns unfilter/wait/failure.
+            if (showCollage) return;
             centerOnIndex(index, true);
             setLocatedTimes(times => times + 1);
         } else if (step.answer === 'unread') {
@@ -1531,7 +1544,7 @@ export const GridView: React.FC<GridViewProps> = ({
             console.log(`[Locate] The list is not whole: ${displayTracks.length} tracks, reading ${isLoading || loading}, filling up ${backgroundLoading}, failed ${hasReadFailed}`);
         }
         answerLocateRequest(locateRequest.nonce, step.answer);
-    }, [backgroundLoading, cardsStillArriving, displayTracks.length, gridItems, hasReadFailed, hasSearchQuery, isActive, isLoading, isLocateAsked, loading, locateRequest, searchQuery]);
+    }, [showCollage, backgroundLoading, cardsStillArriving, displayTracks.length, gridItems, hasReadFailed, hasSearchQuery, isActive, isLoading, isLocateAsked, loading, locateRequest, searchQuery]);
     // 大歌单要分几十页补齐，只写「加载中」用户会以为歌丢了；拿得到总数就把进度写出来。
     const backgroundSyncTotal = collectionDetail?.trackCount ?? collection?.trackCount;
     const backgroundSyncCounts = resolveCollectionSyncCounts(tracks.length, backgroundSyncTotal);
@@ -1680,6 +1693,7 @@ export const GridView: React.FC<GridViewProps> = ({
             <div
                 ref={containerRef}
                 onPointerDown={(event) => {
+                    if (showCollage) return;
                     if (event.button !== 0) return; // 仅限鼠标左键或主要指针拖动
 
                     const target = event.target as HTMLElement;
@@ -1735,6 +1749,12 @@ export const GridView: React.FC<GridViewProps> = ({
                                 // Given no tracks because their read failed: not a collection that holds none.
                                 : loadError && !hasSearchQuery ? t('playlist.loadFailedPlain') : (t('home.loadingLibrary'))}
                     </div>
+                ) : showCollage ? (
+                    <React.Suspense fallback={null}>
+                        <PlaylistCollage tracks={displayTracks} matchIndexes={matchIndexes} contextTracks={contextActionTracks}
+                            isDaylight={isDaylight} pageKey={pageKey} onPlay={onSelectTrack}
+                            onEnqueue={onAddTrackToQueue} onBack={onBack} />
+                    </React.Suspense>
                 ) : (
                     <motion.div
                         data-grid-canvas

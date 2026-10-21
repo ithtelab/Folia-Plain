@@ -13,7 +13,7 @@ interface LiquidGlassSurfaceProps {
     /** Hidden surfaces release the optical layer rather than continuing to filter offscreen. */
     active?: boolean;
     interactive?: boolean;
-    /** Ambient flow is reserved for primary navigation and playback controls. */
+    /** Ambient flow is reserved for primary navigation; the bottom player disables interaction entirely. */
     flow?: 'ambient' | 'interactive';
 }
 
@@ -98,7 +98,7 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     const enhanced = active && lens !== null;
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
-    const toneCurve = isDaylight ? '0.48 0.56 0.7 0.85 1' : '0 0.24 0.43 0.49 0.5';
+    const toneCurve = isDaylight ? '0.55 0.57 0.66 0.82 0.98' : '0 0.24 0.43 0.49 0.5';
     return (
         <span ref={rootRef} aria-hidden="true" className="liquid-glass-surface"
             data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-active={active}

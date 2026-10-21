@@ -26,7 +26,7 @@ describe('glass lens map', () => {
     it('rounds corners without leaking optical coverage outside the shape', () => {
         const map = createGlassLensMap(200, 80, 16);
         expect(pixel(map, 0, 0)).toEqual([128, 128, 0, 255]);
-        const nearCorner = pixel(map, 5, 5);
+        const nearCorner = pixel(map, Math.round(map.width * 0.04), Math.round(map.height * 0.1));
         expect(nearCorner[0]).toBeGreaterThan(128);
         expect(nearCorner[1]).toBeGreaterThan(128);
     });
@@ -40,7 +40,15 @@ describe('glass lens map', () => {
 
     it('handles the small rounded buttons without a degenerate rim', () => {
         const map = createGlassLensMap(40, 40, 999);
-        expect(pixel(map, 15, 15)).toEqual([128, 128, 0, 255]);
+        expect(pixel(map, map.width / 2, map.height / 2)).toEqual([128, 128, 0, 255]);
         expect(map.pixels).toHaveLength(map.width * map.height * 4);
+    });
+
+    it('supersamples small rounded edges without exceeding the existing memory cap', () => {
+        const map = createGlassLensMap(40, 40, 999);
+        expect(map.width).toBe(80);
+        expect(map.height).toBe(80);
+        const coverage = Array.from({ length: map.width * map.height }, (_, index) => map.pixels[index * 4 + 2]);
+        expect(coverage.some(value => value > 0 && value < 255)).toBe(true);
     });
 });

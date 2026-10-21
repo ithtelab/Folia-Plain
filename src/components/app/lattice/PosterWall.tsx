@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { SongResult } from '../../../types';
 import {
     overlaps,
@@ -14,7 +14,7 @@ import { useLatticePosterSelection } from './useLatticePosterSelection';
 import { useWallKeyboardFocus } from './useWallKeyboardFocus';
 import { useWallPointerPan } from '../../wall/useWallPointerPan';
 import { formatWorldTransform } from '../../wall/wallView';
-import type { LatticeTile } from './latticeModel';
+import type { LatticeSongTile, LatticeTile } from './latticeModel';
 import LatticePoster from './LatticePoster';
 import LatticeHeading from './LatticeHeading';
 import LatticeSectionFinder from './LatticeSectionFinder';
@@ -41,6 +41,8 @@ import { wallIsLeftForPage } from './wallLayer';
 // 回资料库墙时海报按距离翻出（useLatticeWallHandoff）。
 
 type PosterWallProps = {
+    /** A collection wall answers locate requests for its collection, independently of the queue wall. */
+    pageKey?: string;
     tiles: LatticeTile[];
     /** The explore wall only: the sections `tiles` stand in, by which that wall is laid out. Without them the wall is the queue's. */
     sections?: WallSection[];
@@ -53,6 +55,8 @@ type PosterWallProps = {
     onSeek: (time: number) => void;
     onOpenPlayer: () => void;
     onBack: () => void;
+    /** Collection browsing supplies play/enqueue controls without binding this wall to the queue. */
+    renderSongControls?: (tile: LatticeSongTile) => ReactNode;
 };
 
 
@@ -84,6 +88,7 @@ const getWorldBounds = (camera: LatticeCamera, viewport: { width: number; height
 });
 
 export default function PosterWall({
+    pageKey,
     tiles,
     sections,
     startTileId = null,
@@ -93,6 +98,7 @@ export default function PosterWall({
     onSeek,
     onOpenPlayer,
     onBack,
+    renderSongControls,
 }: PosterWallProps) {
     countRender('PosterWall');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -125,7 +131,7 @@ export default function PosterWall({
     const [cameraScale, setCameraScale] = useState(() => cameraRef.current.scale);
     const reducedMotion = useReducedMotionFor('lattice');
     // 从资料库墙翻牌交接进来（或淡入交叉）：入场由交接代替，不跑抬起落下的波次。
-    const entranceSuppressed = useWallHandoffStore(state => resolveWallHandoffRole(state.session, 'lattice') === 'in');
+    const entranceSuppressed = useWallHandoffStore(state => !pageKey && resolveWallHandoffRole(state.session, 'lattice') === 'in');
     const autoFocusOnSongChange = useLatticeSettingsStore(state => state.autoFocusOnSongChange);
     const devicePixelRatio = useDevicePixelRatio();
     const pixelScale = cameraScale * devicePixelRatio;
@@ -140,6 +146,7 @@ export default function PosterWall({
     const cameraWatchRef = useRef<(camera: LatticeCamera) => void>(() => undefined);
 
     const publishCurrentPosterVisibility = useCallback((camera: LatticeCamera) => {
+        if (pageKey) return;
         const tracked = trackedCurrentPosterRef.current;
         const visible = !tracked.enabled || Boolean(
             tracked.rect && overlaps(toBounds(tracked.rect), getWorldBounds(camera, viewportRef.current)),
@@ -147,7 +154,7 @@ export default function PosterWall({
         if (currentPosterVisibleRef.current === visible) return;
         currentPosterVisibleRef.current = visible;
         setLatticeCurrentSongPosterVisible(visible);
-    }, []);
+    }, [pageKey]);
 
     const applyCamera = useCallback((next: LatticeCamera, updateBounds = false) => {
         cameraRef.current = next;
@@ -328,9 +335,10 @@ export default function PosterWall({
     }, [activePoster, currentSong, layout, measured, publishCurrentPosterVisibility]);
 
     useEffect(() => () => {
+        if (pageKey) return;
         currentPosterVisibleRef.current = true;
         setLatticeCurrentSongPosterVisible(true);
-    }, []);
+    }, [pageKey]);
 
     const { focused, setFocused, handleKeyDown, handleFocusCapture, handleBlurCapture } = useWallKeyboardFocus({
         activePoster,
@@ -366,6 +374,7 @@ export default function PosterWall({
     const collapsePoster = useCallback(() => setActivePoster(null), [setActivePoster]);
 
     useLatticePlaybackFocus({
+        pageKey,
         currentSong,
         startTileId,
         ready: measured,
@@ -378,6 +387,7 @@ export default function PosterWall({
     });
     const currentSongKey = currentSong ? getPlaybackSongKey(currentSong) : null;
     const handoff = useLatticeWallHandoff({
+        enabled: !pageKey,
         containerRef,
         cameraRef,
         applyCamera,
@@ -481,6 +491,7 @@ export default function PosterWall({
                             onTogglePlayback={onTogglePlayback}
                             onSeek={onSeek}
                             onOpenPlayer={onOpenPlayer}
+                            renderSongControls={renderSongControls}
                         />
                     );
                 })}
