@@ -1,4 +1,5 @@
 import type { SongResult, UnifiedSong } from '../../../types';
+import appIcon from '../../../assets/providers/apps/kugou.jpg';
 import {
     OnlineProviderError,
     type AudioQualityPreference,
@@ -1001,7 +1002,7 @@ export const kugouProvider: OnlineMusicProvider = {
     id: 'kugou',
     displayName: 'KuGou Music',
     shortName: '酷狗',
-    mark: { letter: 'K', color: '#2563eb' },
+    mark: { letter: 'K', color: '#2563eb', iconUrl: appIcon },
     getAvailability: getKugouTransportAvailability,
     describeFailure: describeKugouFailure,
     capabilities: {

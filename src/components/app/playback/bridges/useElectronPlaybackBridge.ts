@@ -123,7 +123,6 @@ export const useElectronPlaybackBridge = ({
     onLike,
 }: UseElectronPlaybackBridgeOptions) => {
     // Read here rather than passed in: all store fields or a module-level motion signal.
-    const setIsTitlebarRevealed = useAppChromeStore(state => state.setIsTitlebarRevealed);
     const isPlayerChromeHidden = useAppChromeStore(state => state.isPlayerChromeHidden);
     const setIsPlayerChromeHidden = useAppChromeStore(state => state.setIsPlayerChromeHidden);
     const showTransparentWindowBorder = useAppChromeStore(state => state.showTransparentWindowBorder);
@@ -363,30 +362,6 @@ export const useElectronPlaybackBridge = ({
 
         return publishStageSnapshot(buildCurrentStagePlayerSnapshot(), { forcePlaybackEvent: true });
     };
-
-    useEffect(() => {
-        // Click-through keeps forwarding mouse-move into the renderer, so the titlebar would keep
-        // revealing itself on a window the cursor cannot actually reach. Stop tracking while it is on.
-        if (!isElectronWindow || mainWindowClickThroughEnabled) {
-            setIsTitlebarRevealed(false);
-            return;
-        }
-
-        const revealThreshold = 56;
-        const handleMouseMove = (event: MouseEvent) => {
-            const nextVisible = event.clientY <= revealThreshold;
-            setIsTitlebarRevealed(prev => (prev === nextVisible ? prev : nextVisible));
-        };
-        const handleMouseLeave = () => setIsTitlebarRevealed(false);
-
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseleave', handleMouseLeave);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseleave', handleMouseLeave);
-        };
-    }, [isElectronWindow, mainWindowClickThroughEnabled, setIsTitlebarRevealed]);
 
     useEffect(() => {
         if (!window.electron?.onTaskbarControl) {

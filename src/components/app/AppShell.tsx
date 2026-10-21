@@ -9,6 +9,8 @@ import TitlebarDragZone from '../TitlebarDragZone';
 import WindowControls from '../WindowControls';
 import { usePlayerOverlayRoot, usePlayerOverlayReservation } from '../../hooks/usePlayerOverlayLayout';
 import type { FoliumLayoutRect } from '../../mods/folium/contract';
+import { TITLEBAR_REVEAL_EDGE, TITLEBAR_SAFE_TOP } from './titlebar/titlebarHover';
+import { useTitlebarReveal } from './titlebar/useTitlebarReveal';
 
 // Shared shell for the app container, Electron titlebar, and mounted audio node.
 type AppShellProps = {
@@ -30,9 +32,8 @@ type AppShellProps = {
     children: React.ReactNode;
 };
 
-const TITLEBAR_REVEAL_HEIGHT = 56;
 const titlebarRevealArea = (bounds: FoliumLayoutRect): FoliumLayoutRect => ({
-    left: bounds.left, top: bounds.top, width: bounds.width, height: TITLEBAR_REVEAL_HEIGHT,
+    left: bounds.left, top: bounds.top, width: bounds.width, height: TITLEBAR_SAFE_TOP,
 });
 
 // 透明播放窗口的圆角应该跟宿主系统的窗口圆角一致。Windows 11 原生窗口圆角是 8px，
@@ -61,8 +62,11 @@ const AppShell: React.FC<AppShellProps> = ({
 }) => {
     const { t } = useTranslation();
     const layoutRootRef = useRef<HTMLDivElement>(null);
-    usePlayerOverlayRoot(layoutRootRef, isPlayerView, { top: usesCustomWindowChrome ? TITLEBAR_REVEAL_HEIGHT : 0, right: 0, bottom: 0, left: 0 });
+    usePlayerOverlayRoot(layoutRootRef, isPlayerView, { top: usesCustomWindowChrome ? TITLEBAR_SAFE_TOP : 0, right: 0, bottom: 0, left: 0 });
     usePlayerOverlayReservation('window-titlebar-reveal', 'window', titlebarRevealArea, usesCustomWindowChrome);
+    // Click-through keeps forwarding mouse-move into the renderer, so the titlebar would keep
+    // revealing itself on a window the cursor cannot actually reach. Stop tracking while it is on.
+    useTitlebarReveal(isElectronWindow && usesCustomWindowChrome && !isMainWindowClickThroughEnabled);
     // Light or dark and the theme, for the shared parts that colour themselves wherever they open (a dialog's sheet).
     const kitTheme = useMemo(() => ({ isDaylight, theme }), [isDaylight, theme]);
     const [sheetLayer, setSheetLayer] = useState<HTMLDivElement | null>(null);
@@ -158,6 +162,7 @@ const AppShell: React.FC<AppShellProps> = ({
             className="fixed inset-0 w-full h-full flex flex-col overflow-hidden font-sans transition-colors duration-500"
             style={{
                 ...appStyle,
+                ...({ '--window-titlebar-safe-top': `${usesCustomWindowChrome ? TITLEBAR_SAFE_TOP : 0}px` } as React.CSSProperties),
                 borderRadius: shouldApplyWindowRadius ? resolveWindowCornerRadius(window.electron?.platform ?? '') : undefined,
                 boxShadow: showTransparentWindowBorder ? 'inset 0 0 0 1px rgba(255,255,255,0.24)' : undefined,
             }}
@@ -176,14 +181,24 @@ const AppShell: React.FC<AppShellProps> = ({
                     )}
                     <div className="relative h-full">
                         <TitlebarDragZone active={usesCustomWindowChrome} />
+                        {!isMainWindowClickThroughEnabled && (
+                            // Native drag regions do not deliver pointer events: keep the activation edge reachable.
+                            <div
+                                data-titlebar-reveal-edge
+                                className="pointer-events-auto absolute inset-x-0 top-0"
+                                style={{ height: TITLEBAR_REVEAL_EDGE, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                            />
+                        )}
                         <div
-                            className={`pointer-events-auto absolute top-0 z-20 h-full flex items-center ${
+                            className={`pointer-events-none absolute top-0 z-20 h-full flex items-center ${
                                 hasFullscreenTitlebarButton ? 'right-[224px]' : 'right-[180px]'
                             }`}
                             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
                         >
                             <button
                                 type="button"
+                                tabIndex={showMainWindowClickThroughToggle ? 0 : -1}
+                                disabled={!showMainWindowClickThroughToggle}
                                 aria-label={isMainWindowClickThroughEnabled ? 'Disable click-through' : 'Enable click-through'}
                                 title={isMainWindowClickThroughEnabled ? t('remote.disableClickThrough') : t('remote.enableClickThrough')}
                                 onClick={onToggleMainWindowClickThrough}
@@ -204,7 +219,7 @@ const AppShell: React.FC<AppShellProps> = ({
                                 {isMainWindowClickThroughEnabled ? <Lock size={14} /> : <LockOpen size={14} />}
                             </button>
                         </div>
-                        <div className="pointer-events-auto absolute top-0 right-0 z-10 h-full">
+                        <div className="pointer-events-none absolute top-0 right-0 z-10 h-full">
                             <WindowControls
                                 revealed={areTitlebarControlsVisible}
                                 isDaylight={isDaylight}

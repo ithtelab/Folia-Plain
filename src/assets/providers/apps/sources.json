@@ -1,0 +1,68 @@
+[
+  {
+    "retrieved": "2026-10-21",
+    "provider": "netease",
+    "sha256": "2dc62d28f679f5d8ae21217e70ec397d0d757bff7953d79eb2178cf93cc4582e",
+    "page": "https://apps.apple.com/cn/app/%E7%BD%91%E6%98%93%E4%BA%91%E9%9F%B3%E4%B9%90-%E6%95%B0%E4%BA%BF%E9%9F%B3%E4%B9%90%E7%95%85%E5%90%AC/id590338362?uo=4",
+    "publisher": "杭州网易云音乐科技有限公司",
+    "appStoreId": 590338362,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/2d/84/5f/2d845fe3-b1fc-b57b-d6d7-fe5ae6a468f5/appIconNew-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "appName": "网易云音乐-数亿音乐畅听",
+    "file": "netease.jpg"
+  },
+  {
+    "retrieved": "2026-10-21",
+    "provider": "kugou",
+    "sha256": "c56abca86e1c4c1d20a4de64e5ae45540c080d37164808cff3f9e3a69b0e5097",
+    "page": "https://apps.apple.com/cn/app/%E9%85%B7%E7%8B%97%E9%9F%B3%E4%B9%90-%E5%B0%B1%E6%98%AF%E6%AD%8C%E5%A4%9A/id472208016?uo=4",
+    "publisher": "Guangzhou KuGou Technology CO. , LTD",
+    "appStoreId": 472208016,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ad/3a/d4/ad3ad455-06c1-eaa5-7c47-a99169cb599d/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg",
+    "appName": "酷狗音乐 - 就是歌多",
+    "file": "kugou.jpg"
+  },
+  {
+    "retrieved": "2026-10-21",
+    "provider": "qq",
+    "sha256": "a3ebd13a05f32aebad0a73ba67eb9a5f1f007bb0690ec0575870147288905a67",
+    "page": "https://apps.apple.com/cn/app/qq%E9%9F%B3%E4%B9%90-%E5%90%AC%E6%88%91%E6%83%B3%E5%90%AC/id414603431?uo=4",
+    "publisher": "Tencent Technology (Shenzhen) Company Limited",
+    "appStoreId": 414603431,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/ed/c3/8f/edc38f10-2f7c-779e-c407-7b228e600312/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/512x512bb.jpg",
+    "appName": "QQ音乐 - 听我想听",
+    "file": "qq.jpg"
+  },
+  {
+    "retrieved": "2026-10-21",
+    "provider": "bodian",
+    "sha256": "a68377474f28ba06519a3ad0540b79d82e03f5e069a4fe127e8b09c578c8ef80",
+    "page": "https://apps.apple.com/cn/app/%E6%B3%A2%E7%82%B9%E9%9F%B3%E4%B9%90-qq%E9%9F%B3%E4%B9%90%E7%AE%80%E6%B4%81%E7%89%88/id1541981555?uo=4",
+    "publisher": "北京闻雨科技有限公司",
+    "appStoreId": 1541981555,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f6/d7/d8/f6d7d81c-bfa3-e8ea-9b8d-5835ac3dd9ab/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg",
+    "appName": "波点音乐-QQ音乐简洁版",
+    "file": "bodian.jpg"
+  },
+  {
+    "retrieved": "2026-10-21",
+    "provider": "spotify",
+    "sha256": "26a59cafdd1cb89666dbaae2602c7e96ad9402bf4008ab43fad9c3999f1dd32c",
+    "page": "https://apps.apple.com/us/app/spotify-music-and-podcasts/id324684580?uo=4",
+    "publisher": "Spotify",
+    "appStoreId": 324684580,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b7/ed/61/b7ed610e-a3ef-4684-4862-935158e58f07/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg",
+    "appName": "Spotify: Music and Podcasts",
+    "file": "spotify.jpg"
+  },
+  {
+    "retrieved": "2026-10-21",
+    "provider": "ytm",
+    "sha256": "04b174d1ff6855db7fa9dfcafab82655a07d7e8da03afdbf4d41c465e4b73d7d",
+    "page": "https://apps.apple.com/us/app/youtube-music/id1017492454?uo=4",
+    "publisher": "Google",
+    "appStoreId": 1017492454,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/70/a5/45/70a54567-d6d2-8f53-67bd-fcb175327044/logo_youtube_music_2024_q4_color-0-0-1x_U007emarketing-0-0-0-7-0-0-0-85-220.png/512x512bb.jpg",
+    "appName": "YouTube Music",
+    "file": "ytm.jpg"
+  }
+]

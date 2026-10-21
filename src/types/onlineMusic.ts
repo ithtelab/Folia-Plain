@@ -383,6 +383,8 @@ export interface LoginMethod {
 export interface ProviderMark {
     letter: string;
     color: string;
+    /** Bundled app artwork; the letter remains a fallback for sources without an icon. */
+    iconUrl?: string;
 }
 
 // 登录窗口里这个平台自己的文字，都是 i18n key，由 UI 层翻译。

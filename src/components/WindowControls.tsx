@@ -77,6 +77,7 @@ export default function WindowControls({
 
     return (
         <div
+            inert={!standardControlsVisible}
             className={`flex h-full ${isDaylight ? 'text-zinc-800' : 'text-[var(--text-primary)]'}`}
             style={{
                 WebkitAppRegion: 'no-drag',

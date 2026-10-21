@@ -1,4 +1,5 @@
 import type { UnifiedSong } from '../../../types';
+import appIcon from '../../../assets/providers/apps/ytm.jpg';
 import type { OnlineMusicProvider, ProviderUser } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
 import { isMacPlatform } from '../../../utils/platform';
@@ -48,7 +49,7 @@ i18n.on('languageChanged', forgetPages);
 
 export const ytmProvider: OnlineMusicProvider = {
     id: 'ytm', displayName: 'YouTube Music', shortName: 'YT Music',
-    mark: { letter: 'Y', color: '#e11d48' },
+    mark: { letter: 'Y', color: '#e11d48', iconUrl: appIcon },
     getAvailability: getYtmTransportAvailability,
     describeFailure: describeYtmFailure,
     // `recommendations` is the radio tab (ytmRecommendations.ts): a personal FM made of song

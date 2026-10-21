@@ -32,8 +32,12 @@ describe('the sign-in window names no platform', () => {
 });
 
 describe('what each platform declares for the sign-in window', () => {
-    it('its mark: one letter and one colour', () => {
-        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => [provider.id, omni.getProviderMark(provider.id)]));
+    it('its mark: fallback text and colour, with bundled app artwork', () => {
+        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => {
+            const mark = omni.getProviderMark(provider.id)!;
+            expect(mark.iconUrl).toContain('/apps/' + provider.id + '.jpg');
+            return [provider.id, { letter: mark.letter, color: mark.color }];
+        }));
         expect(marks).toEqual({
             netease: { letter: '云', color: '#dc2626' },
             kugou: { letter: 'K', color: '#2563eb' },

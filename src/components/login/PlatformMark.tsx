@@ -31,10 +31,10 @@ export const PlatformMark: React.FC<PlatformMarkProps> = ({ providerId, label, s
     return (
         <span
             aria-hidden
-            className={`relative inline-grid shrink-0 place-items-center rounded-full font-bold leading-none ${className ?? ''}`}
-            style={{ width: size, height: size, background: mark.color, color: mark.onColor, fontSize: Math.round(size * 0.42) }}
+            className={`relative inline-grid shrink-0 place-items-center font-bold leading-none ${mark.iconUrl ? 'rounded-[24%]' : 'rounded-full'} ${className ?? ''}`}
+            style={{ width: size, height: size, background: mark.iconUrl ? undefined : mark.color, color: mark.onColor, fontSize: Math.round(size * 0.42) }}
         >
-            {mark.letter}
+            {mark.iconUrl ? <img src={mark.iconUrl} alt="" draggable={false} className="h-full w-full rounded-[inherit] object-contain" /> : mark.letter}
             {ranOut && (
                 <i className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-[var(--st-warn)]" style={{ boxShadow: EDGE }} />
             )}
