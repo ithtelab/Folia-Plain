@@ -58,7 +58,6 @@ export const PLATFORM_NAME_PLACES: Record<string, PlatformNamePlace> = {
     'src/components/modal/LocalSongMetadataMatchDialog.tsx': { n: { netease: 4, qq: 3, kugou: 2 }, kind: 'lyric', why: 'the metadata dialog\'s own list of sources' },
     'src/components/modal/lyric-match/LocalSongLyricMatch.tsx': { n: { netease: 1 }, kind: 'lyric' },
     'src/components/modal/lyric-match/navidromeSongMatch.ts': { n: { netease: 1 }, kind: 'lyric' },
-    'src/components/modal/newFeaturesRelease.ts': { n: { qq: 1 }, kind: 'stored', why: 'the id of a release note entry, also its i18n key; raised by the upstream merge 2026-10-17' },
     'src/components/modal/settings/pages/IntegrationPage.tsx': { n: { netease: 4 }, kind: 'stored', why: 'the stored setting neteaseScrobbleEnabled and its i18n keys' },
     'src/components/modal/settings/pages/LyricsPage.tsx': { n: { spotify: 1 }, kind: 'lyric', why: 'which of two hand-written descriptions of the lyric sources is shown' },
     'src/components/modal/settings/pages/integration/options.ts': { n: { netease: 1 }, kind: 'stored', why: 'an i18n key' },
