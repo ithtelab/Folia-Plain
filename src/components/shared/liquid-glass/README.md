@@ -39,6 +39,11 @@ title controls, the shared visualizer back control, and the shared slide action 
 cards and content panels retain their existing content materials. Window titlebar hit areas and
 safe spacing are unchanged.
 
+Home's existing full-window blur belongs on its decorative background sibling. Putting a backdrop
+filter on an ancestor of the navigation/search creates a backdrop root and cuts off their sampling.
+The light material uses a lower tint plus a protective tone curve, with a bright rim and subtle
+lower-edge shading so it retains definition on the actual pale home background.
+
 The stock progress overrides live in the utilities layer, before `folium-mods`, so mod CSS keeps
 its precedence. Preserve the icon as the slide button's first SVG: its drag feedback targets that
 icon, and must not accidentally target the material's filter definitions.

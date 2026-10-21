@@ -85,7 +85,7 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     const enhanced = active && lens !== null;
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
-    const toneCurve = isDaylight ? '0.38 0.52 0.68 0.84 1' : '0 0.24 0.43 0.49 0.5';
+    const toneCurve = isDaylight ? '0.48 0.56 0.7 0.85 1' : '0 0.24 0.43 0.49 0.5';
     return (
         <span ref={rootRef} aria-hidden="true" className="liquid-glass-surface"
             data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-active={active}

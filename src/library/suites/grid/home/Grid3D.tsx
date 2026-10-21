@@ -296,9 +296,12 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         <div
             ref={gridRootRef}
             data-ponder-page-scope="grid-page"
-            className={`relative w-full h-full flex flex-col font-sans overflow-hidden ${mainBg} pointer-events-auto backdrop-blur-sm ${bottomPadding}`}
+            // Put the existing home blur on a sibling behind the controls, never on their ancestor:
+            // an ancestor backdrop filter would isolate navigation/search from the real background.
+            className={`relative isolate w-full h-full flex flex-col font-sans overflow-hidden pointer-events-auto ${bottomPadding}`}
         >
 
+            <div aria-hidden="true" className={`absolute inset-0 -z-10 pointer-events-none ${mainBg} backdrop-blur-sm`} />
             {/* Main Header Container (Fades out when sliding/interacting) */}
             <div className="transition-opacity duration-300 ease-in-out z-20 opacity-100 select-none">
                 <div className="grid grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 pt-[max(1rem,var(--window-titlebar-safe-top,0px))] md:pt-[max(2rem,var(--window-titlebar-safe-top,0px))] gap-y-4 md:gap-y-0">
