@@ -1652,7 +1652,7 @@ export default {
     "madeBy": "Project:",
     "reportIssue": "Report an issue (Folia Plain)",
     "upstreamProject": "Upstream project: folia-major",
-    "upstreamNotice": "Folia Plain is maintained independently. Please report issues to this fork.",
+    "projectMaintenance": "Maintained by {{maintainer}}. Send issues and suggestions to the Folia Plain repository.",
     "joinCommunity": "Join the community",
     "communityDiscord": "Discord server",
     "communityDiscordHint": "Open the invite link",

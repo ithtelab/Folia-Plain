@@ -5,7 +5,7 @@ import { openPonderNavigation } from '../../../../services/ponder/pagePonderTarg
 import { BUILD_KIND_TAGS, getBuildKind } from '../../../../utils/buildProvenance';
 import { PRIMARY_MODIFIER_LABEL } from '../../../../utils/platform';
 import { HELP_TAB_PLAYER_CONTROLS, HELP_TAB_PRIMARY_SHORTCUTS } from '../../userGuideContent';
-import { Button, CopyButton, Group, Keys, Row, type SettingsGroupDef } from '../kit';
+import { Button, CopyButton, Group, Keys, Link, Row, type SettingsGroupDef } from '../kit';
 import { openOutsideLink } from '../../../../utils/system/outsideLink';
 import { FoundUpdateRow } from './FoundUpdateRow';
 import { iconLabel } from './iconLabel';
@@ -144,7 +144,15 @@ const HelpPage: React.FC<HelpPageProps> = ({ onOpenReleaseNotes, onOpenAiHelp })
                 <Row label={iconLabel(MessageCircle, t('help.reportIssue'))} onClick={() => openOutsideLink(productIdentity.issuesUrl)} />
             </Group>
 
-            <Group def={ABOUT} bare>
+            <Group
+                def={ABOUT}
+                bare
+                foot={(
+                    <Link href={productIdentity.upstreamUrl}>
+                        {t('help.upstreamProject')}
+                    </Link>
+                )}
+            >
                 <Row label={t('help.version')}>
                     {/* One piece of the row: a version too long for its line breaks inside itself and keeps the button beside it. */}
                     <span className="flex min-w-0 items-center gap-2">
@@ -158,13 +166,13 @@ const HelpPage: React.FC<HelpPageProps> = ({ onOpenReleaseNotes, onOpenAiHelp })
                 <FoundUpdateRow sub />
                 <Row
                     label={t('help.madeBy')}
+                    hint={t('help.projectMaintenance', { maintainer: productIdentity.repositoryOwner })}
                 >
                     <Button variant="quiet" onClick={() => openOutsideLink(REPOSITORY_URL)}>
                         {REPOSITORY_NAME}
                         <ExternalLink size={12} />
                     </Button>
                 </Row>
-                <Row label={t('help.upstreamProject')} hint={t('help.upstreamNotice')} onClick={() => openOutsideLink(productIdentity.upstreamUrl)} />
             </Group>
         </>
     );

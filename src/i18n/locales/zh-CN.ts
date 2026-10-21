@@ -1652,7 +1652,7 @@ export default {
     "madeBy": "项目：",
     "reportIssue": "反馈问题（Folia Plain）",
     "upstreamProject": "上游项目：folia-major",
-    "upstreamNotice": "Folia Plain 是独立维护的分支，问题请反馈到本项目仓库。",
+    "projectMaintenance": "由 {{maintainer}} 维护，问题与建议请反馈到 Folia Plain 仓库。",
     "joinCommunity": "加入社区",
     "communityDiscord": "Discord 社区",
     "communityDiscordHint": "打开邀请链接",

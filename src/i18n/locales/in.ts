@@ -1652,7 +1652,7 @@ export default {
     "madeBy": "Proyek:",
     "reportIssue": "Laporkan masalah (Folia Plain)",
     "upstreamProject": "Proyek asal: folia-major",
-    "upstreamNotice": "Folia Plain dikelola secara mandiri. Laporkan masalah ke repositori fork ini.",
+    "projectMaintenance": "Dikelola oleh {{maintainer}}. Kirim masalah dan saran ke repositori Folia Plain.",
     "joinCommunity": "Gabung komunitas",
     "communityDiscord": "Server Discord",
     "communityDiscordHint": "Buka tautan undangan",
