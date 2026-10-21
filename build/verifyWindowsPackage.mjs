@@ -49,9 +49,21 @@ try {
     }));
     assert(preload.url.startsWith('file:'), 'Must load the packaged frontend');
     assert(preload.settingsAvailable, 'Packaged preload IPC must work');
+    const layout = await page.evaluate(() => {
+        const probe = document.createElement('button');
+        probe.className = 'p-4 font-bold';
+        probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none';
+        document.body.append(probe);
+        const style = getComputedStyle(probe);
+        const result = { padding: style.paddingTop, weight: style.fontWeight };
+        probe.remove();
+        return result;
+    });
+    assert.equal(layout.padding, '16px', 'Split CSS must preserve utilities above the base reset');
+    assert.equal(layout.weight, '700', 'Packaged typography utilities must remain effective');
     assert.equal(errors.length, 0, `Renderer errors: ${errors.join('; ')}`);
     await page.screenshot({ path: path.join(output, 'home.png') });
-    await writeFile(path.join(output, 'result.json'), JSON.stringify({ ...metadata, ...preload, errors }, null, 2));
+    await writeFile(path.join(output, 'result.json'), JSON.stringify({ ...metadata, ...preload, layout, errors }, null, 2));
     console.log('[Release] Packaged desktop identity, frontend, preload IPC and native resources verified');
 } finally {
     await app.close();

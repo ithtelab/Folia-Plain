@@ -77,6 +77,11 @@ The stock progress overrides live in the utilities layer, before `folium-mods`, 
 its precedence. Preserve the icon as the slide button's first SVG: its drag feedback targets that
 icon, and must not accidentally target the material's filter definitions.
 
+The glass stylesheet declares the complete CSS layer order before its component and utility
+rules. Production splits can load it before the main Tailwind stylesheet; without the declaration,
+Tailwind's later base layer overrides layout utilities and collapses spacing in packaged controls.
+The Windows package smoke check measures an actual button's padding and weight to guard this order.
+
 Bottom surfaces keep visual weight separate from the glass tint: the player uses the default
 shadow, the song card declares `data-glass-priority="secondary"`, and the panel handle declares
 `quiet`. These only reduce shadows; they do not fade content or add another material layer.

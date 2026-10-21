@@ -1,4 +1,8 @@
 /* One optical surface per control group. Keep these defaults below Folium mod styles. */
+/* Split production CSS can load before index.css. Establish the full order before declaring
+   either glass layer, so Tailwind's later base reset cannot outrank layout utilities. */
+@layer properties, theme, base, components, utilities, folium-mods;
+
 @layer components {
     .liquid-glass-host {
         isolation: isolate;
