@@ -127,6 +127,8 @@ const { prefetchNearbySongs } = await import('@/services/prefetchService');
 const { clearPlaybackRepresentationsForTests, registerPlaybackRepresentation } = await import('@/services/playbackRecovery/representationRegistry');
 const { buildLocalSourceRevision } = await import('@/services/playbackRecovery/sourceRevision');
 const { resetPlaybackStore, watchCurrentSong } = await import('./currentSongWatch');
+const { replacePlayQueue } = await import('@/stores/usePlaybackStore');
+const { noteWholeQueueWrite } = await import('@/services/wholeQueueWrites');
 const { onlineFailureOf } = await import('@/services/onlineMusic/failure/onlineFailureCase');
 const unavailable = (caseId: OnlineFailureCaseId = 'no-audio') => ({
     kind: 'unavailable', failure: onlineFailureOf({ operation: 'audio', providerId: 'bodian' }, { detail: { case: caseId } }),
@@ -450,7 +452,7 @@ describe('the handoff to a rebuilt window and the current song', () => {
         nowPlaying: { track: null, lyricPayload: null, paused: true, progressMs: 0, progressQuality: 'coarse', displayTimeSec: 0 },
         ui: { currentView: 'home', playerChromeHidden: false, mainWindowBorderVisible: false, transparentModeEnabled: false },
     } as unknown as WindowPlaybackHandoff);
-    const restoreFrom = async (snapshot: PlaybackSnapshot | null, askedMeanwhile: SongResult | null = null) => {
+    const restoreFrom = async (snapshot: PlaybackSnapshot | null, askedMeanwhile: SongResult | null = null, duringTheRead?: () => void) => {
         const { refs, watch, setLyrics } = watchWithRefs();
         askForSong(null);
         vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} });
@@ -458,6 +460,7 @@ describe('the handoff to a rebuilt window and the current song', () => {
             // Asked for while the main process answers, not before the restore starts: a check
             // made before this wait would not see it.
             if (askedMeanwhile) askForSong(askedMeanwhile);
+            duringTheRead?.();
             return handoffOf(snapshot);
         } } });
         useElectronWindowPlaybackHandoff({
@@ -521,6 +524,19 @@ describe('the handoff to a rebuilt window and the current song', () => {
         const withNone = await restoreFrom(snapshotOf(null), otherSong);
         expect(withNone.watch.take()).toEqual([]);
         expect(withNone.refs.currentSongRef.current).toBe('online:bodian:y1');
+    });
+
+    it('leaves a queue a mod replaced whole while the handoff was read, and the FM it ended, and hands the song over all the same', async () => {
+        const modQueue = [otherSong];
+        const { refs } = await restoreFrom({ ...snapshotOf(onlineSong), isFmMode: true }, null, () => {
+            noteWholeQueueWrite();
+            replacePlayQueue(modQueue, false);
+        });
+
+        expect(usePlaybackStore.getState().playQueue).toBe(modQueue);
+        expect(usePlaybackStore.getState().isFmMode).toBe(false);
+        expect(refs.currentSongRef.current).toBe('online:bodian:x1');
+        expect(usePlaybackStore.getState().audioSrc).toBe('https://audio.test/x1');
     });
 
     it('leaves no song current when none was handed over', async () => {
@@ -956,5 +972,81 @@ describe('the handoff to a rebuilt window when the song cannot be fetched again'
         expect(await handOver(null)).toEqual(['audio=https://audio.test/old key=online:bodian:x1']);
         expect(await handOver(otherSong)).toEqual([]);
         expect(await handOver(onlineSong)).toEqual([]);
+    });
+});
+
+describe('a whole-queue write while the last session is read', () => {
+    /** Restores `song` and `queue` from the cache; a mod replaces the queue whole while `last_song` is read. */
+    const restoreWithReplacement = async (song: SongResult, queue: SongResult[], modQueue: SongResult[]) => {
+        const { refs, setLyrics } = watchWithRefs();
+        env.cache.set('last_song', song);
+        env.cache.set('last_queue', queue);
+        env.reached = wait => {
+            if (wait !== 'cache last_song') return;
+            noteWholeQueueWrite();
+            replacePlayQueue(modQueue, false);
+        };
+        const persistLastPlaybackCache = vi.fn(async (_song: SongResult | null, _queue: SongResult[]) => undefined);
+        useSessionRestoreController({
+            blobUrlRef: refs.blobUrlRef,
+            currentOnlineAudioUrlFetchedAtRef: refs.currentOnlineAudioUrlFetchedAtRef,
+            setLyrics,
+            restoreCachedThemeForSong: vi.fn(async () => 'none'),
+            persistLastPlaybackCache,
+            clearPersistedStagePlaybackCache: vi.fn(async () => undefined),
+            loadLocalSongs: vi.fn(async () => undefined),
+            loadLocalPlaylists: vi.fn(async () => undefined),
+            shouldAutoPlayRef: refs.shouldAutoPlay,
+        } as never);
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        effectNaming('last_song')();
+        await settle();
+        return { refs, persistLastPlaybackCache };
+    };
+
+    it('keeps the mod\'s queue, restores the song, and saves and fetches around the mod\'s queue (online, with replay gain)', async () => {
+        env.replayGain = { trackGain: -3 };
+        const modQueue = [otherSong];
+        const { refs, persistLastPlaybackCache } = await restoreWithReplacement(onlineSong, [onlineSong, otherSong], modQueue);
+
+        expect(usePlaybackStore.getState().playQueue).toBe(modQueue);
+        expect(refs.currentSongRef.current).toBe('online:bodian:x1');
+        expect(usePlaybackStore.getState().audioSrc).toBe('https://audio.test/x1');
+        // Saved with the song once it is current (the replacement's own save had no song to keep), and
+        // again once the replay gain came: the mod's queue both times.
+        expect(persistLastPlaybackCache.mock.calls.map(([, queue]) => queue)).toEqual([modQueue, modQueue]);
+        expect(prefetchNearbySongs).toHaveBeenCalledWith(expect.objectContaining({ id: 'x1' }), modQueue, 'high', undefined);
+    });
+
+    it('saves the mod\'s queue on the local rebuild\'s path too', async () => {
+        const modQueue = [otherSong];
+        const { persistLastPlaybackCache } = await restoreWithReplacement(localSong, [localSong], modQueue);
+
+        expect(usePlaybackStore.getState().playQueue).toBe(modQueue);
+        expect(usePlaybackStore.getState().currentSong).toMatchObject({ name: 'L' });
+        expect(persistLastPlaybackCache.mock.calls.length).toBeGreaterThan(0);
+        expect(persistLastPlaybackCache.mock.calls.every(([, queue]) => queue === modQueue)).toBe(true);
+    });
+
+    it('without a whole-queue write restores the remembered queue as before', async () => {
+        const { refs, setLyrics } = watchWithRefs();
+        env.cache.set('last_song', onlineSong);
+        env.cache.set('last_queue', [onlineSong, otherSong]);
+        useSessionRestoreController({
+            blobUrlRef: refs.blobUrlRef,
+            currentOnlineAudioUrlFetchedAtRef: refs.currentOnlineAudioUrlFetchedAtRef,
+            setLyrics,
+            restoreCachedThemeForSong: vi.fn(async () => 'none'),
+            persistLastPlaybackCache: vi.fn(async () => undefined),
+            clearPersistedStagePlaybackCache: vi.fn(async () => undefined),
+            loadLocalSongs: vi.fn(async () => undefined),
+            loadLocalPlaylists: vi.fn(async () => undefined),
+            shouldAutoPlayRef: refs.shouldAutoPlay,
+        } as never);
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        effectNaming('last_song')();
+        await settle();
+
+        expect(usePlaybackStore.getState().playQueue.map(song => song.id)).toEqual(['x1', 'y1']);
     });
 });

@@ -23,7 +23,9 @@ import {
     isNavidromePlaybackSong,
     isSamePlaybackSong,
     replacePlaybackSongInQueue,
+    replacePlaybackSongWhereQueued,
     resolveNavidromePlaybackCarrier,
+    samePlaybackKeySequence,
 } from '../../../../utils/appPlaybackGuards';
 import { isQueueSongPlayable } from '../playableSong';
 import { supplyLyricsAfterEmptyLoad } from '../createLyricsSetter';
@@ -62,6 +64,7 @@ import { useSearchNavigationStore } from '../../../../stores/useSearchNavigation
 import { showLatticeFmNotice, usePlaybackEntryViewStore } from '../../../../stores/usePlaybackEntryViewStore';
 import { useStableActionSurface } from '../../../../hooks/useStableCallbacks';
 import { hasBeforePlayHook, notifyPlaybackFailed, runBeforePlayHook } from '../../../../services/hostExtensionHooks';
+import { wholeQueueWritesSoFar } from '../../../../services/wholeQueueWrites';
 import { errorMessage } from '../../../../utils/errorText';
 
 // src/components/app/playback/start/usePlaybackQueueController.ts
@@ -240,7 +243,9 @@ export function usePlaybackQueueController({
     /** Rising id per playSong call: a newer call supersedes an older one still awaiting `beforePlay`. */
     const playSongCallIdRef = useRef(0);
     /** FM state from before the oldest play that has not shown its song yet; a play that does not land puts it back. */
-    const fmModeBeforePendingPlayRef = useRef<boolean | null>(null);
+    // `queueWrites`: the whole-queue writes when it was kept. One that came since (a mod's replaceQueue ended FM)
+    // makes it stale: no later play puts FM back to it.
+    const fmModeBeforePendingPlayRef = useRef<{ isFm: boolean; queueWrites: number } | null>(null);
     const pendingUnavailableSkipTimerRef = useRef<number | null>(null);
     const pendingUnavailableSkipIntervalRef = useRef<number | null>(null);
 
@@ -249,7 +254,8 @@ export function usePlaybackQueueController({
     // snapshot. It goes back to what it was before that play.
     useEffect(() => usePlaybackStore.subscribe((state, previous) => {
         if (state.activePlaybackContext !== 'stage' || previous.activePlaybackContext === 'stage') return;
-        const fmModeBeforeRequest = fmModeBeforePendingPlayRef.current;
+        const kept = fmModeBeforePendingPlayRef.current;
+        const fmModeBeforeRequest = kept && kept.queueWrites === wholeQueueWritesSoFar() ? kept.isFm : null;
         fmModeBeforePendingPlayRef.current = null;
         const mainSnapshot = mainPlaybackSnapshotRef.current;
         if (fmModeBeforeRequest !== null && mainSnapshot && mainSnapshot.isFmMode !== fmModeBeforeRequest) {
@@ -480,6 +486,13 @@ export function usePlaybackQueueController({
         // library's display (playerDisplayQueue, a new array each time), so it is kept too. Read before the
         // hook's wait, as the caller saw it.
         const queueFollowsStore = queue.length === 0 || queue === usePlaybackStore.getState().playQueue;
+        // Read before the hook's wait too: the whole-queue writes this play must not write over.
+        const queueWritesAtStart = wholeQueueWritesSoFar();
+        const storeQueueAtStart = usePlaybackStore.getState().playQueue;
+        // The queue this play was given is the store's, or a copy of it (the queue panel's display copy, the Stage API's select).
+        const yieldsToStore = () => queue.length === 0 || queue === storeQueueAtStart || samePlaybackKeySequence(queue, storeQueueAtStart);
+        // A whole-queue write (a mod's replaceQueue, its undo) came while this play waited, and this play's queue was the store's.
+        const queueRewritten = () => wholeQueueWritesSoFar() !== queueWritesAtStart && yieldsToStore();
         const allowedSong = !options.isAutomixAdvance && hasBeforePlayHook()
             ? await runBeforePlayHook(requestedSong)
             : requestedSong;
@@ -506,8 +519,9 @@ export function usePlaybackQueueController({
         const wasFmMode = usePlaybackStore.getState().isFmMode;
         // With an earlier play still not landed, the FM state it kept stands: the one it wrote never
         // went with a song that played.
-        const fmModeToRestore = fmModeBeforePendingPlayRef.current ?? wasFmMode;
-        fmModeBeforePendingPlayRef.current = fmModeToRestore;
+        const keptFmMode = fmModeBeforePendingPlayRef.current;
+        const fmModeToRestore = keptFmMode && keptFmMode.queueWrites === wholeQueueWritesSoFar() ? keptFmMode.isFm : wasFmMode;
+        fmModeBeforePendingPlayRef.current = { isFm: fmModeToRestore, queueWrites: wholeQueueWritesSoFar() };
         setIsFmMode(isFmCall);
         if (isFmCall && !wasFmMode) {
             setPanelTab('queue');
@@ -526,6 +540,9 @@ export function usePlaybackQueueController({
         const restoreFmModeIfNotLanded = () => {
             if (!isLatestPlaybackRequest()) return;
             fmModeBeforePendingPlayRef.current = null;
+            // A whole-queue write while this play waited has ended Personal FM already: put back, the radio's
+            // songs would be added after that queue. This holds whatever queue the play was given.
+            if (wholeQueueWritesSoFar() !== queueWritesAtStart) return;
             if (usePlaybackStore.getState().isFmMode !== fmModeToRestore) setIsFmMode(fmModeToRestore);
         };
         const isLocal = isLocalPlaybackSong(song);
@@ -545,17 +562,18 @@ export function usePlaybackQueueController({
         playbackAutoSkipCountRef.current = skipCount;
         // For the plays this one defers (the replacement dialog, the timed skip): they start after a
         // prompt or a countdown, so they are not the blend's advance even when this call was.
-        const deferredPlayOptions: PlaybackNavigationOptions = { ...options, isAutomixAdvance: undefined };
+        // Nor do they carry a judgement of the queue made for another play (`queueRewritten`).
+        const deferredPlayOptions: PlaybackNavigationOptions = { ...options, isAutomixAdvance: undefined, queueRewritten: undefined };
         const providerId = getOnlineProviderIdForSong(song) ?? undefined;
 
         // A button of a failure may be pressed long after: where the queue follows the store, the main
         // queue as it is then (the stage keeps it in mainPlaybackSnapshotRef while it plays).
-        const readClickTimeQueue = (): SongResult[] | null => {
-            if (!queueFollowsStore) return null;
+        const readLiveQueue = (): SongResult[] | null => {
             const live = usePlaybackStore.getState();
             const liveQueue = live.activePlaybackContext === 'stage' ? mainPlaybackSnapshotRef.current?.playQueue ?? [] : live.playQueue;
             return liveQueue.length > 0 ? liveQueue : null;
         };
+        const readClickTimeQueue = (): SongResult[] | null => (queueFollowsStore ? readLiveQueue() : null);
         const tellFailure = (shown: OnlineFailure | null, willAutoSkip: boolean) => {
             notifyPlaybackFailed({ song, reason: shown?.case ?? null, phase: 'play', willAutoSkip });
         };
@@ -585,6 +603,18 @@ export function usePlaybackQueueController({
             if (nextSong && skipCount < MAX_UNAVAILABLE_AUTO_SKIP_COUNT) {
                 showTimedSkipPrompt(said, () => {
                     if (!isLatestPlaybackRequest()) return;
+                    // The queue was replaced whole meanwhile: the skip steps through the queue and FM of now
+                    // from this song (from the first entry when the new queue does not hold it), as a skip
+                    // after a failure mid-song does.
+                    if (queueRewritten()) {
+                        void latestQueueActionsRef.current.handleNextTrack({
+                            fromSong: song,
+                            allowStopOnMissing: true,
+                            unavailableSkipCount: skipCount + 1,
+                            shouldNavigateToPlayer: deferredPlayOptions.shouldNavigateToPlayer,
+                        });
+                        return;
+                    }
                     // A queue given here and not yet in the store is the one kept; else the queue of now,
                     // so that edits made meanwhile are not undone.
                     const targetQueue = readClickTimeQueue() ?? newQueue;
@@ -604,9 +634,13 @@ export function usePlaybackQueueController({
                     actionLabel: t('ui.retry'),
                     onAction: () => {
                         setStatusMsg(null);
+                        // After a whole-queue write the retry plays within the queue and FM of now (the song
+                        // goes back in front of a queue that no longer holds it, as any replay of it does).
+                        const rewritten = queueRewritten();
                         // Where no queue was given, none is given again: the store's queue is not rewritten.
-                        const retryQueue = queue.length > 0 && queueFollowsStore ? readClickTimeQueue() ?? [] : queue;
-                        void latestQueueActionsRef.current.playSong(song, retryQueue, isFmCall, { ...deferredPlayOptions, unavailableSkipCount: 0 });
+                        const retryQueue = queue.length > 0 && (queueFollowsStore || rewritten) ? readLiveQueue() ?? [] : queue;
+                        const retryFm = rewritten ? usePlaybackStore.getState().isFmMode : isFmCall;
+                        void latestQueueActionsRef.current.playSong(song, retryQueue, retryFm, { ...deferredPlayOptions, unavailableSkipCount: 0 });
                     },
                 } : said);
             }
@@ -640,6 +674,11 @@ export function usePlaybackQueueController({
                     queue: queueContext,
                     isFmCall,
                     options: deferredPlayOptions,
+                    liveQueue: () => {
+                        if (!queueRewritten()) return null;
+                        const live = usePlaybackStore.getState();
+                        return { queue: live.playQueue, isFmCall: live.isFmMode };
+                    },
                 });
                 // A dialog shows instead of a failure, but this song itself cannot play: told once, with no countdown.
                 tellFailure(shown, false);
@@ -681,6 +720,7 @@ export function usePlaybackQueueController({
             await onPlayLocalSong(resolvedLocalData, localQueue, {
                 shouldNavigateToPlayer,
                 unifiedQueue: newQueue,
+                queueRewritten,
             });
             return;
         }
@@ -701,6 +741,7 @@ export function usePlaybackQueueController({
             await onPlayNavidromeSong(navidromeSong, navidromeQueue, {
                 shouldNavigateToPlayer,
                 unifiedQueue: newQueue,
+                queueRewritten,
             });
             return;
         }
@@ -796,11 +837,21 @@ export function usePlaybackQueueController({
         retireBlobUrl(blobUrlRef.current);
         blobUrlRef.current = null;
 
-        if (queue.length > 0 || playQueue.length === 0) {
+        // A whole-queue write came while this play waited: the new queue stays, with this song swapped in
+        // where it holds it and left as it is where it does not.
+        let landedQueue = resolvedQueue;
+        if (queueRewritten()) {
+            const live = usePlaybackStore.getState().playQueue;
+            const swapped = replacePlaybackSongWhereQueued(live, resolvedSong);
+            if ((queue.length > 0 || playQueue.length === 0) && swapped) {
+                setPlayQueue(swapped);
+            }
+            landedQueue = swapped ?? live;
+        } else if (queue.length > 0 || playQueue.length === 0) {
             setPlayQueue(resolvedQueue);
         }
 
-        void persistLastPlaybackCache({ ...resolvedSong, onlineLyricsState: onlineLyricsState ?? undefined }, resolvedQueue);
+        void persistLastPlaybackCache({ ...resolvedSong, onlineLyricsState: onlineLyricsState ?? undefined }, landedQueue);
 
         if (shouldNavigateToPlayer) {
             navigateToPlaybackView();
@@ -873,7 +924,14 @@ export function usePlaybackQueueController({
             console.warn('Theme load error', error);
         }
 
-        if (newQueue.length > 1) {
+        // Asked again after the waits above: after a whole-queue write during them, the songs fetched ahead
+        // are those around this one in the new queue.
+        if (queueRewritten()) {
+            const live = usePlaybackStore.getState().playQueue;
+            if (live.length > 1) {
+                prefetchNearbySongs(resolvedSong, live, audioQuality, userId);
+            }
+        } else if (newQueue.length > 1) {
             prefetchNearbySongs(resolvedSong, resolvedQueue, audioQuality, userId);
         }
     }, [
@@ -997,7 +1055,7 @@ export function usePlaybackQueueController({
             return;
         }
 
-        const { originalSong, replacementSong, replacementSongId, queue, isFmCall, options } = pendingUnavailableReplacement;
+        const { originalSong, replacementSong, replacementSongId, queue, isFmCall, options, liveQueue } = pendingUnavailableReplacement;
         setPendingUnavailableReplacement(null);
 
         // playSong takes its call id before its first wait; a throw after a newer play took the id is
@@ -1009,8 +1067,18 @@ export function usePlaybackQueueController({
                 return;
             }
 
-            const replacementQueue = buildQueueWithReplacementSong(queue, originalSong, replacementSong);
-            const replacementPlay = playSong(replacementSong, replacementQueue, isFmCall, options);
+            // The queue was replaced whole since the dialog opened: the other version takes the original's
+            // place in the queue of now, and where that queue does not hold the original it plays without
+            // touching the queue.
+            const live = liveQueue?.() ?? null;
+            const replacementPlay = live
+                ? playSong(
+                    replacementSong,
+                    queueIndexOf(live.queue, originalSong) >= 0 ? buildQueueWithReplacementSong(live.queue, originalSong, replacementSong) : [],
+                    live.isFmCall,
+                    options,
+                )
+                : playSong(replacementSong, buildQueueWithReplacementSong(queue, originalSong, replacementSong), isFmCall, options);
             replacementCallId = playSongCallIdRef.current;
             await replacementPlay;
         } catch (error) {
@@ -1040,6 +1108,8 @@ export function usePlaybackQueueController({
 
     const handleNextTrack = useCallback(async (options?: NextTrackOptions) => {
         if (isNowPlayingStageActive) return;
+        // The FM top-up below waits for the radio: a whole-queue write during that wait has ended FM.
+        const queueWritesAtStart = wholeQueueWritesSoFar();
 
         const stopAtQueueEnd = () => {
             if (audioRef.current) {
@@ -1080,6 +1150,12 @@ export function usePlaybackQueueController({
                 // key jump back to the earlier place. A batch of nothing new is a top-up that did not come;
                 // the next track tops up again.
                 const fmSongs = freshFmSongs(playQueue, await omni.getPersonalFm());
+                if (wholeQueueWritesSoFar() !== queueWritesAtStart) {
+                    // The queue was replaced whole while the batch came (which ended FM): no radio songs are
+                    // added after it, and the newest handleNextTrack steps through the new queue instead.
+                    void latestQueueActionsRef.current.handleNextTrack(options);
+                    return;
+                }
                 if (fmSongs.length > 0) {
                     const nextQueue = [...playQueue, ...fmSongs];
                     setPlayQueue(nextQueue);
@@ -1382,6 +1458,8 @@ export function usePlaybackQueueController({
             });
         };
 
+        // The adds below wait for the songs' details: a whole-queue write during that wait is not undone.
+        const queueWritesAtStart = wholeQueueWritesSoFar();
         try {
             if (activePlaybackContext !== 'main' || isNowPlayingStageActive) {
                 throw new Error('Queue editing is not supported in the current playback context.');
@@ -1395,6 +1473,10 @@ export function usePlaybackQueueController({
 
             if (request.action === 'append' || request.action === 'insert-next') {
                 const songs = await loadStageQueueSongs(request);
+                // Its diff is reckoned against `baseQueue`, so it fails rather than add to the queue of now.
+                if (wholeQueueWritesSoFar() !== queueWritesAtStart) {
+                    throw new Error('The queue changed while the request was loading.');
+                }
                 const { nextQueue: newQueue, affectedSongs, changed } = applyQueueAddBehavior({
                     queue: baseQueue,
                     songs,
