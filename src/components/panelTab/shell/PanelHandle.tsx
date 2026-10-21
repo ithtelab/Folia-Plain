@@ -400,6 +400,7 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
                             onPointerCancel={clearToggleButtonGesture}
                             onClick={handleToggleButtonClick}
                             aria-expanded={isOpen}
+                            data-glass-priority="quiet"
                             style={{ touchAction: canSlideOpenCommandPalette ? 'none' : undefined }}
                             className={`liquid-glass-host liquid-glass-button w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform
                                 border-none absolute right-0 top-0 z-10 ${isDaylight ? 'text-zinc-900' : 'text-white'}`}

@@ -3,7 +3,15 @@
     .liquid-glass-host {
         isolation: isolate;
         background: transparent;
-        box-shadow: 0 8px 28px -12px rgb(0 0 0 / 0.44), 0 2px 6px -3px rgb(0 0 0 / 0.24);
+        box-shadow: var(--glass-shadow, 0 8px 28px -12px rgb(0 0 0 / 0.44), 0 2px 6px -3px rgb(0 0 0 / 0.24));
+    }
+
+    .liquid-glass-host[data-glass-priority='secondary'] {
+        --glass-shadow: 0 5px 18px -12px rgb(0 0 0 / 0.28), 0 1px 4px -2px rgb(0 0 0 / 0.18);
+    }
+
+    .liquid-glass-host[data-glass-priority='quiet'] {
+        --glass-shadow: 0 3px 12px -9px rgb(0 0 0 / 0.2), 0 1px 3px -2px rgb(0 0 0 / 0.14);
     }
 
     .liquid-glass-surface {
@@ -148,7 +156,14 @@
     .liquid-glass-host > input:focus-visible,
     .liquid-player-bar button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
     .liquid-player-bar [data-folium-part='progress.time'],
-    .liquid-player-bar [data-folium-part='progress.duration'] { opacity: 0.9; }
+    .liquid-player-bar [data-folium-part='progress.duration'] {
+        opacity: 1;
+        font-size: 11px;
+        width: auto;
+        min-width: 2.25rem;
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+    }
     .liquid-player-bar [data-folium-part='progress.track'] input[type='range'] { top: 50%; height: 24px; transform: translateY(-50%); }
     .liquid-player-bar [data-folium-part='progress.thumb'] { transition: opacity 150ms ease; }
     .liquid-player-bar [data-folium-part='progress.track']:hover [data-folium-part='progress.thumb'],

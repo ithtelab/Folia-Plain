@@ -124,6 +124,8 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
 }) => {
     const { t } = useTranslation();
     const reducedMotion = useReducedMotionFor('uiMicroMotion');
+    // Small time labels need the theme's main text contrast against translucent glass.
+    const progressTextColor = `color-mix(in srgb, ${primaryColor} 94%, transparent)`;
     const layoutTransition = reducedMotion ? { duration: 0 } : CONTROL_LAYOUT_SPRING;
     const { ref: layoutRef, invalidate: invalidateLayout } = usePlayerOverlayObstacle('player-controls', 'playback', !isHidden);
     // const isDaylight = theme?.name === 'Daylight Default'; // Deprecated, passed as prop
@@ -403,7 +405,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                                     onTogglePlay={onTogglePlay}
                                     noTrackText={noTrackText}
                                     primaryColor={primaryColor}
-                                    secondaryColor={secondaryColor}
+                                    secondaryColor={progressTextColor}
                                     trackColor={trackColor}
                                     isDaylight={isDaylight}
                                     controlsDisabled={controlsDisabled || isPositioning}
@@ -418,7 +420,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                                     duration={duration}
                                     onSeek={onSeek}
                                     primaryColor={primaryColor}
-                                    secondaryColor={secondaryColor}
+                                    secondaryColor={progressTextColor}
                                     trackColor={trackColor}
                                     controlsDisabled={controlsDisabled}
                                 />

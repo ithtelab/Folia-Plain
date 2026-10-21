@@ -77,6 +77,15 @@ The stock progress overrides live in the utilities layer, before `folium-mods`, 
 its precedence. Preserve the icon as the slide button's first SVG: its drag feedback targets that
 icon, and must not accidentally target the material's filter definitions.
 
+Bottom surfaces keep visual weight separate from the glass tint: the player uses the default
+shadow, the song card declares `data-glass-priority="secondary"`, and the panel handle declares
+`quiet`. These only reduce shadows; they do not fade content or add another material layer.
+The song card uses a fixed 12px status line, separated title/artist rows and a 12px artist label.
+Player time labels use the theme's main text colour at 94% alpha through the existing progress
+colour input, 11px tabular text and a minimum width that can grow for long mixes. Folium overrides
+still apply after these defaults. Controlled black/white/striped tests in both default appearances
+sampled small-text contrast at 4.59:1 or higher; custom theme colours remain the user's choice.
+
 ## Reference and verification
 
 - [iOS 27 design kits](https://developer.apple.com/news/?id=e2lxw9l1)

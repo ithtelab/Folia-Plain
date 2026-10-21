@@ -184,6 +184,7 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                         onUpdate={invalidateLayout}
                         onLayoutAnimationComplete={invalidateLayout}
                         data-toast-card=""
+                        data-glass-priority="secondary"
                         type="button"
                         layout="size"
                         onClick={onActivate}
@@ -250,15 +251,13 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                             )}
                             {!coverSrc && <Music size={18} className={isDaylight ? 'text-black/35' : 'text-white/35'} />}
                         </motion.div>
-                        <motion.div layout className="min-w-0 max-w-[200px] flex-1">
+                        <motion.div layout className="flex min-w-0 max-w-[200px] flex-1 flex-col gap-0.5">
                             {/* 正在播放 / 接下来播放：歌名上方。切歌那一刻整张卡片不重挂，所以这
                                 一行是自己淡入淡出换掉的，不跟着进场动画走。
-                                高度写死成和 leading 一样的 10px：mode="wait" 换字的中途这一行是
+                                高度写死成和 leading 一样的 12px：mode="wait" 换字的中途这一行是
                                 空的，不占住高度的话歌名会往上跳一下再落回来。 */}
                             <div
-                                className={`h-[10px] text-[9px] font-semibold uppercase leading-[10px] tracking-[0.14em] select-none ${
-                                    isDaylight ? 'text-black/45' : 'text-white/45'
-                                }`}
+                                className="h-3 text-[10px] font-medium uppercase leading-3 tracking-[0.08em] opacity-90 select-none"
                             >
                                 <AnimatePresence mode="wait" initial={false}>
                                     <motion.span
@@ -273,11 +272,9 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                                     </motion.span>
                                 </AnimatePresence>
                             </div>
-                            <div className="truncate text-[13px] font-bold leading-4">{shown.title}</div>
+                            <div className="truncate text-[13px] font-bold leading-[18px]">{shown.title}</div>
                             <div
-                                className={`truncate text-[11px] font-medium leading-[14px] ${
-                                    isDaylight ? 'text-black/55' : 'text-white/50'
-                                }`}
+                                className="truncate text-xs font-medium leading-4 opacity-95"
                             >
                                 {shown.artist || t('ui.unknownArtist')}
                             </div>
