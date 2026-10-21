@@ -112,7 +112,7 @@ See [QQ Music deployment](docs/qq-music-deployment.md), [Docker](deploy/docker/R
 
 ## Attribution
 
-Thanks to [chthollyphile/folia-major](https://github.com/chthollyphile/folia-major) and its [contributors](CONTRIBUTORS.md). This fork starts at upstream **0.7.21** (`f3a9070`) and preserves its Git history, source copyright notices and contributor records. The [original README](docs/upstream/README.en.md) is archived for reference.
+Thanks to [chthollyphile/folia-major](https://github.com/chthollyphile/folia-major) and its [upstream contributors](docs/upstream/CONTRIBUTORS.md). This fork starts at upstream **0.7.21** (`f3a9070`) with independent commit history, retaining source copyright notices and attribution records. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for this fork's maintainers. The [original README](docs/upstream/README.en.md) is archived for reference.
 
 Thanks also to [LDDC](https://github.com/chenmozhijin/LDDC), [AMLL TTML DB](https://github.com/amll-dev/amll-ttml-db), [NetEase API](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced), [QQ Music API](https://github.com/yakult-green-tea/qq-music-api), [KuGou API](https://github.com/MakcRe/KuGouMusicApi), [Pretext](https://github.com/chenglou/pretext), and [Paper Shaders](https://github.com/paper-design/shaders).
 

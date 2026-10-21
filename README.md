@@ -116,7 +116,7 @@ QQ 音乐的 serverless 入口、Cloudflare 与 Docker 的平台差异可参考 
 
 ## 来源与致谢
 
-感谢 [chthollyphile/folia-major](https://github.com/chthollyphile/folia-major) 的作者与[贡献者](CONTRIBUTORS.md)。本分支从上游 **0.7.21**（`f3a9070`）开始，保留原始 Git 历史、代码版权声明和贡献记录。原版 README 存档见 [docs/upstream](docs/upstream/README.md)。
+感谢 [chthollyphile/folia-major](https://github.com/chthollyphile/folia-major) 的作者与[上游贡献者](docs/upstream/CONTRIBUTORS.md)。本分支从上游 **0.7.21**（`f3a9070`）开始，使用独立的提交历史，保留代码版权声明与来源记录。本分支维护者见 [CONTRIBUTORS.md](CONTRIBUTORS.md)，原版 README 存档见 [docs/upstream](docs/upstream/README.md)。
 
 同时感谢上游使用的开源项目，包括 [LDDC](https://github.com/chenmozhijin/LDDC)、[AMLL TTML 歌词库](https://github.com/amll-dev/amll-ttml-db)、[网易云音乐 API](https://github.com/NeteaseCloudMusicApiEnhanced/api-enhanced)、[QQ 音乐 API](https://github.com/yakult-green-tea/qq-music-api)、[酷狗音乐 API](https://github.com/MakcRe/KuGouMusicApi)、[Pretext](https://github.com/chenglou/pretext) 和 [Paper Shaders](https://github.com/paper-design/shaders)。
 

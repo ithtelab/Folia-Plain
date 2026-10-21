@@ -42,8 +42,10 @@ The **Build desktop** workflow produces downloadable artifacts on manual request
 
 Upstream documentation's release channels, mirrors, Docker images, AUR package and communities belong to upstream. Download this fork from its own Releases page.
 
+To publish an existing successful build, use **Publish verified desktop build** with its run ID and platform. It validates the source commit, local checksums and GitHub's received digests. A draft for the same commit can be resumed; an existing public release cannot be overwritten.
+
 ## Upstream updates and attribution
 
-The original history, code copyright notices, AGPL-3.0 license and contributor records are retained. New vector assets use the same license. Music, artwork, lyrics and external services remain the property of their respective rights holders.
+This fork uses independent commit history. Source copyright notices and the AGPL-3.0 license are retained, and upstream contributor records are archived in `docs/upstream/CONTRIBUTORS.md`. New vector assets use the same license. Music, artwork, lyrics and external services remain the property of their respective rights holders.
 
-`upstream` points to the original project and `origin` to this fork. Merge updates on a separate branch, review bundled assets, product identity, updater sources and workflows, then run checks. Upstream model and FFmpeg downloads remain external runtime dependencies; they do not update the application itself.
+`upstream` points to the original project and `origin` to this fork. Review selected upstream commits or file changes on a separate branch, apply the patches as new commits and record their source. Review bundled assets, product identity, updater sources and workflows, then run checks. Keep upstream history separate to preserve this fork's contributor statistics. Upstream model and FFmpeg downloads remain external runtime dependencies; they do not update the application itself.

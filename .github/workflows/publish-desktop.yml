@@ -1,0 +1,84 @@
+name: Publish verified desktop build
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Build desktop run ID
+        required: true
+        type: string
+      platform:
+        description: Artifact platform from that build
+        type: choice
+        default: Windows
+        options: [Windows, Linux, macOS]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: ${{ inputs.run_id }}
+    steps:
+      - name: Validate the source build
+        id: source
+        run: |
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > source-run.json
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const run = JSON.parse(fs.readFileSync('source-run.json'));
+          assert.equal(run.repository.full_name, process.env.GITHUB_REPOSITORY);
+          assert.equal(run.path, '.github/workflows/desktop-build.yml');
+          assert.equal(run.event, 'workflow_dispatch');
+          assert.equal(run.head_branch, 'main');
+          assert.equal(run.conclusion, 'success');
+          assert.match(run.head_sha, /^[a-f0-9]{40}$/);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `sha=${run.head_sha}\n`);
+          NODE
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+      - uses: actions/download-artifact@v6
+        with:
+          name: folia-plain-${{ inputs.platform }}
+          path: release
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify and upload the release
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          (cd release && sha256sum --check SHA256SUMS.txt)
+          version=$(node -p "require('./package.json').version")
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          tag="v$version"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft,targetCommitish > draft.json; then
+            node -e 'const a=require("node:assert/strict"),d=require("./draft.json");a.equal(d.isDraft,true);a.equal(d.targetCommitish,process.env.SOURCE_SHA)'
+          else
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --title "Folia Plain $tag" --notes-file "docs/releases/$tag.md" --draft
+          fi
+          gh release upload "$tag" release/* --repo "$GITHUB_REPOSITORY" --clobber
+          gh api "repos/$GITHUB_REPOSITORY/releases" > releases.json
+          RELEASE_TAG="$tag" node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const release = JSON.parse(fs.readFileSync('releases.json')).find(r => r.tag_name === process.env.RELEASE_TAG);
+          assert.equal(release.draft, true);
+          const checksums = fs.readFileSync('release/SHA256SUMS.txt', 'utf8').trim().split('\n').map(line => line.split('  '));
+          checksums.push([crypto.createHash('sha256').update(fs.readFileSync('release/SHA256SUMS.txt')).digest('hex'), 'SHA256SUMS.txt']);
+          assert.equal(release.assets.length, checksums.length);
+          for (const [hash, name] of checksums) {
+            const asset = release.assets.find(a => a.name === name);
+            assert.equal(asset?.state, 'uploaded', name);
+            assert.equal(asset.digest, `sha256:${hash}`, name);
+          }
+          NODE
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
