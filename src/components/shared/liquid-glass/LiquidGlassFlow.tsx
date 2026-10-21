@@ -3,6 +3,18 @@ import { liquidMetalFragmentShader, ShaderMount } from '@paper-design/shaders';
 import { PAPER_SHADER_CONTEXT_ATTRIBUTES } from '../../../utils/paperShaderContext';
 
 // The reference's flowing metallic reflection, confined to the glass rim instead of its content.
+// A blended WebGL sibling makes Chromium skip the backdrop filter below it. Emit translucent
+// reflections in the shader instead, so normal alpha compositing preserves the real glass blur.
+const glassReflectionShader = liquidMetalFragmentShader.replace('void main()', 'void paintReflection()') + `
+void main() {
+    paintReflection();
+    float luminance = dot(fragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float alpha = smoothstep(0.12, 0.98, luminance) * fragColor.a * 0.75;
+    vec3 reflection = clamp(fragColor.rgb / max(luminance, 0.001), 0.9, 1.0);
+    fragColor = vec4(reflection * alpha, alpha);
+}
+`;
+
 export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interactive' }) {
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -13,7 +25,7 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
         let mount: ShaderMount;
         try {
             // Reuse the installed shader/runtime; no copied WebGL renderer or remote image.
-            mount = new ShaderMount(element, liquidMetalFragmentShader, {
+            mount = new ShaderMount(element, glassReflectionShader, {
                 u_colorBack: [0, 0, 0, 0], u_colorTint: [1, 1, 1, 1],
                 u_repetition: 4, u_softness: 0.5, u_angle: 45, u_distortion: 0,
                 u_contour: 0, u_shiftRed: 0.3, u_shiftBlue: 0.3, u_isImage: false, u_shape: 0,

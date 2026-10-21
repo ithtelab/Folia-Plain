@@ -6,6 +6,7 @@ import type { Theme } from '../../../types';
 import { useTransitionBorderCue } from './now-playing-toast/useTransitionBorderCue';
 import { usePlayerBottomBarBottomPx } from '../../../hooks/usePlayerBottomBarBottomPx';
 import { usePlayerOverlayObstacle } from '../../../hooks/usePlayerOverlayLayout';
+import LiquidGlassSurface from '../../shared/liquid-glass/LiquidGlassSurface';
 
 // src/components/app/overlays/NowPlayingToast.tsx
 // 播放器与 Lattice 左下角的 now playing 卡片（playing-toast 样式：圆角 2xl、44px 封面、底部滑入）。
@@ -18,7 +19,7 @@ import { usePlayerOverlayObstacle } from '../../../hooks/usePlayerOverlayLayout'
 // 读，一个开关只该有一个读的地方。混音期间卡片自己撑开不隐藏：描边挂在卡片里，卡片淡出了就没
 // 地方画了。
 
-// 着色器描边只有真的在混音时才用到，懒加载让 @paper-design/shaders 的 chunk 不进主包；
+// 混音描边组件按需懒加载；玻璃反光也复用 Paper，但两层分别控制生命周期。
 // 混音开始前有几秒（arm 早于 fade）足够它加载完。
 const NowPlayingToastTransitionBorder = lazy(() => import('./now-playing-toast/NowPlayingToastTransitionBorder'));
 
@@ -192,12 +193,13 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                         animate={{ opacity: 1, x: 0 }}
                         whileTap={onActivate ? { opacity: 0.85 } : undefined}
                         transition={{ duration: 0.35, ease: 'easeOut' }}
-                        className={`relative flex min-w-[240px] items-center gap-3 overflow-hidden rounded-2xl border p-2 pr-4 text-left backdrop-blur-xl shadow-lg transition-colors ${
-                            isDaylight ? 'border-black/10 bg-white/35 text-zinc-900' : 'border-white/10 bg-black/35 text-white'
+                        className={`liquid-glass-host relative flex min-w-[240px] items-center gap-3 overflow-hidden rounded-2xl border border-transparent p-2 pr-4 text-left transition-colors ${
+                            isDaylight ? 'text-zinc-900' : 'text-white'
                         } ${onActivate
-                            ? `pointer-events-auto cursor-pointer ${isDaylight ? 'hover:bg-white/55' : 'hover:bg-black/55'}`
+                            ? 'liquid-glass-button pointer-events-auto cursor-pointer'
                             : ''}`}
                     >
+                        <LiquidGlassSurface isDaylight={isDaylight} radius={CARD_RADIUS} interactive={Boolean(onActivate) && transitionCue === null} />
                         {/* 顶部光线（进场的横向扫光）。混音期间收掉：描边现在正压在卡片边框上，
                             再叠一条亮线就是同一条边上两层东西，读起来是好几层边框套在一起。 */}
                         <motion.span

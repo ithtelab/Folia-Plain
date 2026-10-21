@@ -32,9 +32,12 @@ with the surface until the new one is ready. There is no screen capture or netwo
 
 The flowing rim reuses the installed Paper liquid-metal shader and runtime, following the user's
 metallic-button reference (reflection bands, modest dispersion and interaction speed-up). Its
-1.4 px mask keeps the centre transparent; `soft-light` blends the bands with the actual local
-backdrop rather than drawing a fixed black chrome outline. This adapts continuously to background
-colour without screenshots, pixel readbacks or React sampling. No new dependency is installed.
+1.4 px mask keeps the centre transparent. The shader turns dark bands into transparency and emits
+premultiplied translucent highlights, composited normally over the live backdrop, with no fixed
+black outline. Do not use a CSS blend mode on the WebGL layer: Chromium then stops applying the
+sibling backdrop filter. A stripe comparison with flow enabled/hidden verified the blur remains
+active after this fix. This follows background colour without screenshots, pixel readbacks or React
+sampling. No new dependency is installed.
 Each small GPU surface is capped at 128,000 pixels with antialias/depth buffers disabled.
 
 `useLiquidGlassMotion` observes the host's pointer/focus and layout changes. Short-lived springs
@@ -56,8 +59,12 @@ Hidden hosts pass `active={false}`. Document visibility and system accessibility
 the optical filter and flow. Observers, media listeners and timers are disposed on unmount. Browser
 compositing decides how to execute the backdrop filter; the reflection rim uses WebGL when available.
 
-Adopted by the floating player, Grid home navigation/search, Grid collection/directory back and
-title controls, the shared visualizer back control, and the shared slide action button. Album
+Adopted by the floating player, now-playing song card, player panel handle, provider switcher,
+Grid home navigation/search, Grid collection/directory back and title controls, the shared visualizer
+back control, and the shared slide action button. The song card and panel handle use interactive
+flow; the song card yields its decorative reflections to the automix progress border during a mix.
+Preserve the panel handle's icon as its first SVG and brighten that icon during sliding, not the
+glass host, because a host filter isolates its backdrop. Album
 cards and content panels retain their existing content materials. Window titlebar hit areas and
 safe spacing are unchanged.
 
@@ -80,6 +87,8 @@ icon, and must not accidentally target the material's filter definitions.
 `dev-probe.html?probe=liquidGlass` uses the real player and original sample artwork. Add
 `&tone=light` for the light appearance, or `&backdrop=stripes` to inspect actual backdrop bending.
 This is a development probe and does not become a product page or a clock feature.
+It includes the real song card and panel handle beside the real player to inspect the three bottom
+surfaces together; their counters also allow manual checks of card activation and command sliding.
 
 Pure optical invariants are covered in `test/unit/app/liquidGlassOptics.test.ts`. Existing player
 positioning, seek, navigation, mod-width and titlebar browser checks cover integration. Desktop

@@ -133,6 +133,7 @@ const NowPlayingToastTransitionBorder: React.FC<NowPlayingToastTransitionBorderP
             exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeOut' } }}
             transition={{ duration: ENTER_SEC, ease: 'easeOut' }}
             className="pointer-events-none"
+            data-toast-transition-border=""
             style={{ position: 'absolute', top: -GLOW_PAD, left: -GLOW_PAD, width: canvasWidth, height: canvasHeight }}
         >
             <PulsingBorderProgress

@@ -10,13 +10,13 @@ test('混音进度描边挂在卡片周围', async ({ mount, page }) => {
     const cue = page.locator('[data-probe-action="cue"]');
     await expect(cue).toBeVisible();
 
-    // 混音之前没有描边：着色器 chunk 也还没有被拉下来
-    await expect(page.locator('canvas')).toHaveCount(0);
+    // 混音之前没有进度描边；玻璃反光的画布不参与这项检查。
+    await expect(page.locator('[data-toast-transition-border] canvas')).toHaveCount(0);
 
     const card = page.locator('[data-toast-card]');
 
     await cue.click();
-    const canvas = page.locator('canvas');
+    const canvas = page.locator('[data-toast-transition-border] canvas');
     await expect(canvas).toBeVisible({ timeout: 10_000 });
     // 两个都有进场动画（卡片滑入、描边淡入），落定之后再量
     await page.waitForTimeout(1200);
@@ -45,10 +45,10 @@ test('设置页开关的预览 cue 收得到', async ({ mount, page }) => {
     await mount('nowPlayingToastTransitionBorder');
     const preview = page.locator('[data-probe-action="settings-preview"]');
     await expect(preview).toBeVisible();
-    await expect(page.locator('canvas')).toHaveCount(0);
+    await expect(page.locator('[data-toast-transition-border] canvas')).toHaveCount(0);
 
     await preview.click();
-    await expect(page.locator('canvas')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-toast-transition-border] canvas')).toBeVisible({ timeout: 10_000 });
 });
 
 // 卡片外面那层是 pointer-events-none（描边和扫光都不该吃鼠标），只有卡片本身把它翻回来。
@@ -161,7 +161,7 @@ test('混音期间收掉顶部的扫光条', async ({ mount, page }) => {
     expect(Number(await sheen.evaluate(el => getComputedStyle(el).opacity))).toBeGreaterThan(0.9);
 
     await page.locator('[data-probe-action="cue"]').click();
-    await expect(page.locator('canvas')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-toast-transition-border] canvas')).toBeVisible({ timeout: 10_000 });
     await page.waitForTimeout(900);
     expect(Number(await sheen.evaluate(el => getComputedStyle(el).opacity))).toBeLessThan(0.05);
 });

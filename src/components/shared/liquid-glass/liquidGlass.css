@@ -81,8 +81,8 @@
         padding: 1.4px;
         border-radius: inherit;
         opacity: 0.72;
-        /* Reflect the live backdrop: dark metal bands soften into its local tone. */
-        mix-blend-mode: soft-light;
+        /* Transparent reflections follow the live backdrop without breaking its blur. */
+        mix-blend-mode: normal;
         mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         mask-composite: exclude;
         pointer-events: none;

@@ -5,6 +5,9 @@ import FloatingPlayerControls from '../../src/components/FloatingPlayerControls'
 import LiquidGlassSurface from '../../src/components/shared/liquid-glass/LiquidGlassSurface';
 import { PlayerState } from '../../src/types';
 import type { ProbeDefinition } from './definition';
+import NowPlayingToast from '../../src/components/app/overlays/NowPlayingToast';
+import PanelHandle from '../../src/components/panelTab/shell/PanelHandle';
+import { DEFAULT_THEME } from '../../src/services/baseThemes';
 
 // The real player over varied, original artwork; query parameters also exercise bright/striped backdrops.
 const clock = motionValue(137);
@@ -29,8 +32,11 @@ const LiquidGlassProbe: React.FC = () => {
     const [light, setLight] = useState(query.get('tone') === 'light');
     const [playing, setPlaying] = useState(false);
     const [seeks, setSeeks] = useState(0);
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [activations, setActivations] = useState(0);
+    const [commands, setCommands] = useState(0);
     const striped = query.get('backdrop') === 'stripes';
-    return <div data-glass-preview data-seeks={seeks} style={{
+    return <div data-glass-preview data-seeks={seeks} data-card-activations={activations} data-command-opens={commands} style={{
         position: 'relative', height: '100dvh', overflow: 'hidden',
         background: striped ? 'repeating-linear-gradient(90deg, #204f9a 0 14px, #e8aa64 14px 28px, #cf647f 28px 42px)' : light ? '#e2ded7' : '#242528',
         color: light ? '#202228' : '#f8f9fc',
@@ -64,7 +70,13 @@ const LiquidGlassProbe: React.FC = () => {
             onNavigateToPlayer={noop} isDaylight={light} primaryColor={light ? '#202228' : '#f8f9fc'} secondaryColor={light ? '#424650' : '#d0d5df'}
             slotPrimary="loop" slotSecondary="queue" slotContext={{ onShuffle: noop, canShuffle: true, onLike: noop, isLiked: false, likeDisabled: false, invokeCommandById: noop, canInvokeCommandById: () => true }}
             onCommitBottomBarOffset={noop} />
-        <button data-preview-tone onClick={() => setLight(v => !v)} className="absolute left-8 bottom-10 text-xs opacity-70">{light ? '深色预览' : '浅色预览'}</button>
+        <NowPlayingToast song={{ title: 'Somewhere, in the quiet', artist: 'Folia Plain Sessions', coverUrl: null }}
+            trackKey="glass-preview" isDaylight={light} mode="always"
+            onActivate={() => setActivations(n => n + 1)} activateLabel="Open current track" />
+        <PanelHandle isOpen={panelOpen} onToggle={() => setPanelOpen(v => !v)} theme={DEFAULT_THEME}
+            isDaylight={light} showOpenPanelCloseButton isPanelGuideHotspotActive={false} hideToggleButton={false}
+            onOpenCommandPalette={() => setCommands(n => n + 1)} isCommandPaletteOpen={false} />
+        <button data-preview-tone onClick={() => setLight(v => !v)} className="absolute left-8 top-28 text-xs opacity-70">{light ? '深色预览' : '浅色预览'}</button>
     </div>;
 };
 

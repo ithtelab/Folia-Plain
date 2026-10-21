@@ -5,9 +5,10 @@ import { Settings2, X, Command } from 'lucide-react';
 import type { Theme } from '../../../types';
 import { usePlayerBottomBarBottomPx } from '../../../hooks/usePlayerBottomBarBottomPx';
 import { usePlayerOverlayObstacle } from '../../../hooks/usePlayerOverlayLayout';
+import LiquidGlassSurface from '../../shared/liquid-glass/LiquidGlassSurface';
 
 // src/components/panelTab/shell/PanelHandle.tsx
-// The round button at the bottom right of the playing page that opens the panel and, white, closes
+// The round button at the bottom right of the playing page that opens the panel and, showing X, closes
 // it. Slid to the left while the panel is closed, it opens the command palette instead: the track
 // it slides on, the feedback while it is dragged, and the guide that shows the track on hover or
 // after a touch beside it.
@@ -92,10 +93,11 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
         const progress = Math.min(1, Math.abs(dragX) / PANEL_SLIDE_TRIGGER_PX);
         button.style.transition = 'none';
         button.style.transform = `translateX(${dragX}px)`;
-        button.style.filter = `brightness(${1 + progress * 0.18})`;
 
         const icon = button.querySelector('svg');
         if (icon) {
+            // Keep the glass sampling its background while the icon brightens during a slide.
+            icon.style.filter = `brightness(${1 + progress * 0.18})`;
             icon.style.transform = `rotate(${progress * -180}deg)`;
             icon.style.scale = String(1 - progress * 0.1);
         }
@@ -182,6 +184,7 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
             button.style.color = '';
             const icon = button.querySelector('svg');
             if (icon) {
+                icon.style.filter = '';
                 icon.style.transition = '';
                 icon.style.transform = '';
                 icon.style.scale = '';
@@ -213,6 +216,7 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
 
         const icon = button.querySelector('svg');
         if (icon) {
+            icon.style.filter = '';
             icon.style.transition = 'transform 160ms ease-out, scale 160ms ease-out';
             icon.style.transform = '';
             icon.style.scale = '';
@@ -395,11 +399,13 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
                             onPointerUp={clearToggleButtonGesture}
                             onPointerCancel={clearToggleButtonGesture}
                             onClick={handleToggleButtonClick}
+                            aria-expanded={isOpen}
                             style={{ touchAction: canSlideOpenCommandPalette ? 'none' : undefined }}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg backdrop-blur-md transform
-                                border-none absolute right-0 top-0 z-10 ${isOpen ? 'bg-white text-black' : (isDaylight ? 'bg-white/70 text-zinc-900' : 'bg-black/40 text-white')}`}
+                            className={`liquid-glass-host liquid-glass-button w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform
+                                border-none absolute right-0 top-0 z-10 ${isDaylight ? 'text-zinc-900' : 'text-white'}`}
                         >
                             {isOpen ? <X size={20} /> : <Settings2 size={20} />}
+                            <LiquidGlassSurface isDaylight={isDaylight} />
                         </button>
                     </div>
                 </motion.div>
