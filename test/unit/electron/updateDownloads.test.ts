@@ -77,6 +77,19 @@ describe('Plain update downloads', () => {
         expect(provider.httpRequest).toHaveBeenCalledTimes(1);
     });
 
+    it('survives API rate limits using metadata directly from GitHub, never from an unverified relay', async () => {
+        const Provider = createMirrorUpdateProvider();
+        const provider = new Provider({ owner: 'ithtelab', repo: 'Folia-Plain', resolveDownloadSource: () => 'mirror' }, { channel: 'latest' }, { executor: null, platform: 'win32' });
+        provider.httpRequest = vi.fn().mockRejectedValueOnce(new Error('API rate limit exceeded')).mockResolvedValueOnce('version: 0.7.22\nfiles:\n  - url: Folia-Plain-Setup-0.7.22-x64.exe\n    sha512: official-digest\n');
+        const info = await provider.getLatestVersion();
+        expect(info.tag).toBe('v0.7.22');
+        expect(info.files[0].sha512).toBe('official-digest');
+        expect(provider.httpRequest.mock.calls.map((call: [URL]) => call[0].href)).toEqual([
+            'https://api.github.com/repos/ithtelab/Folia-Plain/releases/latest',
+            'https://github.com/ithtelab/Folia-Plain/releases/latest/download/latest.yml',
+        ]);
+    });
+
     it('reports the final failure and permits a subsequent retry', async () => {
         const download = vi.fn().mockRejectedValueOnce(new Error('relay down')).mockRejectedValueOnce(new Error('GitHub down')).mockResolvedValueOnce(['retry.exe']);
         const run = createUpdateDownloadRunner({ download, setSource: vi.fn(), onFallback: vi.fn() });

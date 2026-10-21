@@ -41,7 +41,19 @@ function createMirrorUpdateProvider() {
 
     async getLatestVersion() {
       // The API is the authority even when github.com's release feed is blocked locally.
-      const release = JSON.parse(await this.requestMetadata(new URL(`https://api.github.com/repos/${identity.repository}/releases/latest`), { Accept: 'application/vnd.github+json' }));
+      let release;
+      try {
+        release = JSON.parse(await this.requestMetadata(new URL(`https://api.github.com/repos/${identity.repository}/releases/latest`), { Accept: 'application/vnd.github+json' }));
+      } catch (error) {
+        // Shared network exits can exhaust GitHub's anonymous API quota. In this path only
+        // GitHub itself may provide metadata: the relay cannot supply its own trusted checksum.
+        console.warn('[Updater] GitHub release API unavailable; reading the official update file directly.', error);
+        const name = `${this.channel}.yml`;
+        const canonical = new URL(`${identity.releasesUrl}/latest/download/${name}`);
+        const info = parseUpdateInfo(await this.requestMetadata(canonical, { Accept: 'application/octet-stream' }), name, canonical);
+        if (!/^\d+\.\d+\.\d+$/.test(info.version)) throw new Error('No stable Plain update metadata available');
+        return { ...info, tag: `v${info.version}` };
+      }
       if (release.draft || release.prerelease || !/^v\d+\.\d+\.\d+$/.test(release.tag_name)) throw new Error('No stable Plain release available');
       const name = `${this.channel}.yml`;
       const asset = release.assets?.find(file => file.name === name);
