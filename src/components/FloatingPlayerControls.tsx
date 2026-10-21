@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Play, Pause } from 'lucide-react';
 import { MotionValue } from 'framer-motion';
 import ProgressBar from './ProgressBar';
@@ -17,6 +17,7 @@ import { PLAYER_BOTTOM_BAR_BASE_OFFSET_PX, clampPlayerBottomBarOffset, resolvePl
 import type { PlayerControlSlotActionId, PlayerControlSlotContext } from './floating-player/playerControlSlotActions';
 import { usePlayerOverlayObstacle } from '../hooks/usePlayerOverlayLayout';
 import LiquidGlassSurface from './shared/liquid-glass/LiquidGlassSurface';
+import { useReducedMotionFor } from '../hooks/useReducedMotionFor';
 
 export interface TrackNavigation {
     /** 当前曲目的稳定身份，用于识别「确实换歌了」；相邻两首同名时标题字符串不变，不能拿标题判断 */
@@ -122,7 +123,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
     onCommitBottomBarOffset,
 }) => {
     const { t } = useTranslation();
-    const reducedMotion = useReducedMotion();
+    const reducedMotion = useReducedMotionFor('uiMicroMotion');
     const layoutTransition = reducedMotion ? { duration: 0 } : CONTROL_LAYOUT_SPRING;
     const { ref: layoutRef, invalidate: invalidateLayout } = usePlayerOverlayObstacle('player-controls', 'playback', !isHidden);
     // const isDaylight = theme?.name === 'Daylight Default'; // Deprecated, passed as prop
@@ -383,7 +384,7 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                             ${isPositioning ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
                             ${showExpanded ? 'p-3 w-full' : `px-4 py-2 ${COLLAPSED_WIDTH_CLASS}`}`}
                     >
-                        <LiquidGlassSurface isDaylight={isDaylight} active={!isHidden} />
+                        <LiquidGlassSurface isDaylight={isDaylight} active={!isHidden} interactive={!isPositioning && !controlsDisabled} flow="ambient" />
                         <motion.div
                             layout
                             transition={{ layout: layoutTransition }}

@@ -17,7 +17,8 @@ The `radius` prop must match the host (the default `999` describes a capsule or 
   successfully does not prove that an engine renders it correctly, so this path is conservative.
 - Reduced transparency or increased contrast: near-solid material, no optical filter or map.
 - Forced colours: system Canvas / CanvasText, no decorative optical layers.
-- Reduced motion: no added material transitions, and the player's layout spring is disabled.
+- Reduced UI micro motion: the app's existing preference disables material reactions, selection
+  settling and the player's layout spring. System motion preferences follow the app's opt-in policy.
 
 Tone curves keep extreme white/black backgrounds from washing out the foreground. They follow
 the host's explicit light/dark appearance; there is no per-frame DOM luminance sampling or automatic
@@ -27,12 +28,33 @@ text-colour classification. Custom theme colours continue to come from existing 
 
 The map is built on the CPU only after dimensions settle for 100 ms. Textures are capped at
 1024 × 256 and use CSS size, independent of display density. During resizing the old map stretches
-with the surface until the new one is ready. There is no animation loop, pointer listener,
-screen capture, WebGL context, network asset or third-party dependency.
+with the surface until the new one is ready. There is no screen capture or network asset.
+
+The flowing rim reuses the installed Paper liquid-metal shader and runtime, following the user's
+metallic-button reference (reflection bands, modest dispersion and interaction speed-up). Its
+1.4 px mask keeps the centre transparent; `soft-light` blends the bands with the actual local
+backdrop rather than drawing a fixed black chrome outline. This adapts continuously to background
+colour without screenshots, pixel readbacks or React sampling. No new dependency is installed.
+Each small GPU surface is capped at 128,000 pixels with antialias/depth buffers disabled.
+
+`useLiquidGlassMotion` observes the host's pointer/focus and layout changes. Short-lived springs
+drive the decorative material's compression, rebound, highlight position and actual backdrop
+displacement/normal offset. They update DOM/SVG directly, never React state. The host and its text
+do not transform, so hit testing, progress gestures and titlebar clearance stay stable. Selection
+fills settle separately while the existing shared-layout animation moves between tabs.
+
+Spring frames stop when they converge; stationary hover also settles. The separate shader uses
+`flow="ambient"` only for home navigation and the player: slow idle reflections, faster hover/focus
+and press. All other hosts default to `flow="interactive"` and stop their shader clock when neither
+hovered nor focused. Blur pauses the clock, out-of-viewport surfaces pause through Paper's observer,
+and hidden documents or accessibility fallbacks unmount the flow. WebGL failure leaves static
+glass intact. Unmount disposes the runtime and explicitly releases its GPU context.
+Geometry is cached between pointer moves. Keyboard compression applies to buttons, not spaces typed
+into search.
 
 Hidden hosts pass `active={false}`. Document visibility and system accessibility changes release
-the optical filter. Observers, media listeners and timers are disposed on unmount. Browser
-compositing decides how to execute the backdrop filter; this component does not force a GPU backend.
+the optical filter and flow. Observers, media listeners and timers are disposed on unmount. Browser
+compositing decides how to execute the backdrop filter; the reflection rim uses WebGL when available.
 
 Adopted by the floating player, Grid home navigation/search, Grid collection/directory back and
 title controls, the shared visualizer back control, and the shared slide action button. Album
@@ -62,3 +84,8 @@ This is a development probe and does not become a product page or a clock featur
 Pure optical invariants are covered in `test/unit/app/liquidGlassOptics.test.ts`. Existing player
 positioning, seek, navigation, mod-width and titlebar browser checks cover integration. Desktop
 verification uses an isolated profile, including real Electron rendering and accessibility media.
+`test/unit/app/glassSpring.test.ts` covers convergence, bounded slow frames and release impulses.
+Manual checks also observe zero material mutations after settling and unchanged host bounds during
+compression; actual-home video captures hover, press, tab selection and search expansion. Separate
+shader-clock checks confirm ambient advancement, interactive idle stopping, hover advancement,
+reduced-motion/transparency disposal and a static-material fallback when rim WebGL is unavailable.

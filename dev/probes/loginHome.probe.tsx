@@ -14,14 +14,14 @@ import { probeAccountController } from './probeAccountController';
  * The two sign-in parts of the home page: the panel shown while nobody is signed in (one button)
  * and the switcher pill at the bottom right. The accounts are samples; nothing is requested.
  *
- * Opened by hand: ?probe=loginHome&state=signed-out|ran-out|signed-in&theme=dark|light.
+ * Opened by hand: ?probe=loginHome&state=signed-out|ran-out|signed-in&theme=dark|light&provider=netease.
  * Both parts open the sign-in window through its one entry; no window is mounted here.
  *
  * message=signed-out|ran-out|plain also shows the app's own message as it stands after a sign-out
  * and when a sign-in ran out (both lead with the platform's mark), and a message about no
  * platform (`plain`: the type's icon, as every other message of the app).
  */
-type ProbeProps = { state?: string; theme?: 'dark' | 'light'; message?: string };
+type ProbeProps = { state?: string; theme?: 'dark' | 'light'; message?: string; provider?: string };
 
 const row = (providerId: string, shortName: string, extra: Partial<ProviderAccountSummary> = {}): ProviderAccountSummary => ({
     providerId, shortName, displayName: shortName, availability: { configured: true }, status: 'anonymous', user: null, collections: [], ...extra,
@@ -37,7 +37,7 @@ function LoginHomeProbe(props: ProbeProps) {
             : state === 'ran-out' ? { error: 'auth-required' } : {}),
         row('qq', 'QQ音乐'), row('kugou', '酷狗'), row('bodian', '波点'), row('ytm', 'YouTube Music'), row('spotify', 'Spotify'),
     ];
-    const account = probeAccountController(providers, 'netease');
+    const account = probeAccountController(providers, props.provider ?? query.get('provider') ?? 'netease');
     const { t } = useTranslation();
     const message = props.message ?? query.get('message');
     const said: StatusMessage | null = message === 'signed-out' ? { type: 'info', text: t('status.loggedOut'), providerId: 'netease' }

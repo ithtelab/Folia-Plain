@@ -1,14 +1,20 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useId, useRef, useState } from 'react';
 import { createGlassLensMap } from './liquidGlassOptics';
 import './liquidGlass.css';
+import { useLiquidGlassMotion } from './useLiquidGlassMotion';
+import { useReducedMotionFor } from '../../../hooks/useReducedMotionFor';
 
 // Decorative material only: the host keeps its own layout, controls, hit area and semantics.
+const LiquidGlassFlow = lazy(() => import('./LiquidGlassFlow'));
 
 interface LiquidGlassSurfaceProps {
     isDaylight?: boolean;
     radius?: number;
     /** Hidden surfaces release the optical layer rather than continuing to filter offscreen. */
     active?: boolean;
+    interactive?: boolean;
+    /** Ambient flow is reserved for primary navigation and playback controls. */
+    flow?: 'ambient' | 'interactive';
 }
 
 interface LensGeometry {
@@ -17,12 +23,17 @@ interface LensGeometry {
     image: string;
 }
 
-export default function LiquidGlassSurface({ isDaylight = false, radius = 999, active = true }: LiquidGlassSurfaceProps) {
+export default function LiquidGlassSurface({ isDaylight = false, radius = 999, active = true, interactive = true, flow = 'interactive' }: LiquidGlassSurfaceProps) {
     const rootRef = useRef<HTMLSpanElement>(null);
     const filterRef = useRef<SVGFilterElement>(null);
     const imageRef = useRef<SVGFEImageElement>(null);
+    const displacementRef = useRef<SVGFEDisplacementMapElement>(null);
+    const normalOffsetRef = useRef<SVGFEOffsetElement>(null);
     const id = `glass-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const [lens, setLens] = useState<LensGeometry | null>(null);
+    const [flowAllowed, setFlowAllowed] = useState(false);
+    const reducedUiMotion = useReducedMotionFor('uiMicroMotion');
+    useLiquidGlassMotion(rootRef, displacementRef, normalOffsetRef, active && interactive);
 
     useEffect(() => {
         const root = rootRef.current;
@@ -35,6 +46,8 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
         let previous = '';
         const update = () => {
             window.clearTimeout(timer);
+            const allowed = !reduced.matches && !document.hidden;
+            setFlowAllowed(current => current === allowed ? current : allowed);
             if (reduced.matches || document.hidden) {
                 setLens(current => current === null ? current : null);
                 previous = '';
@@ -97,7 +110,8 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
                         <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="frost" />
                         <feImage ref={imageRef} href={lens.image} x="0" y="0" width={lens.width} height={lens.height}
                             preserveAspectRatio="none" result="normals" />
-                        <feDisplacementMap in="SourceGraphic" in2="normals" scale="16"
+                        <feOffset ref={normalOffsetRef} in="normals" dx="0" dy="0" result="movingNormals" />
+                        <feDisplacementMap ref={displacementRef} in="SourceGraphic" in2="movingNormals" scale="16"
                             xChannelSelector="R" yChannelSelector="G" result="bent" />
                         <feColorMatrix in="normals" type="matrix"
                             values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 0 0" result="rim" />
@@ -119,6 +133,9 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
             } : undefined} />
             <span className="liquid-glass-tint" />
             <span className="liquid-glass-rim" />
+            {active && interactive && flowAllowed && !reducedUiMotion && <Suspense fallback={null}><LiquidGlassFlow mode={flow} /></Suspense>}
+            <span className="liquid-glass-sheen" />
+            <span className="liquid-glass-glow" />
         </span>
     );
 }

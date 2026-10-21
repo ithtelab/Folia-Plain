@@ -34,6 +34,7 @@ import { useLibraryHomeListRegistration, useLibraryHomeTabsRegistration } from '
 import { cycleIndex } from '../../../core/home/homeSources';
 import { useUpdateIndicator } from '../../../../hooks/useUpdateIndicator';
 import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
+import { useReducedMotionFor } from '../../../../hooks/useReducedMotionFor';
 
 // src/library/suites/grid/home/Grid3D.tsx
 // Glassmorphic interactive desktop home view replacing the legacy 3D carousel.
@@ -132,6 +133,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     } = props;
 
     const { t, i18n } = useTranslation();
+    const reducedUiMotion = useReducedMotionFor('uiMicroMotion');
     const {
         isDaylight,
     } = useThemeSettingsStore(useShallow(state => ({
@@ -387,7 +389,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     {/* Center Tab Switcher */}
                     <div className="flex justify-center order-3 md:order-none col-span-2 md:col-span-1">
                         <div className="liquid-glass-host relative p-1 rounded-full scale-90 md:scale-100 origin-center">
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} />
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="ambient" />
                             <div className="inline-flex items-center gap-0">
                                 {homeTabs.map((tab) => {
                                     const isActive = homeViewTab === tab.key;
@@ -409,8 +411,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                                 {isActive && (
                                                     <motion.span
                                                         layoutId="home-active-tab-pill-desktop"
-                                                        className="absolute inset-0 rounded-full bg-white shadow-sm"
-                                                        transition={{ type: 'spring', stiffness: 460, damping: 36, mass: 0.9 }}
+                                                        className="liquid-glass-selection absolute inset-0 rounded-full"
+                                                        transition={reducedUiMotion ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 24, mass: 1 }}
                                                     />
                                                 )}
                                                 <span className="relative z-10">{tab.label}</span>
