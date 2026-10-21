@@ -1,0 +1,105 @@
+import { useMemo, useState } from 'react';
+import { BookOpen, Check, Copy, MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Sheet, SheetButton } from '../shared/Sheet';
+import { Group, Row, Value, type SettingsGroupDef } from './settings/kit';
+import { copyText } from '../../utils/system/clipboard';
+import { openOutsideLink } from '../../utils/system/outsideLink';
+import { iconLabel } from './settings/pages/iconLabel';
+import productIdentity from '../../../shared/productIdentity.mjs';
+
+// src/components/modal/AiHelpPromptModal.tsx
+// The 遇到问题？ dialog of the Help page: where to read and where to ask, and a prompt to copy for
+// an AI model, which names the guide and the repository.
+
+const FOLIA_GUIDE_URL = `${productIdentity.upstreamDocsUrl}llm-routing`;
+const FOLIA_DOCS_URL = productIdentity.upstreamDocsUrl;
+const FOLIA_REPOSITORY_URL = productIdentity.repositoryUrl;
+
+const LINKS: SettingsGroupDef = { id: 'aiHelpLinks', titleKey: 'aiHelp.title' };
+const ASK_AI: SettingsGroupDef = { id: 'aiHelpPrompt', titleKey: 'aiHelp.askAiTitle' };
+
+type AiHelpPromptModalProps = {
+    isOpen: boolean;
+    isDaylight: boolean;
+    onClose: () => void;
+};
+
+export const AiHelpPromptModal: React.FC<AiHelpPromptModalProps> = ({
+    isOpen,
+    isDaylight,
+    onClose,
+}) => {
+    const { t } = useTranslation();
+    const [copied, setCopied] = useState(false);
+
+    const prompt = useMemo(() => t('aiHelp.prompt', {
+        appName: productIdentity.name,
+        guideUrl: FOLIA_GUIDE_URL,
+        repoUrl: FOLIA_REPOSITORY_URL,
+        defaultValue: [
+            `I am using ${productIdentity.name}, a fork of folia-major, and need help with a problem.`,
+            '',
+            `Upstream Folia Guide (some details may differ): ${FOLIA_GUIDE_URL}`,
+            `${productIdentity.name} repository: ${FOLIA_REPOSITORY_URL}`,
+            '',
+            'Please read these references as context, then help me understand and solve the problem I describe next. Ask for any missing details before making assumptions, and give me steps I can try safely.'
+        ].join('\n')
+    }), [t]);
+
+    const handleCopyPrompt = async () => {
+        try {
+            await copyText(prompt);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+        } catch (error) {
+            console.error('Failed to copy AI help prompt:', error);
+            setCopied(false);
+        }
+    };
+
+    return (
+        <Sheet
+            isOpen={isOpen}
+            onClose={onClose}
+            isDaylight={isDaylight}
+            size="m"
+            title={t('aiHelp.title')}
+            footer={(
+                <>
+                    <SheetButton onClick={onClose}>{t('ui.cancel')}</SheetButton>
+                    <SheetButton variant="primary" onClick={() => void handleCopyPrompt()}>
+                        {/* Both states lie in one cell, so the button keeps its width when its text changes. */}
+                        <span className="grid justify-items-center">
+                            <span className={`col-start-1 row-start-1 inline-flex items-center gap-1.5 ${copied ? 'invisible' : ''}`}>
+                                <Copy size={14} />
+                                {t('aiHelp.copyPrompt')}
+                            </span>
+                            <span className={`col-start-1 row-start-1 inline-flex items-center gap-1.5 ${copied ? '' : 'invisible'}`}>
+                                <Check size={14} />
+                                {t('status.copied')}
+                            </span>
+                        </span>
+                    </SheetButton>
+                </>
+            )}
+        >
+            {/* A group keeps the space a settings page has above its first card; here the sheet's own padding is that space. */}
+            <div className="-mt-5">
+                <Group def={LINKS} bare>
+                    <Row label={iconLabel(BookOpen, t('aiHelp.docsTitle'))} hint={t('aiHelp.upstreamDocsNotice')} onClick={() => openOutsideLink(FOLIA_DOCS_URL)}>
+                        <Value>{t('aiHelp.openDocs')}</Value>
+                    </Row>
+                    <Row label={iconLabel(MessageCircle, t('help.reportIssue'))} onClick={() => openOutsideLink(productIdentity.issuesUrl)}>
+                        <Value>GitHub</Value>
+                    </Row>
+                </Group>
+                <Group def={ASK_AI} foot={t('aiHelp.usageHint')}>
+                    <pre className="select-text whitespace-pre-wrap break-words px-4 py-3.5 font-mono text-xs leading-[19px] text-[color:var(--st-t1)]">
+                        {prompt}
+                    </pre>
+                </Group>
+            </div>
+        </Sheet>
+    );
+};

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="title desc">
+  <title id="title">Folia Plain</title>
+  <desc id="desc">An abstract sound wave and the words Folia Plain. Immersive lyrics, a quieter player.</desc>
+  <rect width="1200" height="280" rx="24" fill="#f3f5f2"/>
+  <g fill="none" stroke="#417461" stroke-linecap="round" stroke-width="6">
+    <path d="M108 143h24m16-22v44m18-64v84m18-102v120m18-144v168m18-124v80m18-60v40m18-26h24"/>
+  </g>
+  <text x="326" y="149" font-family="Segoe UI,Arial,sans-serif" font-size="66" font-weight="600" letter-spacing="-2" fill="#1d3129">Folia <tspan font-weight="300">Plain</tspan></text>
+  <text x="330" y="193" font-family="Segoe UI,Arial,sans-serif" font-size="19" letter-spacing="1" fill="#62746b">IMMERSIVE LYRICS. A QUIETER PLAYER.</text>
+  <path d="M989 81v118m21-98v78m21-58v38m21-22v6" stroke="#417461" stroke-width="3" stroke-linecap="round" opacity=".35"/>
+</svg>

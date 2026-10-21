@@ -1,0 +1,14 @@
+{
+    "name": "Folia Plain",
+    "repositoryOwner": "ithtelab",
+    "repositoryName": "Folia-Plain",
+    "repository": "ithtelab/Folia-Plain",
+    "repositoryUrl": "https://github.com/ithtelab/Folia-Plain",
+    "issuesUrl": "https://github.com/ithtelab/Folia-Plain/issues",
+    "releasesUrl": "https://github.com/ithtelab/Folia-Plain/releases",
+    "appId": "io.github.ithtelab.foliaplain",
+    "executableName": "folia-plain",
+    "upstreamRepository": "chthollyphile/folia-major",
+    "upstreamUrl": "https://github.com/chthollyphile/folia-major",
+    "upstreamDocsUrl": "https://folia-site.cielaniska.top/guide/"
+}

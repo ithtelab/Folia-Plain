@@ -1,0 +1,112 @@
+name: Build desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build (download the result from workflow artifacts)
+        required: true
+        type: choice
+        default: windows-latest
+        options:
+          - windows-latest
+          - ubuntu-latest
+          - macos-latest
+      publish:
+        description: Publish the verified packages to this repository's Releases
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ inputs.platform }}
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Read package version
+        id: version
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install native helper toolchain
+        if: runner.os != 'macOS'
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache analysis runtime
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/.mnn-src
+            build/mnn
+          key: plain-mnn-${{ runner.os }}-${{ hashFiles('build/buildMnnRuntime.mjs', 'native/folia-mnn/**') }}
+      - name: Build frontend and native helpers
+        env:
+          ELECTRON: 'true'
+          APP_VERSION_LABEL: Plain
+          APP_RELEASE_CHANNEL: realeco
+        run: |
+          npm run build
+          npm run build:windowtolayer
+          npm run build:wallpaper-helper
+      - name: Package without publishing
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --publish never --config.publish.channel=latest
+      - name: Verify packaged Windows application
+        if: runner.os == 'Windows'
+        run: node build/verifyWindowsPackage.mjs
+      - name: Write release checksums
+        run: node build/writeReleaseChecksums.mjs
+      - uses: actions/upload-artifact@v6
+        with:
+          name: folia-plain-${{ runner.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
+            release/*.blockmap
+            release/*.yml
+            release/SHA256SUMS.txt
+            !release/builder-debug.yml
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload desktop verification
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: folia-plain-Windows-verification
+          path: test-results/packaged-desktop/
+          if-no-files-found: ignore
+
+  publish:
+    if: inputs.publish
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: folia-plain-${{ needs.build.result == 'success' && (inputs.platform == 'windows-latest' && 'Windows' || inputs.platform == 'macos-latest' && 'macOS' || 'Linux') }}
+          path: release
+      - name: Verify checksums and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          (cd release && sha256sum --check SHA256SUMS.txt)
+          gh release create "v$RELEASE_VERSION" release/* --target "$GITHUB_SHA" --title "Folia Plain v$RELEASE_VERSION" --notes-file "docs/releases/v$RELEASE_VERSION.md"
