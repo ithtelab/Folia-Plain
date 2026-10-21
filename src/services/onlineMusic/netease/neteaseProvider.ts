@@ -41,6 +41,9 @@ export const toNeteaseId = (id: MediaId): number => {
     return numericId;
 };
 
+// How many ids one `/song/detail` request of `playback.getSongDetails` carries.
+export const NETEASE_SONG_DETAIL_BATCH = 50;
+
 const mapQuality = (quality: AudioQualityPreference): string => {
     return neteaseQualityLevel(quality);
 };
@@ -340,6 +343,25 @@ export const neteaseProvider: OnlineMusicProvider = {
             const response = await neteaseApi.getSongDetail(toNeteaseId(id));
             const raw = response?.songs?.[0];
             return raw ? normalizeNeteaseSong(raw) : null;
+        },
+        // `/song/detail` takes many ids at once. Asked NETEASE_SONG_DETAIL_BATCH at a time, one
+        // request after another; its songs are matched to the ids by id, since it leaves out an id
+        // it has no song by. An id that is no number names no NetEase song: null, without asking.
+        async getSongDetails(ids) {
+            const numericIds = ids.map(id => {
+                const numericId = Number(id);
+                return Number.isFinite(numericId) && String(id).trim() !== '' ? numericId : null;
+            });
+            const asked = [...new Set(numericIds.filter((id): id is number => id !== null))];
+            const found = new Map<number, UnifiedSong>();
+            for (let start = 0; start < asked.length; start += NETEASE_SONG_DETAIL_BATCH) {
+                const response = await neteaseApi.getSongDetail(asked.slice(start, start + NETEASE_SONG_DETAIL_BATCH));
+                for (const raw of response?.songs ?? []) {
+                    const songId = Number(raw?.id);
+                    if (Number.isFinite(songId)) found.set(songId, normalizeNeteaseSong(raw));
+                }
+            }
+            return numericIds.map(id => (id === null ? null : found.get(id) ?? null));
         },
         async getAudioSource(song, quality) {
             const response = await neteaseApi.getSongUrl(toNeteaseId(song.id), mapQuality(quality));

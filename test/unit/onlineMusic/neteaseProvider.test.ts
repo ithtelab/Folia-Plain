@@ -21,6 +21,7 @@ vi.mock('@/services/onlineMusic/netease/netease', async importOriginal => ({
         getLyric: vi.fn(),
         getUnavailableSongReplacement: vi.fn(),
         cloudSearch: vi.fn(),
+        getSongDetail: vi.fn(),
         getAlbum: vi.fn(),
         getArtistDetail: vi.fn(),
         getArtistAlbums: vi.fn(),
@@ -135,6 +136,34 @@ describe('neteaseProvider', () => {
         const page = await neteaseProvider.search!.searchSongs('song', 1, 0);
         expect(page.items[0].sourceRef).toEqual({ kind: 'online', providerId: 'netease', mediaId: '42' });
         expect(page).toMatchObject({ total: 2, hasMore: true, nextOffset: 1 });
+    });
+
+    // `/song/detail` takes many ids: songs looked up together go 50 to a request, one request after another.
+    it('looks many songs up 50 to a request, in the order of the ids, null for one NetEase does not have', async () => {
+        const detail = (id: number) => ({ ...song, id, name: `Song ${id}`, sourceRef: undefined });
+        let running = 0;
+        let most = 0;
+        vi.mocked(neteaseApi.getSongDetail).mockImplementation(async (ids: number[] | number) => {
+            running += 1;
+            most = Math.max(most, running);
+            await new Promise(resolve => setTimeout(resolve, 1));
+            running -= 1;
+            // NetEase leaves out an id it has no song by, and need not answer in the order asked.
+            const asked = (Array.isArray(ids) ? ids : [ids]).filter(id => id !== 404);
+            return { songs: asked.reverse().map(detail) } as any;
+        });
+        const ids = [...Array.from({ length: 119 }, (_, index) => index + 1), 404];
+        ids.splice(3, 0, 2);
+
+        const songs = await neteaseProvider.playback!.getSongDetails!([...ids.map(String), 'not-a-number']);
+
+        expect(vi.mocked(neteaseApi.getSongDetail).mock.calls.map(([asked]) => (asked as number[]).length)).toEqual([50, 50, 20]);
+        expect(most).toBe(1);
+        expect(songs).toHaveLength(ids.length + 1);
+        expect(songs[0]).toMatchObject({ id: 1, name: 'Song 1', sourceRef: { kind: 'online', providerId: 'netease', mediaId: '1' } });
+        expect(songs[3]?.name).toBe('Song 2');
+        expect(songs[ids.length - 2]?.name).toBe('Song 119');
+        expect(songs.slice(-2)).toEqual([null, null]);
     });
 
     it('normalizes album collection metadata into provider fields', async () => {
