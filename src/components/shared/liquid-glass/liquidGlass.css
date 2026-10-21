@@ -153,8 +153,14 @@
 
 /* Override the stock progress utilities, while keeping the public Folium mod layer last. */
 @layer utilities {
-    .liquid-glass-host > input:focus-visible,
+    .liquid-glass-host > input:focus-visible {
+        outline: 1px solid rgb(255 255 255 / 0.85);
+        outline-offset: -1px;
+    }
     .liquid-player-bar button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    @media (forced-colors: active), (prefers-contrast: more) {
+        .liquid-glass-host > input:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+    }
     .liquid-player-bar [data-folium-part='progress.time'],
     .liquid-player-bar [data-folium-part='progress.duration'] {
         opacity: 1;
