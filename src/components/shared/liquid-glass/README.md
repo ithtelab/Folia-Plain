@@ -59,7 +59,7 @@ Hidden hosts pass `active={false}`. Document visibility and system accessibility
 the optical filter and flow. Observers, media listeners and timers are disposed on unmount. Browser
 compositing decides how to execute the backdrop filter; the reflection rim uses WebGL when available.
 
-Adopted by the floating player, now-playing song card, player panel handle, provider switcher,
+Adopted by the floating player, now-playing song card, player panel handle, provider switcher, home sign-in button,
 Grid home navigation/search, Grid collection/directory back and title controls, the shared visualizer
 back control, and the shared slide action button. The song card and panel handle use interactive
 flow; the song card yields its decorative reflections to the automix progress border during a mix.

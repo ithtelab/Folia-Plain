@@ -1,34 +1,33 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="folia_gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#48828E"/>
-      <stop offset="1" stop-color="#B6BAF3"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#202A40"/>
+      <stop offset=".48" stop-color="#171C27"/>
+      <stop offset="1" stop-color="#30343D"/>
     </linearGradient>
-    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
-      <feOffset dx="4" dy="8" result="offsetblur"/>
-      <feComponentTransfer>
-        <feFuncA type="linear" slope="0.3"/>
-      </feComponentTransfer>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#547FE8" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#6E79F5" stop-opacity=".65"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#BFC8DE" stop-opacity=".68"/>
+    </linearGradient>
+    <linearGradient id="letter" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DCE2F2"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16"/>
     </filter>
   </defs>
-  
-  <!-- Background Container: Soft Rounded Square with Gradient -->
-  <rect x="32" y="32" width="448" height="448" rx="120" fill="url(#folia_gradient)" />
-  
-  <!-- Stylized F Logo -->
-  <g filter="url(#dropShadow)">
-    <!-- Vertical Stem -->
-    <path d="M160 128 C 160 110 175 110 190 110 H 220 C 235 110 250 125 250 140 V 372 C 250 388 235 402 220 402 H 190 C 175 402 160 388 160 372 V 128 Z" fill="white"/>
-    
-    <!-- Top Bar (Leaf Shape) -->
-    <path d="M240 110 H 340 C 380 110 400 140 400 170 C 400 200 360 200 340 200 H 250 V 110 Z" fill="white"/>
-    
-    <!-- Middle Bar (Smaller Leaf Shape) -->
-    <path d="M250 240 H 320 C 350 240 360 260 360 280 C 360 300 340 300 320 300 H 250 V 240 Z" fill="white"/>
-  </g>
+  <rect x="78" y="88" width="868" height="868" rx="220" fill="#000000" opacity=".20" filter="url(#shadow)"/>
+  <rect x="64" y="56" width="896" height="896" rx="226" fill="url(#bg)" stroke="#9AA9CC" stroke-opacity=".22" stroke-width="5"/>
+  <path d="M64 360 C180 300 230 350 285 438 S410 590 500 660 S650 760 735 610 S875 515 960 645 L960 260 C820 140 720 160 590 180 S270 160 64 300Z" fill="url(#blue)" opacity=".72"/>
+  <path d="M64 500 C190 440 255 500 350 610 S535 765 655 665 S810 480 960 610" fill="none" stroke="#92A9FF" stroke-opacity=".65" stroke-width="6"/>
+  <path d="M64 585 C180 545 265 610 365 700 S555 815 675 705 S825 565 960 690" fill="none" stroke="url(#silver)" stroke-opacity=".82" stroke-width="9"/>
+  <path d="M64 500 C190 440 255 500 350 610 S535 765 655 665 S810 480 960 610 L960 760 C825 690 775 665 705 760 S535 850 415 765 S200 620 64 675Z" fill="#8E9FFF" opacity=".12"/>
+  <path d="M356 250 Q356 218 390 218 H670 Q754 218 754 301 Q754 384 670 384 H518 V445 H620 Q704 445 704 528 Q704 611 620 611 H518 V735 Q518 808 444 808 Q370 808 370 735 V300 Q370 250 356 250Z" fill="#000000" opacity=".18"/>
+  <path d="M344 236 Q344 204 378 204 H658 Q742 204 742 287 Q742 370 658 370 H506 V431 H608 Q692 431 692 514 Q692 597 608 597 H506 V721 Q506 794 432 794 Q358 794 358 721 V286 Q358 236 344 236Z" fill="url(#letter)"/>
+  <path d="M95 190 Q200 95 365 72" fill="none" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="5" stroke-linecap="round"/>
 </svg>

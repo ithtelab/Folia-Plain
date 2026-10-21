@@ -180,7 +180,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "build/icon.png",
+      "icon": "build/icon.ico",
       "extraResources": [
         {
           "from": "build",

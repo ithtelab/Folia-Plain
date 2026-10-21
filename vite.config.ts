@@ -252,7 +252,7 @@ export default async function viteConfig(_config: ConfigEnv): Promise<UserConfig
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg'],
+        includeAssets: ['icon.svg', 'icon.png'],
         devOptions: {
           enabled: true
         },
@@ -286,9 +286,15 @@ export default async function viteConfig(_config: ConfigEnv): Promise<UserConfig
           icons: [
             {
               src: 'icon.svg',
-              sizes: '512x512',
+              sizes: 'any',
               type: 'image/svg+xml',
-              purpose: 'any maskable'
+              purpose: 'maskable'
+            },
+            {
+              src: 'icon.png',
+              sizes: '1024x1024',
+              type: 'image/png',
+              purpose: 'any'
             }
           ]
         }
