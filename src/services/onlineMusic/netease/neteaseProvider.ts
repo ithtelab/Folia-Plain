@@ -347,6 +347,9 @@ export const neteaseProvider: OnlineMusicProvider = {
         // `/song/detail` takes many ids at once. Asked NETEASE_SONG_DETAIL_BATCH at a time, one
         // request after another; its songs are matched to the ids by id, since it leaves out an id
         // it has no song by. An id that is no number names no NetEase song: null, without asking.
+        // An answer with another code than 200 (the local backend's 502 where it cannot reach
+        // NetEase, NetEase refusing or limiting the request) says nothing of which songs exist: the
+        // whole call rejects, as getAudioSource does, instead of answering null for every id.
         async getSongDetails(ids) {
             const numericIds = ids.map(id => {
                 const numericId = Number(id);
@@ -356,6 +359,7 @@ export const neteaseProvider: OnlineMusicProvider = {
             const found = new Map<number, UnifiedSong>();
             for (let start = 0; start < asked.length; start += NETEASE_SONG_DETAIL_BATCH) {
                 const response = await neteaseApi.getSongDetail(asked.slice(start, start + NETEASE_SONG_DETAIL_BATCH));
+                if (isRefusedNeteaseAnswer(response)) throw neteaseAnswerError(response, 'the song details');
                 for (const raw of response?.songs ?? []) {
                     const songId = Number(raw?.id);
                     if (Number.isFinite(songId)) found.set(songId, normalizeNeteaseSong(raw));

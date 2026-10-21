@@ -16,7 +16,9 @@ import type {
     OmniProviderCapabilities,
     OmniProviderId,
     OmniProviderSummary,
+    OmniRequestRunner,
     OmniSongAvailability,
+    OmniSongDetail,
     OmniSongReplacement,
     OmniUser,
     OnlineAuthProvider,
@@ -194,6 +196,39 @@ const searchWith = (
     context
         ? search.searchSongs(query, page.limit, page.offset, context)
         : search.searchSongs(query, page.limit, page.offset)
+);
+
+// A request that goes straight to the provider, for a caller that hands in no runner.
+const runDirectly: OmniRequestRunner = work => work();
+
+// One request through a caller's runner (`OmniRequestRunner`), telling a failure of the request
+// itself (`failed`, with the provider's own error) apart from the runner refusing it or giving up
+// waiting for it (`refused`, with what the runner rejected with).
+type RunOutcome<T> =
+    | { kind: 'answered'; value: T }
+    | { kind: 'failed'; error: unknown }
+    | { kind: 'refused'; error: unknown };
+
+const runThrough = async <T>(run: OmniRequestRunner, work: () => Promise<T>): Promise<RunOutcome<T>> => {
+    const own: { failed: boolean; error: unknown } = { failed: false, error: undefined };
+    try {
+        const value = await run(async () => {
+            try {
+                return await work();
+            } catch (error) {
+                own.failed = true;
+                own.error = error;
+                throw error;
+            }
+        });
+        return { kind: 'answered', value };
+    } catch (error) {
+        return own.failed ? { kind: 'failed', error: own.error } : { kind: 'refused', error };
+    }
+};
+
+const songDetailOf = (song: UnifiedSong | null | undefined): OmniSongDetail => (
+    song ? { status: 'found', song } : { status: 'missing' }
 );
 
 // 点赞状态改完要落盘：只更内存的话，重启后靠快照 hydration 的那一帧会恢复旧心形，
@@ -826,20 +861,38 @@ export const omni = {
         return requireOnlineMusicProvider(providerId).playback?.getSongDetail(id) ?? null;
     },
 
-    // Songs by id at one provider, in the order of `ids`: null for an id it has no song by. A
-    // provider that looks many up in one request (`playback.getSongDetails`) is asked so; any other
-    // is asked `getSongDetail` for one id after another, never two at a time: how many requests run
-    // at once is the caller's to limit.
-    async getSongDetails(providerId: OmniProviderId, ids: MediaId[]): Promise<(UnifiedSong | null)[]> {
+    // Songs by id at one provider: one OmniSongDetail for each id, in the order of `ids`. A provider
+    // that looks many up in one request (`playback.getSongDetails`) is asked so, once for all of
+    // them; any other is asked `getSongDetail` for one id after another, never two at a time, and an
+    // id whose request fails does not stop the others. Each of those calls to the provider goes
+    // through `options.run` where the caller hands one in, for it to count and limit them: once
+    // `run` refuses one (or stops waiting for it), nothing more is asked and the ids left are
+    // `skipped`. The call itself rejects only for a provider that is not there.
+    async getSongDetails(
+        providerId: OmniProviderId,
+        ids: MediaId[],
+        options?: { run?: OmniRequestRunner },
+    ): Promise<OmniSongDetail[]> {
         const playback = requireOnlineMusicProvider(providerId).playback;
-        if (!playback || ids.length === 0) return ids.map(() => null);
-        if (playback.getSongDetails) {
-            const songs = await playback.getSongDetails(ids);
-            return ids.map((_, index) => songs[index] ?? null);
+        if (!playback || ids.length === 0) return ids.map(() => ({ status: 'missing' }));
+        const run = options?.run ?? runDirectly;
+        const lookUpMany = playback.getSongDetails?.bind(playback);
+        if (lookUpMany) {
+            const outcome = await runThrough(run, () => lookUpMany(ids));
+            if (outcome.kind === 'answered') return ids.map((_, index) => songDetailOf(outcome.value[index]));
+            const status = outcome.kind === 'failed' ? 'failed' : 'skipped';
+            return ids.map(() => ({ status, error: outcome.error }));
         }
-        const songs: (UnifiedSong | null)[] = [];
-        for (const id of ids) songs.push(await playback.getSongDetail(id));
-        return songs;
+        const details: OmniSongDetail[] = [];
+        for (const id of ids) {
+            const outcome = await runThrough(run, () => playback.getSongDetail(id));
+            if (outcome.kind === 'refused') {
+                while (details.length < ids.length) details.push({ status: 'skipped', error: outcome.error });
+                break;
+            }
+            details.push(outcome.kind === 'failed' ? { status: 'failed', error: outcome.error } : songDetailOf(outcome.value));
+        }
+        return details;
     },
 
     canPlaySong(song: SongResult): boolean {

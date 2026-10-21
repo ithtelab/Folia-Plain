@@ -4,7 +4,7 @@ import { omni } from '@/services/onlineMusic/omni';
 import { registerOnlineMusicProvider, unregisterOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
 import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccountStore';
 import type { UnifiedSong } from '@/types';
-import type { OnlineMusicProvider, ProviderCapabilities, ProviderCollection } from '@/types/onlineMusic';
+import type { OmniRequestRunner, OmniSongDetail, OnlineMusicProvider, ProviderCapabilities, ProviderCollection } from '@/types/onlineMusic';
 import { onlineFailureOf } from '@/services/onlineMusic/failure/onlineFailureCase';
 import { installOmniResultHooks } from '@/services/hostExtensionHooks';
 
@@ -643,6 +643,9 @@ describe('omni like mutations', () => {
 // What Folium's `folium.omni` reads through: songs by id many at a time, lyrics before the
 // extension layers, a song's album and artists, and searches kept apart by caller.
 describe('omni reads for callers beside the host UI', () => {
+    // A detail as these tests compare it: the song's name where one was found, its status otherwise.
+    const namesOf = (detail: OmniSongDetail): string => (detail.status === 'found' ? detail.song.name : detail.status);
+
     afterEach(() => installOmniResultHooks(null));
 
     it('asks a provider that looks many songs up at once once, in the order of the ids', async () => {
@@ -653,12 +656,41 @@ describe('omni reads for callers beside the host UI', () => {
             playback: { getSongDetail, getSongDetails, getAudioSource: async () => null },
         });
 
-        const songs = await omni.getSongDetails(providerId, ['b', 'gone', 'a']);
+        let runs = 0;
+        const run: OmniRequestRunner = work => {
+            runs += 1;
+            return work();
+        };
+        const details = await omni.getSongDetails(providerId, ['b', 'gone', 'a'], { run });
 
-        expect(songs.map(found => found?.name ?? null)).toEqual([`${providerId}:b`, null, `${providerId}:a`]);
+        expect(details.map(namesOf)).toEqual([`${providerId}:b`, 'missing', `${providerId}:a`]);
         expect(getSongDetails).toHaveBeenCalledTimes(1);
         expect(getSongDetails).toHaveBeenCalledWith(['b', 'gone', 'a']);
         expect(getSongDetail).not.toHaveBeenCalled();
+        // One call to the provider, so one request for the caller to count.
+        expect(runs).toBe(1);
+    });
+
+    it('fails every id of a many-at-once request that failed, and skips them all where run refused it', async () => {
+        const refusal = new Error('the provider refused the song details');
+        const getSongDetails = vi.fn(async (_ids: (string | number)[]): Promise<(UnifiedSong | null)[]> => { throw refusal; });
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: { getSongDetail: async () => null, getSongDetails, getAudioSource: async () => null },
+        });
+
+        await expect(omni.getSongDetails(providerId, ['1', '2'])).resolves.toEqual([
+            { status: 'failed', error: refusal },
+            { status: 'failed', error: refusal },
+        ]);
+
+        const limited = Object.assign(new Error('rate-limited'), { code: 'rate-limited' });
+        getSongDetails.mockClear();
+        await expect(omni.getSongDetails(providerId, ['1', '2'], { run: async () => { throw limited; } })).resolves.toEqual([
+            { status: 'skipped', error: limited },
+            { status: 'skipped', error: limited },
+        ]);
+        expect(getSongDetails).not.toHaveBeenCalled();
     });
 
     it('asks any other provider for one song after another, never two at a time', async () => {
@@ -676,12 +708,84 @@ describe('omni reads for callers beside the host UI', () => {
             playback: { getSongDetail, getAudioSource: async () => null },
         });
 
-        const songs = await omni.getSongDetails(providerId, ['x', 'gone', 'y']);
+        let runs = 0;
+        const run: OmniRequestRunner = work => {
+            runs += 1;
+            return work();
+        };
+        const details = await omni.getSongDetails(providerId, ['x', 'gone', 'y'], { run });
 
-        expect(songs.map(found => found?.name ?? null)).toEqual([`${providerId}:x`, null, `${providerId}:y`]);
+        expect(details.map(namesOf)).toEqual([`${providerId}:x`, 'missing', `${providerId}:y`]);
         expect(getSongDetail.mock.calls.map(([id]) => id)).toEqual(['x', 'gone', 'y']);
         expect(most).toBe(1);
+        // Each id is its own request to the provider: the caller's runner sees every one.
+        expect(runs).toBe(3);
         await expect(omni.getSongDetails(providerId, [])).resolves.toEqual([]);
+    });
+
+    it('keeps asking past an id whose request fails, with the provider\'s own error on it', async () => {
+        const gone = new Error('the provider threw for this id');
+        const getSongDetail = vi.fn(async (mediaId: string | number) => {
+            if (mediaId === 'bad') throw gone;
+            return song(providerId, String(mediaId));
+        });
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: { getSongDetail, getAudioSource: async () => null },
+        });
+
+        const first = await omni.getSongDetails(providerId, ['x', 'bad', 'y']);
+        expect(first.map(namesOf)).toEqual([`${providerId}:x`, 'failed', `${providerId}:y`]);
+        expect(first[1]).toEqual({ status: 'failed', error: gone });
+
+        // A runner that rejects with an error of its own for a request that failed: still that id's
+        // failure, with the provider's error, and the ids after it are asked.
+        getSongDetail.mockClear();
+        const mapping = async <T>(work: () => Promise<T>): Promise<T> => {
+            try {
+                return await work();
+            } catch {
+                throw new Error('network');
+            }
+        };
+        const details = await omni.getSongDetails(providerId, ['bad', 'y'], { run: mapping });
+        expect(details[0]).toEqual({ status: 'failed', error: gone });
+        expect(namesOf(details[1])).toBe(`${providerId}:y`);
+        expect(getSongDetail).toHaveBeenCalledTimes(2);
+    });
+
+    it('stops asking once run refuses a request, or stops waiting for one, and hands on what it already has', async () => {
+        const getSongDetail = vi.fn(async (mediaId: string | number) => song(providerId, String(mediaId)));
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            playback: { getSongDetail, getAudioSource: async () => null },
+        });
+
+        // Over the allowance from the second request on: refused before the provider is asked.
+        const limited = Object.assign(new Error('rate-limited'), { code: 'rate-limited' });
+        let allowed = 1;
+        const allowance = async <T>(work: () => Promise<T>): Promise<T> => {
+            if (allowed <= 0) throw limited;
+            allowed -= 1;
+            return work();
+        };
+        const details = await omni.getSongDetails(providerId, ['a', 'b', 'c'], { run: allowance });
+        expect(namesOf(details[0])).toBe(`${providerId}:a`);
+        expect(details.slice(1)).toEqual([{ status: 'skipped', error: limited }, { status: 'skipped', error: limited }]);
+        expect(getSongDetail.mock.calls.map(([id]) => id)).toEqual(['a']);
+
+        // No answer in time: the request runs on, but nothing more is asked.
+        getSongDetail.mockClear();
+        const late = Object.assign(new Error('network'), { code: 'network' });
+        const impatient = async <T>(work: () => Promise<T>): Promise<T> => {
+            void work();
+            throw late;
+        };
+        await expect(omni.getSongDetails(providerId, ['a', 'b'], { run: impatient })).resolves.toEqual([
+            { status: 'skipped', error: late },
+            { status: 'skipped', error: late },
+        ]);
+        expect(getSongDetail).toHaveBeenCalledTimes(1);
     });
 
     it('answers nothing found for every id of a provider that plays nothing', async () => {
@@ -689,7 +793,7 @@ describe('omni reads for callers beside the host UI', () => {
             ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
             playback: undefined,
         });
-        await expect(omni.getSongDetails(providerId, ['1', '2'])).resolves.toEqual([null, null]);
+        await expect(omni.getSongDetails(providerId, ['1', '2'])).resolves.toEqual([{ status: 'missing' }, { status: 'missing' }]);
     });
 
     it('reads lyrics past the extension layers with extensionHooks: false, and through them by default', async () => {

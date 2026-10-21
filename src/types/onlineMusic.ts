@@ -365,7 +365,8 @@ export interface OnlinePlaybackProvider {
     /**
      * Songs by id, many in one request, in the order of `ids`: null for an id the platform has no
      * song by. Left out where the platform looks songs up one at a time; `omni.getSongDetails`
-     * then asks `getSongDetail` for each.
+     * then asks `getSongDetail` for each. An answer that refuses the request rejects: it is not a
+     * row of nulls.
      */
     getSongDetails?(ids: MediaId[]): Promise<(UnifiedSong | null)[]>;
     // 拿不到地址而知道为什么的抛错（provider 的 `describeFailure` 说它的意思）；null 是没有地址、也没有可说的。
@@ -882,3 +883,25 @@ export type OmniExploreSection = ProviderExploreSection;
 export type OmniExplorePage = ProviderExplorePage;
 export type OmniExploreItemsPage = ProviderExploreItemsPage;
 export { OnlineProviderError as OmniError };
+
+/**
+ * Runs one request omni makes to a provider for a caller that counts or limits them
+ * (`omni.getSongDetails`). It may refuse a request by rejecting without running `work`, or stop
+ * waiting for one that runs by rejecting before `work` settles.
+ */
+export type OmniRequestRunner = <T>(work: () => Promise<T>) => Promise<T>;
+
+/**
+ * What `omni.getSongDetails` found for one id.
+ * `found`: the song. `missing`: the provider answered and has no song by that id.
+ * `failed`: the request to the provider that was to answer it failed with `error` (a request for
+ * many ids fails them all); the ids after it are still asked.
+ * `skipped`: no answer for it came through the caller's `run`, which refused that request or an
+ * earlier one, or stopped waiting for it; `error` is what `run` rejected with. Nothing after it was
+ * asked.
+ */
+export type OmniSongDetail =
+    | { status: 'found'; song: UnifiedSong }
+    | { status: 'missing' }
+    | { status: 'failed'; error: unknown }
+    | { status: 'skipped'; error: unknown };

@@ -166,6 +166,32 @@ describe('neteaseProvider', () => {
         expect(songs.slice(-2)).toEqual([null, null]);
     });
 
+    // A refusing answer says nothing of which songs NetEase has: the call fails, it does not answer
+    // "none of these" (a lookup would take every id for gone). `/song/detail` still leaves `songs`
+    // on it, empty (netease.ts's getSongDetail).
+    it.each([
+        ['the local service cannot reach NetEase', { code: 502, msg: 'getaddrinfo ENOTFOUND interfacepc.music.163.com' }, 'unavailable'],
+        ['NetEase refuses the request', { code: -462, message: '绑定手机号后才能继续操作' }, 'unavailable'],
+        ['the session is signed out', { code: 301 }, 'auth-required'],
+    ])('rejects a batch when %s, instead of answering null for every id', async (_label, response, errorCode) => {
+        vi.mocked(neteaseApi.getSongDetail).mockResolvedValue({ ...response, songs: [] } as any);
+        await expect(neteaseProvider.playback!.getSongDetails!(['1', '2'])).rejects.toMatchObject({
+            code: errorCode,
+            providerId: 'netease',
+            cause: { code: response.code },
+        });
+    });
+
+    it('rejects when a later batch is refused, though an earlier one was answered', async () => {
+        vi.mocked(neteaseApi.getSongDetail)
+            .mockResolvedValueOnce({ code: 200, songs: [{ ...song, id: 1, sourceRef: undefined }] } as any)
+            .mockResolvedValueOnce({ code: 502, songs: [] } as any);
+        const ids = Array.from({ length: 51 }, (_, index) => String(index + 1));
+
+        await expect(neteaseProvider.playback!.getSongDetails!(ids)).rejects.toMatchObject({ code: 'unavailable' });
+        expect(neteaseApi.getSongDetail).toHaveBeenCalledTimes(2);
+    });
+
     it('normalizes album collection metadata into provider fields', async () => {
         vi.mocked(neteaseApi.getArtistAlbums).mockResolvedValue({
             hotAlbums: [{
