@@ -13,7 +13,7 @@ Immersive Lyrics, Simply Music // 歌词入境，听歌归简
 [![Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml/badge.svg)](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24-417461?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Version](https://img.shields.io/badge/version-0.7.21-62746b)](package.json)
+[![Version](https://img.shields.io/badge/version-0.7.22-62746b)](package.json)
 [![Stars](https://img.shields.io/github/stars/ithtelab/Folia-Plain?style=social)](https://github.com/ithtelab/Folia-Plain/stargazers)
 
 [获取方式](#获取方式) · [本地运行](#本地运行) · [部署说明](#部署) · [开发与维护](docs/plain.md)

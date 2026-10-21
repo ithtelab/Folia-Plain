@@ -1,4 +1,4 @@
-import { AudioWaveform, Compass, LogIn, Music2, QrCode, Sparkles } from 'lucide-react';
+import { AppWindow, Image, Music2, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -15,15 +15,13 @@ type NewFeaturesRelease = {
     features: NewFeatureCard[];
 };
 
-// Defines inherited upstream release features; their localized intro identifies the Plain fork.
+// Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_7_21',
+    i18nKey: 'releaseNotes.v0_7_22',
     features: [
-        { id: 'newPlatforms', icon: Music2 },
-        { id: 'loginWindow', icon: LogIn },
-        { id: 'explore', icon: Compass },
-        { id: 'smartBeat', icon: AudioWaveform },
-        { id: 'qqMusic', icon: QrCode },
-        { id: 'moreDetails', icon: Sparkles },
+        { id: 'liquidGlass', icon: Sparkles },
+        { id: 'clearerPlayer', icon: Music2 },
+        { id: 'saferTitlebar', icon: AppWindow },
+        { id: 'appIcons', icon: Image },
     ],
 };

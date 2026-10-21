@@ -3197,6 +3197,25 @@ export default {
         "description": "Setelah masuk, playlist pribadi buatan Anda kini dapat memuat lagu dengan paging sungguhan. Backend yang di-host sendiri harus memakai qq-music-api 3.1.2 atau lebih baru; backend lama beralih otomatis, dan playlist yang tidak dapat dibaca kini menjelaskan bahwa playlist itu tidak publik, alih-alih tampil kosong tanpa keterangan."
       }
     },
+    "v0_7_22": {
+      "intro": "Folia Plain 0.7.22 menghadirkan material Liquid Glass yang seragam, kontrol pemutar bawah yang lebih jelas, lebih sedikit salah klik pada bilah judul, serta ikon aplikasi dan platform musik yang diperbarui.",
+      "liquidGlass": {
+        "title": "Liquid Glass yang mengalir",
+        "description": "Navigasi, pencarian, pemutar, kartu lagu, dan tombol masuk memadukan latar buram, pembiasan tepi, dan pantulan yang mengalir. Navigasi dan pemutar mengalir perlahan saat diam; kontrol lain bergerak saat digunakan. Bingkai hitam tebal pada pencarian dihapus. Pengurangan gerakan UI atau transparansi menyederhanakan efek; kaca statis tetap tersedia saat dukungan grafis terbatas."
+      },
+      "clearerPlayer": {
+        "title": "Kontrol pemutar lebih jelas",
+        "description": "Waktu pemutaran, status lagu, dan nama artis lebih mudah dibaca, dengan bayangan lebih ringan dan jarak lebih lega. Pemutar, kartu lagu, dan kontrol panel memakai material yang sama, sambil mempertahankan pencarian posisi lagu, garis progres automix, dan aksi geser."
+      },
+      "saferTitlebar": {
+        "title": "Mengurangi salah klik bilah judul",
+        "description": "Kontrol jendela diberi jarak aman dari navigasi dan muncul setelah penunjuk berhenti sebentar di dekat tepi atas. Kontrol tersembunyi tidak menerima input. Pengaturan untuk selalu menampilkan kontrol jendela tetap tersedia."
+      },
+      "appIcons": {
+        "title": "Ikon aplikasi dan platform baru",
+        "description": "Ikon Folia Plain baru digunakan pada pemasang, jendela desktop, baki sistem, situs web, dan PWA. Enam platform musik menggunakan ikon aplikasi aslinya, dengan ukuran dan jarak yang diperbaiki pada pemilih platform."
+      }
+    },
     "v0_7_21": {
       "intro": "Folia Plain berbasis folia-major 0.7.21 dari proyek asal, dengan aset bawaan dan teks yang netral. Fitur berikut diwarisi dari proyek asal: Spotify dan YouTube Music di desktop, satu jendela login untuk semua platform, tab Jelajahi, Mode ketukan pintar di Sonnet, Diorama dan Pendolo, login QR aplikasi QQ Music, serta bahasa Tionghoa Tradisional.",
       "newPlatforms": {

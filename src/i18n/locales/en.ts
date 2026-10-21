@@ -3197,6 +3197,25 @@ export default {
         "description": "When signed in, your own private playlists now load their songs, with real paging. Self-hosted backends must run qq-music-api 3.1.2 or later; older backends fall back automatically, and a playlist that cannot be read now says it is not public instead of silently showing as empty."
       }
     },
+    "v0_7_22": {
+      "intro": "Folia Plain 0.7.22 brings a shared Liquid Glass material, clearer bottom playback controls, fewer accidental titlebar interactions, and refreshed app and music-provider icons.",
+      "liquidGlass": {
+        "title": "Flowing Liquid Glass",
+        "description": "Navigation, search, playback, song cards and sign-in controls combine background blur, edge refraction and flowing highlights. Navigation and the player flow slowly at rest; other controls react to interaction. Search loses its heavy black outline. Reduced UI motion or transparency simplifies the effects, with static glass available when graphics support is limited."
+      },
+      "clearerPlayer": {
+        "title": "Clearer playback controls",
+        "description": "Playback times, song status and artist names are easier to read, with lighter shadows and more breathing room. The player, song card and panel control share one material while keeping seeking, the automix progress border and slide actions."
+      },
+      "saferTitlebar": {
+        "title": "Fewer titlebar misclicks",
+        "description": "Window controls have more clearance from navigation and appear after a brief pause near the top edge. Hidden controls no longer receive input. The setting to keep window controls visible remains available."
+      },
+      "appIcons": {
+        "title": "New app and provider icons",
+        "description": "The new Folia Plain icon appears in installers, desktop windows, the tray, the website and the PWA. Six music providers use their real app icons, with better proportions and spacing in the provider switcher."
+      }
+    },
     "v0_7_21": {
       "intro": "Folia Plain is based on upstream folia-major 0.7.21, with neutral built-in assets and wording. The following features are inherited from upstream: Spotify and YouTube Music on desktop, one sign-in window for all platforms, an Explore tab, Smart beat mode in Sonnet, Diorama and Pendolo, QQ Music app QR sign-in, and Traditional Chinese.",
       "newPlatforms": {
