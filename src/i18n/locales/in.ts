@@ -1220,12 +1220,7 @@ export default {
     "qualityUltra": "Ultra Tinggi",
     "qualityLossless": "Lossless",
     "qualityHires": "Hi-Res",
-    "qualitySpatial": "Audio Spasial",
-    "qualityAvailability": "Kualitas tersedia bergantung pada akun dan lagu. Sumber yang diterima dapat lebih rendah dari preferensi Anda.",
-    "surroundCompatibility": "Meminta campuran surround stereo dari platform, tanpa dekoder spasial khusus atau penerusan multikanal. Batasan akun dan lagu tetap berlaku.",
     "membershipInactive": "Berakhir",
-    "qualityMaster": "Master",
-    "qualitySurround": "Audio Surround",
     "membershipVip": "VIP",
     "membershipSvip": "SVIP",
     "membershipMusicPackage": "Paket musik",
@@ -3250,8 +3245,8 @@ export default {
         "description": "Pengaturan Performa dan Gerakan desktop kini memiliki akselerasi perangkat keras, aktif secara bawaan. Mulai ulang setelah menyimpan agar berlaku; menonaktifkannya dapat membantu masalah layar hitam atau perenderan."
       },
       "musicAccount": {
-        "title": "Keanggotaan dan audio lanjutan",
-        "description": "Akun yang didukung menampilkan tingkat keanggotaan dan tanggal berakhir dari platform; tanggal tak diketahui ditandai. Preferensi Spatial, Master dan Surround stereo bergantung pada akun dan lagu, tanpa dekoder spasial khusus."
+        "title": "Tingkat dan masa keanggotaan",
+        "description": "Akun yang didukung membedakan VIP dan SVIP serta menampilkan tingkat, tanggal berakhir, dan lencana resmi dari platform. Keanggotaan kedaluwarsa ditandai; tanggal yang hilang tidak ditebak. Teks tetap tersedia bila lencana gagal dimuat."
       },
       "platformPackages": {
         "title": "Unduhan lintas platform",

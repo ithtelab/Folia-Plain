@@ -31,7 +31,7 @@ import { neteaseRaw } from './neteaseRaw';
 import { canRunLoginSelfCheck, runLoginSelfCheck } from '../loginSelfCheck';
 import { diagnosticLine, formatDiagnosticClock } from '../login/loginDiagnosticReport';
 import { normalizeNeteaseMembership } from './neteaseMembership';
-import { NETEASE_QUALITY_LEVELS, neteaseQualityLevel, actualNeteaseQuality, isEnhancedNeteaseQuality } from './neteaseQuality';
+import { NETEASE_QUALITY_LEVELS, neteaseQualityLevel, actualNeteaseQuality } from './neteaseQuality';
 
 // src/services/onlineMusic/netease/neteaseProvider.ts
 
@@ -53,7 +53,6 @@ const mapScrobbleQuality = (quality?: AudioQualityPreference): { level: string; 
     if (quality === 'standard') return { level: 'standard', bitrate: 128 };
     if (quality === 'lossless') return { level: 'lossless', bitrate: 999 };
     if (quality === 'hires') return { level: 'hires', bitrate: 1999 };
-    if (quality && isEnhancedNeteaseQuality(quality)) return { level: mapQuality(quality), bitrate: 1999 };
     return { level: 'exhigh', bitrate: 320 };
 };
 
@@ -329,13 +328,7 @@ export const neteaseProvider: OnlineMusicProvider = {
             return raw ? normalizeNeteaseSong(raw) : null;
         },
         async getAudioSource(song, quality) {
-            let response = await neteaseApi.getSongUrl(toNeteaseId(song.id), mapQuality(quality));
-            let requested = quality;
-            if (!isRefusedNeteaseAnswer(response) && !response?.data?.[0]?.url && isEnhancedNeteaseQuality(quality)) {
-                console.info('[Audio] Enhanced stream unavailable; retrying the same song at Hi-Res');
-                requested = 'hires';
-                response = await neteaseApi.getSongUrl(toNeteaseId(song.id), 'hires');
-            }
+            const response = await neteaseApi.getSongUrl(toNeteaseId(song.id), mapQuality(quality));
             if (isRefusedNeteaseAnswer(response)) throw neteaseAnswerError(response, 'the song URL');
             const raw = response?.data?.[0];
             const rawUrl = raw?.url;
@@ -346,7 +339,7 @@ export const neteaseProvider: OnlineMusicProvider = {
             // module/song_url_v1.js 带 unblock=true 时写字符串 'null'。
             const preview = typeof raw?.freeTrialInfo === 'object' && raw.freeTrialInfo !== null;
             const trackGain = toFiniteNumber(raw?.gain);
-            const sourceQuality = actualNeteaseQuality(raw?.level, requested);
+            const sourceQuality = actualNeteaseQuality(raw?.level, quality);
             if (sourceQuality !== quality) console.info(`[Audio] Stream preference ${quality} resolved to ${sourceQuality}`);
             return {
                 url: String(rawUrl).replace(/^http:/, 'https:'),

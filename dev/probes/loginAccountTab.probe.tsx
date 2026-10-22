@@ -46,7 +46,8 @@ function LoginAccountTabProbe(props: ProbeProps) {
         store.setActiveProviderId('netease');
         if (state === 'signed-in') {
             store.updateAccount('netease', { status: 'authenticated', user: { id: '329184756', nickname: '青柠汽水', vipType: 11,
-                ...(membership ? { membership: { tier: 'svip' as const, level: 8, active: membership !== 'expired',
+                ...(membership ? { membership: { tier: membership === 'vip' ? 'vip' as const : 'svip' as const, level: 8, active: membership !== 'expired',
+                    ...(query.get('badge') ? { badgeUrl: 'https://p1.music.126.net/member/probe-badge.png' } : {}),
                     ...(membership === 'unknown' ? {} : { expiresAt: Date.UTC(membership === 'expired' ? 2020 : 2080, 4, 20) }) } } : {}),
             }, error: undefined });
         } else {

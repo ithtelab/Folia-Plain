@@ -9,8 +9,7 @@ export const DEFAULT_ONLINE_PROVIDER_ID: OnlineProviderId = 'netease';
 // Lowest first as `omni` orders them: standard, high, ultra, lossless, hires. 'ultra' is a level
 // only for a provider that lists it (YouTube Music, for a Premium member); everywhere else a stored
 // 'ultra' stands for 'high'.
-// Enhanced preferences are offered only by providers that list them; elsewhere they resolve to Hi-Res or below.
-export type AudioQualityPreference = 'standard' | 'high' | 'ultra' | 'lossless' | 'hires' | 'spatial' | 'master' | 'surround';
+export type AudioQualityPreference = 'standard' | 'high' | 'ultra' | 'lossless' | 'hires';
 export type ProviderCatalogEntityKind = 'album' | 'artist' | 'playlist';
 
 export interface ProviderCatalogRef {
@@ -168,6 +167,7 @@ export interface ProviderMembership {
     level?: number;
     expiresAt?: number;
     active?: boolean;
+    badgeUrl?: string;
 }
 
 export interface ProviderArtistSummary {

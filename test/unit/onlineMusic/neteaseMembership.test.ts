@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeNeteaseMembership } from '../../../src/services/onlineMusic/netease/neteaseMembership';
-import { NETEASE_QUALITY_LEVELS, actualNeteaseQuality } from '../../../src/services/onlineMusic/netease/neteaseQuality';
-import { resolveStoredAudioQuality } from '../../../src/stores/useAudioSettingsStore';
+import { actualNeteaseQuality } from '../../../src/services/onlineMusic/netease/neteaseQuality';
 
 // Membership dates come from the API; unknown dates and expired higher tiers cannot grant access.
 const now = 1800000000000;
@@ -22,12 +21,15 @@ describe('membership details', () => {
     it.each([null, { code: 301 }, { code: 200, data: {} }, { code: 200, data: { redplus: { expireTime: 0 } } }])('keeps unavailable details unknown: %j', value => {
         expect(normalizeNeteaseMembership(value, now)).toBeUndefined();
     });
-    it.each(['spatial', 'master', 'surround'] as const)('persists the %s preference', quality => {
-        expect(resolveStoredAudioQuality(quality)).toBe(quality);
-        expect(NETEASE_QUALITY_LEVELS).toContain(quality);
+    it('uses the matching official product icon and upgrades its URL to HTTPS', () => {
+        expect(normalizeNeteaseMembership({ code: 200, data: { redplus: { expireTime: now + 1, iconUrl: 'http://p1.music.126.net/member/svip.png' } } }, now)?.badgeUrl).toBe('https://p1.music.126.net/member/svip.png');
+    });
+    it('distinguishes a plain VIP and ignores untrusted badge URLs', () => {
+        expect(normalizeNeteaseMembership({ code: 200, data: { associator: { expireTime: now + 1, iconUrl: 'javascript:alert(1)' } } }, now)).toMatchObject({ tier: 'vip', active: true });
+        expect(normalizeNeteaseMembership({ code: 200, data: { associator: { expireTime: now + 1, iconUrl: 'https://example.test/vip.png' } } }, now)?.badgeUrl).toBeUndefined();
     });
     it('normalizes the actual returned level', () => {
-        expect(actualNeteaseQuality('exhigh', 'master')).toBe('high');
-        expect(actualNeteaseQuality('sky', 'surround')).toBe('surround');
+        expect(actualNeteaseQuality('exhigh', 'hires')).toBe('high');
+        expect(actualNeteaseQuality('lossless', 'hires')).toBe('lossless');
     });
 });

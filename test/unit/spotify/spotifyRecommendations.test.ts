@@ -147,10 +147,8 @@ describe('quality levels', () => {
         expect(asked('audio')[0][1]).toEqual({ id: id('a'), quality: 'high' });
     });
 
-    it('uses the default four where no quality capability list is registered', () => {
-        expect(omni.getAudioQualityLevels('quality-unlisted')).toEqual(['standard', 'high', 'lossless', 'hires']);
-        expect(omni.resolveAudioQuality('quality-unlisted', 'hires')).toBe('hires');
-        expect(omni.resolveAudioQuality('quality-unlisted', 'master')).toBe('hires');
-        expect(omni.resolveAudioQuality('spotify', 'master')).toBe('high');
+    it('leaves a provider that lists no levels with all four', () => {
+        expect(omni.getAudioQualityLevels('netease')).toEqual(['standard', 'high', 'lossless', 'hires']);
+        expect(omni.resolveAudioQuality('netease', 'hires')).toBe('hires');
     });
 });

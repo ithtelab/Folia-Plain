@@ -50,22 +50,9 @@ const song: UnifiedSong = {
 describe('neteaseProvider', () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it.each([['spatial', 'jyeffect'], ['master', 'jymaster'], ['surround', 'sky']] as const)('requests %s through the documented stream level', async (quality, level) => {
-        vi.mocked(neteaseApi.getSongUrl).mockResolvedValue({ data: [{ url: 'https://music.test/audio.flac', level }] } as any);
-        expect((await neteaseProvider.playback!.getAudioSource(song, quality))?.quality).toBe(quality);
-        expect(neteaseApi.getSongUrl).toHaveBeenCalledWith(42, level);
-    });
-
-    it('reports a server downgrade rather than claiming master quality', async () => {
+    it('reports a server downgrade rather than claiming Hi-Res quality', async () => {
         vi.mocked(neteaseApi.getSongUrl).mockResolvedValue({ data: [{ url: 'https://music.test/audio.flac', level: 'lossless' }] } as any);
-        expect((await neteaseProvider.playback!.getAudioSource(song, 'master'))?.quality).toBe('lossless');
-    });
-
-    it('retries an unavailable enhanced stream at Hi-Res without dropping preview restrictions', async () => {
-        vi.mocked(neteaseApi.getSongUrl).mockResolvedValueOnce({ code: 200, data: [{ url: null }] } as any)
-            .mockResolvedValueOnce({ data: [{ url: 'https://music.test/preview.flac', level: 'lossless', freeTrialInfo: { start: 0, end: 30 } }] } as any);
-        expect(await neteaseProvider.playback!.getAudioSource(song, 'surround')).toMatchObject({ quality: 'lossless', preview: true });
-        expect(neteaseApi.getSongUrl).toHaveBeenLastCalledWith(42, 'hires');
+        expect((await neteaseProvider.playback!.getAudioSource(song, 'hires'))?.quality).toBe('lossless');
     });
 
     it('keeps a confirmed account signed in when optional membership reading fails', async () => {
@@ -73,6 +60,15 @@ describe('neteaseProvider', () => {
         vi.mocked(neteaseApi.getUserAccount).mockResolvedValue({ code: 200, account: { id: 7 }, profile: { userId: 7, nickname: 'Listener' } } as any);
         vi.mocked(neteaseApi.getVipInfo).mockRejectedValueOnce(new Error('membership unavailable'));
         expect(await neteaseProvider.auth!.getLoginStatus()).toMatchObject({ id: 7, nickname: 'Listener' });
+    });
+
+    it('attaches the official SVIP badge and exact expiry to the verified account', async () => {
+        const expiresAt = Date.now() + 60000;
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue({ code: 200, data: { profile: { userId: 7, nickname: 'Listener' } } } as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue({ code: 200, account: { id: 7 }, profile: { userId: 7, nickname: 'Listener' } } as any);
+        vi.mocked(neteaseApi.getVipInfo).mockResolvedValueOnce({ code: 200, data: { redVipLevel: 8, redplus: { expireTime: expiresAt, iconUrl: 'https://p1.music.126.net/member/svip.png' } } } as any);
+        expect(await neteaseProvider.auth!.getLoginStatus()).toMatchObject({ id: 7, membership: { tier: 'svip', level: 8, expiresAt, active: true, badgeUrl: 'https://p1.music.126.net/member/svip.png' } });
+        expect(neteaseApi.getVipInfo).toHaveBeenCalledWith(7);
     });
 
     it('maps semantic high quality to the NetEase exhigh value', async () => {

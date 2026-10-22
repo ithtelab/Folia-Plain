@@ -75,7 +75,7 @@ import type { AccountReadOutcome, AccountReadReason } from './account/accountRea
 type PageInput = { limit: number; offset: number };
 
 // The quality levels, lowest first.
-const AUDIO_QUALITY_LEVELS: readonly AudioQualityPreference[] = ['standard', 'high', 'ultra', 'lossless', 'hires', 'spatial', 'master', 'surround'];
+const AUDIO_QUALITY_LEVELS: readonly AudioQualityPreference[] = ['standard', 'high', 'ultra', 'lossless', 'hires'];
 // A provider that lists none of its own tells these four apart. 'ultra' is not among them: it
 // is a level only for a provider that lists it, so no other provider is ever asked at it.
 const UNLISTED_AUDIO_QUALITY_LEVELS: readonly AudioQualityPreference[] = ['standard', 'high', 'lossless', 'hires'];

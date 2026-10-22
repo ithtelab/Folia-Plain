@@ -41,9 +41,6 @@ const AUDIO_QUALITY_OPTIONS: Array<{
     { value: 'ultra', labelKey: 'account.qualityUltra' },
     { value: 'lossless', labelKey: 'account.qualityLossless' },
     { value: 'hires', labelKey: 'account.qualityHires' },
-    { value: 'spatial', labelKey: 'account.qualitySpatial' },
-    { value: 'master', labelKey: 'account.qualityMaster' },
-    { value: 'surround', labelKey: 'account.qualitySurround' },
 ];
 
 const selectLogoutPending = (snapshot: LibraryAccountSnapshot) => snapshot.logout.status === 'pending';
@@ -136,8 +133,6 @@ const AccountTab: React.FC<AccountTabProps> = ({
                     onChange={(quality) => { if (quality !== litQuality) onAudioQualityChange(quality); }}
                 />
             </PanelRow>
-
-            <p className="px-1 pb-2 text-[11px] leading-4 text-[color:var(--st-t2)]">{t(litQuality === 'surround' ? 'account.surroundCompatibility' : 'account.qualityAvailability')}</p>
 
             {activeUser && (
                 <div className="flex px-1 py-2">

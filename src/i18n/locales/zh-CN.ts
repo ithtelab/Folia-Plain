@@ -1220,12 +1220,7 @@ export default {
     "qualityUltra": "超高",
     "qualityLossless": "无损",
     "qualityHires": "Hi-Res",
-    "qualitySpatial": "高清臻音",
-    "qualityAvailability": "可用音质取决于账号权限与歌曲资源，实际返回音源可能低于所选偏好。",
-    "surroundCompatibility": "请求平台的双声道环绕混音；不提供专用空间解码或多声道直通，资源受会员与曲目限制。",
     "membershipInactive": "已到期",
-    "qualityMaster": "超清母带",
-    "qualitySurround": "沉浸环绕声",
     "membershipVip": "VIP",
     "membershipSvip": "SVIP",
     "membershipMusicPackage": "音乐包",
@@ -3250,8 +3245,8 @@ export default {
         "description": "桌面版性能与动效设置新增 GPU 硬件加速开关，默认开启。保存后重启生效，遇到黑屏或渲染异常时可尝试关闭。"
       },
       "musicAccount": {
-        "title": "会员与高阶音质",
-        "description": "支持的账号可显示平台返回的会员等级和到期日，未知日期会明确标注。新增高清臻音、母带和双声道环绕音源偏好；实际资源受账号与曲目限制，不提供专用空间解码。"
+        "title": "会员等级与到期日期",
+        "description": "支持的账号可区分 VIP 与 SVIP，显示平台返回的等级、到期日期和官方会员标识。已到期会明确标注，平台没有返回的日期不会猜测；图标无法加载时保留文字标识。"
       },
       "platformPackages": {
         "title": "多平台下载",
