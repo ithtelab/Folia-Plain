@@ -772,6 +772,8 @@ export const neteaseApi = {
   },
 
   // --- User Data ---
+  getVipInfo: async (uid: number) => fetchWithCreds(`/vip/info/v2?uid=${uid}`, { signal: AbortSignal.timeout(4000) }),
+
   likeSong: async (id: number, like = true) => {
     return fetchWithCreds(`/like?id=${id}&like=${like}`);
   },
@@ -928,7 +930,9 @@ export const neteaseApi = {
     // 'standard' often returns null or invalid links for VIP content even if logged in.
     // randomCNIP=true added to improve success rate for some restricted tracks
     // https=true ensures URLs are returned with HTTPS protocol to avoid mixed content issues
-    return fetchWithCreds(`/song/url/v1?id=${id}&level=${level}&randomCNIP=true&https=true`, {}, 'online');
+    // Ask for the provider's stereo surround mix; the player does not implement its proprietary spatial renderer.
+    const immerse = level === 'sky' ? '&immerseType=ste2' : '';
+    return fetchWithCreds(`/song/url/v1?id=${id}&level=${level}${immerse}&randomCNIP=true&https=true`, {}, 'online');
   },
 
   getLyric: async (id: number) => {

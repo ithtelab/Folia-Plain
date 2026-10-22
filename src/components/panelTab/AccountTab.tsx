@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, RefreshCw, Crown, User as UserIcon } from 'lucide-react';
+import { LogOut, RefreshCw, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { AudioQualityPreference } from '../../types/onlineMusic';
 import type { LibraryAccountController, LibraryAccountSnapshot } from '../../library/core/account/account.contract';
@@ -8,6 +8,7 @@ import { canLogoutProvider } from '../../library/core/account/accountRules';
 import { omni } from '../../services/onlineMusic/omni';
 import { openLoginWindow } from '../login/loginWindowStore';
 import { PlatformMark } from '../login/PlatformMark';
+import MembershipSummary from '../login/MembershipSummary';
 import { Select } from '../modal/settings/kit';
 import { useKitReducedMotion } from '../modal/settings/kit/motion';
 import { GroupLine } from './shell/GroupLine';
@@ -40,6 +41,9 @@ const AUDIO_QUALITY_OPTIONS: Array<{
     { value: 'ultra', labelKey: 'account.qualityUltra' },
     { value: 'lossless', labelKey: 'account.qualityLossless' },
     { value: 'hires', labelKey: 'account.qualityHires' },
+    { value: 'spatial', labelKey: 'account.qualitySpatial' },
+    { value: 'master', labelKey: 'account.qualityMaster' },
+    { value: 'surround', labelKey: 'account.qualitySurround' },
 ];
 
 const selectLogoutPending = (snapshot: LibraryAccountSnapshot) => snapshot.logout.status === 'pending';
@@ -100,13 +104,12 @@ const AccountTab: React.FC<AccountTabProps> = ({
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 text-sm font-semibold leading-5">
                             <span className="truncate">{activeUser.nickname}</span>
-                            {Boolean(activeUser.vipType && activeUser.vipType !== 0) && (
-                                <Crown size={14} className="shrink-0 text-[color:var(--st-warn)]" />
-                            )}
+                            <MembershipSummary user={activeUser} mode="badge" />
                         </div>
                         <div className="truncate text-xs leading-[18px] text-[color:var(--st-t2)]">
                             {activeSummary?.shortName || activeSummary?.displayName || activeProviderId} · ID: {String(activeUser.id)}
                         </div>
+                        <MembershipSummary user={activeUser} mode="expiry" />
                     </div>
                     <PanelIconButton label={t('account.logout')} disabled={!canLogout} onClick={() => void handleLogout()}>
                         <LogOut size={17} />
@@ -133,6 +136,8 @@ const AccountTab: React.FC<AccountTabProps> = ({
                     onChange={(quality) => { if (quality !== litQuality) onAudioQualityChange(quality); }}
                 />
             </PanelRow>
+
+            <p className="px-1 pb-2 text-[11px] leading-4 text-[color:var(--st-t2)]">{t(litQuality === 'surround' ? 'account.surroundCompatibility' : 'account.qualityAvailability')}</p>
 
             {activeUser && (
                 <div className="flex px-1 py-2">

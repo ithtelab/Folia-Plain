@@ -1220,6 +1220,18 @@ export default {
     "qualityUltra": "Ultra High",
     "qualityLossless": "Lossless",
     "qualityHires": "Hi-Res",
+    "qualitySpatial": "Spatial Audio",
+    "qualityAvailability": "Available streams depend on your account and the song. The returned source may be below your preference.",
+    "surroundCompatibility": "Requests the provider's stereo surround mix, without proprietary spatial decoding or multichannel passthrough. Account and song restrictions apply.",
+    "membershipInactive": "Expired",
+    "qualityMaster": "Master",
+    "qualitySurround": "Surround Audio",
+    "membershipVip": "VIP",
+    "membershipSvip": "SVIP",
+    "membershipMusicPackage": "Music package",
+    "membershipExpires": "Expires: {{date}}",
+    "membershipExpired": "Expired on {{date}}",
+    "membershipExpiryUnknown": "Expiry date unavailable",
     "vipOnly": "VIP Only"
   },
   "playlist": {
@@ -3236,6 +3248,10 @@ export default {
       "gpuAcceleration": {
         "title": "Control GPU acceleration",
         "description": "Desktop Performance and Motion settings now include hardware acceleration, enabled by default. Restart after saving for it to take effect; disabling it may help with black screens or rendering issues."
+      },
+      "musicAccount": {
+        "title": "Membership and enhanced audio",
+        "description": "Supported accounts show the provider's membership tier and expiry, with unknown dates clearly marked. Spatial, Master and stereo Surround preferences depend on your account and song; proprietary spatial decoding is not included."
       },
       "platformPackages": {
         "title": "Multi-platform downloads",

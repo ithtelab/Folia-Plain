@@ -30,6 +30,8 @@ import { createNeteaseExplore } from './neteaseExplore';
 import { neteaseRaw } from './neteaseRaw';
 import { canRunLoginSelfCheck, runLoginSelfCheck } from '../loginSelfCheck';
 import { diagnosticLine, formatDiagnosticClock } from '../login/loginDiagnosticReport';
+import { normalizeNeteaseMembership } from './neteaseMembership';
+import { NETEASE_QUALITY_LEVELS, neteaseQualityLevel, actualNeteaseQuality, isEnhancedNeteaseQuality } from './neteaseQuality';
 
 // src/services/onlineMusic/netease/neteaseProvider.ts
 
@@ -40,9 +42,7 @@ export const toNeteaseId = (id: MediaId): number => {
 };
 
 const mapQuality = (quality: AudioQualityPreference): string => {
-    if (quality === 'standard') return 'standard';
-    if (quality === 'high') return 'exhigh';
-    return quality;
+    return neteaseQualityLevel(quality);
 };
 
 /**
@@ -53,6 +53,7 @@ const mapScrobbleQuality = (quality?: AudioQualityPreference): { level: string; 
     if (quality === 'standard') return { level: 'standard', bitrate: 128 };
     if (quality === 'lossless') return { level: 'lossless', bitrate: 999 };
     if (quality === 'hires') return { level: 'hires', bitrate: 1999 };
+    if (quality && isEnhancedNeteaseQuality(quality)) return { level: mapQuality(quality), bitrate: 1999 };
     return { level: 'exhigh', bitrate: 320 };
 };
 
@@ -321,13 +322,20 @@ export const neteaseProvider: OnlineMusicProvider = {
         },
     },
     playback: {
+        audioQualityLevels: NETEASE_QUALITY_LEVELS,
         async getSongDetail(id) {
             const response = await neteaseApi.getSongDetail(toNeteaseId(id));
             const raw = response?.songs?.[0];
             return raw ? normalizeNeteaseSong(raw) : null;
         },
         async getAudioSource(song, quality) {
-            const response = await neteaseApi.getSongUrl(toNeteaseId(song.id), mapQuality(quality));
+            let response = await neteaseApi.getSongUrl(toNeteaseId(song.id), mapQuality(quality));
+            let requested = quality;
+            if (!isRefusedNeteaseAnswer(response) && !response?.data?.[0]?.url && isEnhancedNeteaseQuality(quality)) {
+                console.info('[Audio] Enhanced stream unavailable; retrying the same song at Hi-Res');
+                requested = 'hires';
+                response = await neteaseApi.getSongUrl(toNeteaseId(song.id), 'hires');
+            }
             if (isRefusedNeteaseAnswer(response)) throw neteaseAnswerError(response, 'the song URL');
             const raw = response?.data?.[0];
             const rawUrl = raw?.url;
@@ -338,10 +346,12 @@ export const neteaseProvider: OnlineMusicProvider = {
             // module/song_url_v1.js 带 unblock=true 时写字符串 'null'。
             const preview = typeof raw?.freeTrialInfo === 'object' && raw.freeTrialInfo !== null;
             const trackGain = toFiniteNumber(raw?.gain);
+            const sourceQuality = actualNeteaseQuality(raw?.level, requested);
+            if (sourceQuality !== quality) console.info(`[Audio] Stream preference ${quality} resolved to ${sourceQuality}`);
             return {
                 url: String(rawUrl).replace(/^http:/, 'https:'),
                 fetchedAt: Date.now(),
-                quality,
+                quality: sourceQuality,
                 ...(preview ? { preview } : {}),
                 ...(trackGain === undefined ? {} : { replayGain: { trackGain } }),
             };
@@ -422,7 +432,15 @@ export const neteaseProvider: OnlineMusicProvider = {
                 writeProviderSessionValue('netease', 'cookie', loginResponse.cookie);
             }
             noteLoginStatusCheck(diagnosticLine`signed in (login/status code=${loginCode}, user/account code=${accountCode})`);
-            return normalizeUser({ ...loginProfile, ...accountProfile });
+            const user = normalizeUser({ ...loginProfile, ...accountProfile });
+            try {
+                user.membership = normalizeNeteaseMembership(await neteaseApi.getVipInfo(toNeteaseId(user.id)));
+                if (user.membership) console.info(`[Account] Membership refreshed: ${user.membership.tier}, ${user.membership.active ? 'active' : 'expired'}, expiry ${user.membership.expiresAt ? 'known' : 'unknown'}`);
+            } catch (error) {
+                // Optional membership information must never make an otherwise valid login disappear.
+                console.warn('[Account] Could not refresh membership details', error);
+            }
+            return user;
         },
         // The request to NetEase takes the cookie as it is when it is made (`neteaseApi.logout`),
         // and the cookie goes at once, before the first wait and whatever NetEase answers: what

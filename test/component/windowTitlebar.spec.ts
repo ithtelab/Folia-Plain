@@ -38,3 +38,19 @@ test('the always-visible preference keeps controls accessible away from the edge
     await close.click();
     await expect(page.locator('[data-titlebar-test-action]')).toHaveText('close');
 });
+
+test('blank titlebar space stays draggable across the left and right sides', async ({ page }) => {
+    const width = page.viewportSize()!.width;
+    const drag = page.locator('[data-titlebar-drag-zone]');
+    await expect(drag).toHaveCSS('-webkit-app-region', 'drag');
+    const edge = (await page.locator('[data-titlebar-reveal-edge]').boundingBox())!;
+    expect(edge.width).toBeLessThanOrEqual(256);
+    expect(edge.x).toBeGreaterThan(width / 2);
+    for (const x of [80, width / 2, width - 300, width - 100]) {
+        const y = x > edge.x ? 24 : 12;
+        const hit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.hasAttribute('data-titlebar-drag-zone'), { x, y });
+        expect(hit, `blank titlebar at ${x},${y}`).toBe(true);
+    }
+    const hidden = page.locator('button[tabindex="-1"]').filter({ has: page.locator('.lucide-x') });
+    await expect(hidden.locator('..')).not.toHaveCSS('-webkit-app-region', 'no-drag');
+});

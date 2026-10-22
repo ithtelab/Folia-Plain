@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Keep native dragging available independently of whether the window controls are revealed.
 export default function TitlebarDragZone({
     active,
 }: {
@@ -9,6 +10,7 @@ export default function TitlebarDragZone({
 
     return (
         <div
+            data-titlebar-drag-zone
             className="absolute inset-0 pointer-events-auto"
             style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
         />

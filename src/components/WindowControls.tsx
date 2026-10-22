@@ -80,7 +80,7 @@ export default function WindowControls({
             inert={!standardControlsVisible}
             className={`flex h-full ${isDaylight ? 'text-zinc-800' : 'text-[var(--text-primary)]'}`}
             style={{
-                WebkitAppRegion: 'no-drag',
+                WebkitAppRegion: standardControlsVisible ? 'no-drag' : undefined,
                 pointerEvents: 'none',
             } as React.CSSProperties}
         >

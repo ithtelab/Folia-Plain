@@ -15,6 +15,9 @@ vi.mock('@/services/onlineMusic/netease/netease', async importOriginal => ({
     neteaseApi: {
         normalizeSongResult: vi.fn((raw: unknown) => raw),
         getSongUrl: vi.fn(),
+        getVipInfo: vi.fn(),
+        getLoginStatus: vi.fn(),
+        getUserAccount: vi.fn(),
         getLyric: vi.fn(),
         getUnavailableSongReplacement: vi.fn(),
         cloudSearch: vi.fn(),
@@ -46,6 +49,31 @@ const song: UnifiedSong = {
 
 describe('neteaseProvider', () => {
     beforeEach(() => vi.clearAllMocks());
+
+    it.each([['spatial', 'jyeffect'], ['master', 'jymaster'], ['surround', 'sky']] as const)('requests %s through the documented stream level', async (quality, level) => {
+        vi.mocked(neteaseApi.getSongUrl).mockResolvedValue({ data: [{ url: 'https://music.test/audio.flac', level }] } as any);
+        expect((await neteaseProvider.playback!.getAudioSource(song, quality))?.quality).toBe(quality);
+        expect(neteaseApi.getSongUrl).toHaveBeenCalledWith(42, level);
+    });
+
+    it('reports a server downgrade rather than claiming master quality', async () => {
+        vi.mocked(neteaseApi.getSongUrl).mockResolvedValue({ data: [{ url: 'https://music.test/audio.flac', level: 'lossless' }] } as any);
+        expect((await neteaseProvider.playback!.getAudioSource(song, 'master'))?.quality).toBe('lossless');
+    });
+
+    it('retries an unavailable enhanced stream at Hi-Res without dropping preview restrictions', async () => {
+        vi.mocked(neteaseApi.getSongUrl).mockResolvedValueOnce({ code: 200, data: [{ url: null }] } as any)
+            .mockResolvedValueOnce({ data: [{ url: 'https://music.test/preview.flac', level: 'lossless', freeTrialInfo: { start: 0, end: 30 } }] } as any);
+        expect(await neteaseProvider.playback!.getAudioSource(song, 'surround')).toMatchObject({ quality: 'lossless', preview: true });
+        expect(neteaseApi.getSongUrl).toHaveBeenLastCalledWith(42, 'hires');
+    });
+
+    it('keeps a confirmed account signed in when optional membership reading fails', async () => {
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue({ code: 200, data: { profile: { userId: 7, nickname: 'Listener' } } } as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue({ code: 200, account: { id: 7 }, profile: { userId: 7, nickname: 'Listener' } } as any);
+        vi.mocked(neteaseApi.getVipInfo).mockRejectedValueOnce(new Error('membership unavailable'));
+        expect(await neteaseProvider.auth!.getLoginStatus()).toMatchObject({ id: 7, nickname: 'Listener' });
+    });
 
     it('maps semantic high quality to the NetEase exhigh value', async () => {
         vi.mocked(neteaseApi.getSongUrl).mockResolvedValue({ data: [{ url: 'http://music.test/song.mp3' }] } as any);

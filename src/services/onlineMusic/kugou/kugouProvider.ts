@@ -665,10 +665,10 @@ const normalizeKugouSearchSongs = (rawItems: any[]): UnifiedSong[] => {
 };
 
 const qualityValue = (quality: AudioQualityPreference): string => ({
-    standard: '128', high: '320', ultra: '320', lossless: 'flac', hires: 'high',
+    standard: '128', high: '320', ultra: '320', lossless: 'flac', hires: 'high', spatial: 'high', master: 'high', surround: 'high',
 })[quality];
 
-const QUALITY_FALLBACKS: Record<AudioQualityPreference, AudioQualityPreference[]> = {
+const QUALITY_FALLBACKS: Partial<Record<AudioQualityPreference, AudioQualityPreference[]>> = {
     standard: ['standard'],
     high: ['high', 'standard'],
     // For the type: KuGou is never asked at 'ultra' (omni asks at 'high' in its place).
@@ -677,7 +677,7 @@ const QUALITY_FALLBACKS: Record<AudioQualityPreference, AudioQualityPreference[]
     hires: ['hires', 'lossless', 'high', 'standard'],
 };
 
-const qualityFallbacks = (quality: AudioQualityPreference): AudioQualityPreference[] => QUALITY_FALLBACKS[quality];
+const qualityFallbacks = (quality: AudioQualityPreference): AudioQualityPreference[] => QUALITY_FALLBACKS[quality] ?? ['hires', 'lossless', 'high', 'standard'];
 
 const getId = (value: MediaId | ProviderCollection | SongResult) => typeof value === 'object' ? value.id : value;
 

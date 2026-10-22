@@ -13,6 +13,7 @@ import { openLoginWindow, useLoginWindowStore } from './loginWindowStore';
 import { AccountPicture, PlatformMark } from './PlatformMark';
 import { pillProvider, pillSeenNext, rowStatus, type PillSeen } from './platformRows';
 import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
+import MembershipSummary from './MembershipSummary';
 
 // src/components/login/SwitcherPill.tsx
 // 主页右下角的切换器：正在用的账号的头像，角上是平台的记号（没有人登录时只有记号；登录失效时记号上
@@ -132,6 +133,7 @@ const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer }) 
                         <span className={`st-t-move overflow-hidden whitespace-nowrap text-xs font-semibold transition-[max-width,opacity,padding] ${showLabel ? 'max-w-[180px] pl-2.5 pr-3 opacity-100' : 'max-w-0 opacity-0'}`}>
                             {provider.shortName || provider.displayName}
                         </span>
+                        {provider.user?.membership && <MembershipSummary user={provider.user} mode="badge" />}
                     </button>
                 </Tooltip>
                 <span className="mx-1 hidden h-4 w-px bg-current opacity-10 md:block" aria-hidden="true" />

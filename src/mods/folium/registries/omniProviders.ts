@@ -107,8 +107,9 @@ const buildProvider = (modId: string, providerId: string, def: FoliumOmniProvide
                 getAudioSource: async (song, quality: AudioQualityPreference) => {
                     // For the type: a mod's provider lists no levels, so it is never asked at 'ultra',
                     // which is no level of the mod contract (omni asks at 'high' in its place).
+                    // Enhanced built-in presets likewise resolve to Hi-Res before reaching legacy mod providers.
                     const source = await timeFoliumMod(modId, `provider ${providerId} getAudioUrl`, () => (
-                        def.getAudioUrl!(toProviderSong(song), quality === 'ultra' ? 'high' : quality)
+                        def.getAudioUrl!(toProviderSong(song), quality === 'ultra' ? 'high' : quality === 'spatial' || quality === 'master' || quality === 'surround' ? 'hires' : quality)
                     ));
                     if (!source || typeof source.url !== 'string') return null;
                     return {

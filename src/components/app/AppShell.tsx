@@ -182,18 +182,18 @@ const AppShell: React.FC<AppShellProps> = ({
                     <div className="relative h-full">
                         <TitlebarDragZone active={usesCustomWindowChrome} />
                         {!isMainWindowClickThroughEnabled && (
-                            // Native drag regions do not deliver pointer events: keep the activation edge reachable.
+                            // Only the button strip needs a client-area reveal target; blank titlebar space stays draggable.
                             <div
                                 data-titlebar-reveal-edge
-                                className="pointer-events-auto absolute inset-x-0 top-0"
-                                style={{ height: TITLEBAR_REVEAL_EDGE, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                                className="pointer-events-auto absolute right-0 top-0"
+                                style={{ width: hasFullscreenTitlebarButton ? 256 : 212, height: TITLEBAR_REVEAL_EDGE, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
                             />
                         )}
                         <div
                             className={`pointer-events-none absolute top-0 z-20 h-full flex items-center ${
                                 hasFullscreenTitlebarButton ? 'right-[224px]' : 'right-[180px]'
                             }`}
-                            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                            style={{ WebkitAppRegion: showMainWindowClickThroughToggle ? 'no-drag' : undefined } as React.CSSProperties}
                         >
                             <button
                                 type="button"

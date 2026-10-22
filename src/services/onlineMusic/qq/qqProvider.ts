@@ -42,10 +42,10 @@ import { errorFields, errorMessage } from '../../../utils/errorText';
 
 // src/services/onlineMusic/qq/qqProvider.ts
 
-const QQ_QUALITY_FALLBACKS: Record<
+const QQ_QUALITY_FALLBACKS: Partial<Record<
     AudioQualityPreference,
     Array<{ apiQuality: '128' | '320' | 'flac'; resolvedQuality: AudioQualityPreference }>
-> = {
+>> = {
     standard: [{ apiQuality: '128', resolvedQuality: 'standard' }],
     high: [
         { apiQuality: '320', resolvedQuality: 'high' },
@@ -379,7 +379,7 @@ const getAudioSource = async (song: SongResult, quality: AudioQualityPreference)
     let likelyCause: 'subscription' | 'region' | undefined;
     // The first request that failed: what is said when no level was answered at all.
     let firstFailure: unknown;
-    const tiers = QQ_QUALITY_FALLBACKS[quality];
+    const tiers = QQ_QUALITY_FALLBACKS[quality] ?? QQ_QUALITY_FALLBACKS.hires!;
     const standardTier = tiers[tiers.length - 1];
     // 标准音质（最后一档）回了空链接：这个账号拿不到整首，更高的档连不上也一样。后端 3.3.3 在原因没确认时
     // 已经替这一档再要过一次（qq-music-api 的 services/auth/playback.js）。

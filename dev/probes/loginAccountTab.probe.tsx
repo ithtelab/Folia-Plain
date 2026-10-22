@@ -7,6 +7,7 @@ import { useOnlineProviderAccountStore } from '../../src/stores/useOnlineProvide
 import { createProviderAccountController } from '../../src/library/core/account/providerAccountController.service';
 import { createProviderAccountDeps } from '../../src/library/core/account/providerAccountDeps.service';
 import type { ProbeDefinition } from './definition';
+import type { AudioQualityPreference } from '../../src/types/onlineMusic';
 // dev/probes/loginAccountTab.probe.tsx
 
 /**
@@ -26,6 +27,8 @@ function LoginAccountTabProbe(props: ProbeProps) {
     const state = props.state ?? query.get('state') ?? 'signed-in';
     const isDaylight = (props.theme ?? query.get('theme')) === 'light';
     const [said, setSaid] = useState('');
+    const [quality, setQuality] = useState<AudioQualityPreference>('high');
+    const membership = query.get('membership');
     const [account] = useState(() => createProviderAccountController(createProviderAccountDeps({
         logout: async () => { },
         confirmLogout: async () => {
@@ -42,11 +45,14 @@ function LoginAccountTabProbe(props: ProbeProps) {
         const store = useOnlineProviderAccountStore.getState();
         store.setActiveProviderId('netease');
         if (state === 'signed-in') {
-            store.updateAccount('netease', { status: 'authenticated', user: { id: '329184756', nickname: '青柠汽水', vipType: 11 }, error: undefined });
+            store.updateAccount('netease', { status: 'authenticated', user: { id: '329184756', nickname: '青柠汽水', vipType: 11,
+                ...(membership ? { membership: { tier: 'svip' as const, level: 8, active: membership !== 'expired',
+                    ...(membership === 'unknown' ? {} : { expiresAt: Date.UTC(membership === 'expired' ? 2020 : 2080, 4, 20) }) } } : {}),
+            }, error: undefined });
         } else {
             store.clearAccount('netease', state === 'ran-out' ? 'auth-required' : undefined);
         }
-    }, [state]);
+    }, [state, membership]);
 
     return (
         <div className={`flex min-h-screen flex-col items-center gap-3 p-10 ${isDaylight ? 'bg-zinc-300' : 'bg-zinc-800'}`}>
@@ -56,8 +62,8 @@ function LoginAccountTabProbe(props: ProbeProps) {
             >
                 <AccountTab
                     accountController={account}
-                    audioQuality="high"
-                    onAudioQualityChange={() => { }}
+                    audioQuality={quality}
+                    onAudioQualityChange={setQuality}
                     onSyncData={() => { }}
                     isSyncing={false}
                     onNavigateHome={() => setSaid('go home')}

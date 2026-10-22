@@ -1,4 +1,4 @@
-import { ArrowUpRight, Cpu, Layers, Monitor, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Cpu, Headphones, Layers, Monitor, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -24,5 +24,6 @@ export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
         { id: 'playerDestination', icon: ArrowUpRight },
         { id: 'gpuAcceleration', icon: Cpu },
         { id: 'platformPackages', icon: Monitor },
+        { id: 'musicAccount', icon: Headphones },
     ],
 };
