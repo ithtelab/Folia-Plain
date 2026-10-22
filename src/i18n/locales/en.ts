@@ -3273,6 +3273,37 @@ export default {
         "description": "This repository offers Windows, macOS and Linux desktop packages, plus a Web deployment ZIP and checksums. Online Web music needs backends; macOS packages are unsigned and not notarized."
       }
     },
+    "v0_7_25": {
+      "intro": "Folia Plain 0.7.25 adds a Windows GPU picker and a background throttling switch, and fixes sign-ins being dropped after a restart.",
+      "gpuPreference": {
+        "title": "Pick which GPU renders",
+        "description": "Windows Options → Performance & motion has a new Render GPU setting: Auto, High performance or Power saving. Dual-GPU laptops render on the integrated chip by default; pick the discrete one here and restart. Command-line switches and the system graphics settings take precedence."
+      },
+      "backgroundThrottling": {
+        "title": "No more full-speed rendering in the background",
+        "description": "The performance page has a Background throttling switch, off by default. With it on, a minimised or covered window is throttled by the system and the lyric animation holds its current frame until you come back. Wallpaper mode, an always-on-top window, video export and a connected OBS browser source all make it stand down."
+      },
+      "loginKept": {
+        "title": "Sign-ins survive a restart",
+        "description": "Being offline, a server error or an unreadable encrypted store no longer counts as nobody being signed in and deletes a still-valid sign-in; only an explicit rejection clears it. QQ desktop renews on a timer, and page storage is flushed before quit, restart or a crash."
+      },
+      "glassChoice": {
+        "title": "Glass or the original material, any time",
+        "description": "Options → Appearance has a Liquid Glass switch; turning it off restores the original material. The choice is saved and travels with your visual config exports."
+      },
+      "staticGlass": {
+        "title": "Thinner, more consistent glass",
+        "description": "Cards and controls share one set of blur, edge highlight and film values, and the material is thinner, so you can see the page through it. Light mode gains a deepened tone with a lit top edge over a shaded lower one, and pressing a card sends two liquid waves out from where you pressed."
+      },
+      "playerDestination": {
+        "title": "The player bar goes straight to lyrics",
+        "description": "Pressing the bottom player bar opens the lyrics page directly, while the queue button and your playback preference stay as they were. Esc leaves window fullscreen; the pointer hides after about 3 seconds still and returns as soon as you move."
+      },
+      "musicAccount": {
+        "title": "Membership level and expiry",
+        "description": "Supported accounts show VIP or SVIP, the level and expiry date the platform returns, and its official badge. Expired memberships are marked, and a missing date is never guessed."
+      }
+    },
     "v0_7_24": {
       "intro": "Folia Plain 0.7.24 starts new installs on the grid, lets you skip the first-run guide, and keeps polishing Liquid Glass and playback smoothness.",
       "gridFirst": {

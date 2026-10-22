@@ -389,7 +389,11 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     {/* Center Tab Switcher */}
                     <div className="flex justify-center order-3 md:order-none col-span-2 md:col-span-1">
                         <div className="liquid-glass-host relative p-1 rounded-full scale-90 md:scale-100 origin-center">
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="ambient" legacy="navigation" />
+                            {/* The tab capsule keeps its glass and its rim light, but not the moving
+                                reflection: a flowing highlight around the one control you read at a
+                                glance was noise, not life. The bottom player is static for the same
+                                reason. */}
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="static" legacy="navigation" />
                             <div className="inline-flex items-center gap-0">
                                 {homeTabs.map((tab) => {
                                     const isActive = homeViewTab === tab.key;

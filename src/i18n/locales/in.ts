@@ -3273,6 +3273,37 @@ export default {
         "description": "Repositori ini menyediakan paket desktop Windows, macOS dan Linux, serta ZIP penerapan Web dan checksum. Musik daring Web memerlukan backend; paket macOS tidak ditandatangani atau dinotarisasi."
       }
     },
+    "v0_7_25": {
+      "intro": "Folia Plain 0.7.25 menambah pilihan GPU render di Windows, sakelar pembatasan latar belakang, dan memperbaiki login yang hilang setelah mulai ulang.",
+      "gpuPreference": {
+        "title": "Pilih GPU mana yang merender",
+        "description": "Opsi Windows → Performa & gerak punya pengaturan GPU Render: Otomatis, Performa tinggi, atau Hemat daya. Laptop dua GPU secara bawaan merender di chip terintegrasi; pilih GPU diskrit di sini lalu mulai ulang. Sakelar baris perintah dan pengaturan grafis sistem lebih diutamakan."
+      },
+      "backgroundThrottling": {
+        "title": "Tidak lagi merender penuh di latar belakang",
+        "description": "Halaman performa punya sakelar Pembatasan latar belakang, mati secara bawaan. Saat dinyalakan, jendela yang diminimalkan atau tertutup dibatasi sistem dan animasi lirik berhenti di bingkai terakhir sampai kamu kembali. Mode wallpaper, jendela selalu di atas, ekspor video, dan sumber browser OBS yang terhubung membuatnya menyerah."
+      },
+      "loginKept": {
+        "title": "Login bertahan setelah mulai ulang",
+        "description": "Tidak ada jaringan, galat server, atau penyimpanan terenkripsi yang tak terbaca tidak lagi dianggap sebagai belum login sehingga menghapus login yang masih berlaku; hanya penolakan eksplisit yang menghapusnya. QQ desktop memperpanjang secara berkala, dan penyimpanan halaman ditulis sebelum keluar, mulai ulang, atau crash."
+      },
+      "glassChoice": {
+        "title": "Kaca atau material asli, kapan saja",
+        "description": "Opsi → Tampilan punya sakelar Liquid Glass; mematikannya mengembalikan material asli. Pilihan tersimpan dan ikut dalam ekspor konfigurasi tampilan."
+      },
+      "staticGlass": {
+        "title": "Kaca lebih tipis dan konsisten",
+        "description": "Kartu dan kontrol memakai satu set nilai buram, sorotan tepi, dan lapisan tipis, dan materialnya lebih tipis sehingga halaman di belakangnya terlihat. Mode terang mendapat warna lebih pekat dengan tepi atas terang di atas tepi bawah redup, dan menekan kartu memancarkan dua gelombang cair dari titik tekanan."
+      },
+      "playerDestination": {
+        "title": "Bilah pemutar langsung ke lirik",
+        "description": "Menekan bilah pemutar bawah langsung membuka halaman lirik, sementara tombol antrean dan preferensi pemutaran tetap seperti semula. Esc keluar dari layar penuh jendela; penunjuk disembunyikan setelah sekitar 3 detik diam dan kembali saat digerakkan."
+      },
+      "musicAccount": {
+        "title": "Tingkat keanggotaan dan masa berlaku",
+        "description": "Akun yang didukung menampilkan VIP atau SVIP, tingkat dan tanggal kedaluwarsa dari platform, serta lencana resminya. Keanggotaan kedaluwarsa ditandai, dan tanggal yang tidak tersedia tidak ditebak."
+      }
+    },
     "v0_7_24": {
       "intro": "Folia Plain 0.7.24 memulai pemasangan baru di grid, membolehkan panduan awal dilewati, dan terus merapikan Liquid Glass serta kelancaran pemutaran.",
       "gridFirst": {
