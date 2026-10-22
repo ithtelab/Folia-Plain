@@ -15,7 +15,7 @@ void main() {
 }
 `;
 
-export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interactive' }) {
+export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interactive' | 'static' }) {
     const elementRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -41,6 +41,14 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
             return;
         }
         const abort = new AbortController();
+        const dispose = () => {
+            abort.abort();
+            const gl = mount.canvasElement.getContext('webgl2');
+            mount.dispose();
+            gl?.getExtension('WEBGL_lose_context')?.loseContext();
+        };
+        // Keep the same reflection shader, frozen at its initial frame, with no input listeners.
+        if (mode === 'static') return dispose;
         const options = { passive: true, signal: abort.signal };
         let hovered = host.matches(':hover');
         let focused = host.contains(document.activeElement);
@@ -79,12 +87,7 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
         window.addEventListener('blur', blurWindow, options);
         window.addEventListener('focus', focusWindow, options);
         update();
-        return () => {
-            abort.abort();
-            const gl = mount.canvasElement.getContext('webgl2');
-            mount.dispose();
-            gl?.getExtension('WEBGL_lose_context')?.loseContext();
-        };
+        return dispose;
     }, [mode]);
 
     return <div ref={elementRef} className="liquid-glass-flow" data-glass-flow={mode} aria-hidden="true" />;

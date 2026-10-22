@@ -10,8 +10,8 @@ on:
       platform:
         description: Artifact platform from that build
         type: choice
-        default: Windows
-        options: [Windows, Linux, macOS]
+        default: All
+        options: [All, Windows, Linux, macOS]
 
 permissions:
   actions: read
@@ -47,10 +47,17 @@ jobs:
           ref: ${{ steps.source.outputs.sha }}
       - uses: actions/download-artifact@v6
         with:
-          name: folia-plain-${{ inputs.platform }}
-          path: release
+          pattern: folia-plain-*
+          path: artifacts
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Combine verified platform packages
+        env:
+          PLATFORMS: ${{ inputs.platform == 'All' && 'Windows,macOS,Linux' || inputs.platform }}
+        run: node build/assembleRelease.mjs artifacts release "$PLATFORMS"
       - name: Verify and upload the release
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}

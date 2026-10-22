@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { applyImportedConfig, buildCurrentConfig, type ConfigThemeControls } from '@/components/modal/settings/pages/storage/visualConfigTransfer';
 import { useStageSettingsStore } from '@/stores/useStageSettingsStore';
 import { useThemeSettingsStore } from '@/stores/useThemeSettingsStore';
+import { useGlassSettingsStore } from '@/stores/useGlassSettingsStore';
 import { useVisualizerSettingsStore } from '@/stores/useVisualizerSettingsStore';
 import type { DualTheme } from '@/types';
 import { ACTIVATE_CUSTOM_THEME_KEY, THEME_DARK_KEY } from '@/utils/appearanceImportPlan';
@@ -31,6 +32,21 @@ const controls = (over: Partial<ConfigThemeControls> = {}): ConfigThemeControls 
 });
 
 describe('applyImportedConfig', () => {
+    it('exports the material choice and applies it only when selected for import', () => {
+        const previous = useGlassSettingsStore.getState().liquidGlassEnabled;
+        try {
+            useGlassSettingsStore.getState().setLiquidGlassEnabled(false);
+            const config: Record<string, unknown> = buildCurrentConfig(controls(), 'none');
+            expect(config.liquidGlassEnabled).toBe(false);
+            useGlassSettingsStore.getState().setLiquidGlassEnabled(true);
+            applyImportedConfig(config, [], controls());
+            expect(useGlassSettingsStore.getState().liquidGlassEnabled).toBe(true);
+            applyImportedConfig(config, ['liquidGlassEnabled'], controls());
+            expect(useGlassSettingsStore.getState().liquidGlassEnabled).toBe(false);
+        } finally {
+            useGlassSettingsStore.getState().setLiquidGlassEnabled(previous);
+        }
+    });
     it('applies the picked fields and leaves the others as they are', () => {
         const before = useVisualizerSettingsStore.getState().backgroundOpacity;
 

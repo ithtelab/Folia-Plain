@@ -38,6 +38,8 @@ Product identity is defined in `shared/productIdentity.json`. Desktop packages u
 
 Windows Releases provide an x64 NSIS installer, ZIP, updater metadata and `SHA256SUMS.txt`. The packaged executable is checked for native resources, product identity, isolated-profile startup and preload IPC before publication.
 
+macOS provides arm64 / x64 DMG and ZIP packages; Linux provides x64 DEB, RPM and portable TAR.GZ files. macOS builds are unsigned and not notarized. The Web ZIP contains a separate static frontend build and deployment instructions. Selecting `all` builds all desktop systems in parallel, with the Web archive generated in the Windows job. The verified publisher's `All` option combines validated attachments and checksum records before publication.
+
 The **Build desktop** workflow produces downloadable artifacts on manual request. Publishing is off by default; selecting `publish` creates a Release only after the build and verification succeed. The version comes from `package.json` and notes from `docs/releases/v<version>.md`. An existing version cannot be published twice. Local `npm run build:electron` requires network access and platform toolchains, including Rust and CMake when applicable. Passing the Web build does not verify desktop installers.
 
 Upstream documentation's release channels, mirrors, Docker images, AUR package and communities belong to upstream. Download this fork from its own Releases page.

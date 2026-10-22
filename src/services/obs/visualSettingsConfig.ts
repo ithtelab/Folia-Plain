@@ -6,6 +6,7 @@ import { toStoredSmartBeat } from '../../stores/visualizerSettingsPersistence';
 import { useVisualizerAssetStore } from '../../stores/useVisualizerAssetStore';
 import { useTypographySettingsStore } from '../../stores/useTypographySettingsStore';
 import { useThemeSettingsStore } from '../../stores/useThemeSettingsStore';
+import { useGlassSettingsStore } from '../../stores/useGlassSettingsStore';
 import { useStageSettingsStore } from '../../stores/useStageSettingsStore';
 import { useLibraryWallLookStore } from '../../stores/useLibraryWallLookStore';
 
@@ -45,6 +46,7 @@ export function buildVisualSettingsConfig(): Record<string, unknown> {
     // Static mode is not merely an audio-reactivity switch: it selects the low-motion branch inside
     // several renderers, so a web overlay without it animates where the main window does not.
     staticMode: storeThemeSettings.staticMode,
+    liquidGlassEnabled: useGlassSettingsStore.getState().liquidGlassEnabled,
     visualizerOpacity: storeVisualizer.visualizerOpacity,
     hidePlayerTranslationSubtitle: storeTypographySettings.hidePlayerTranslationSubtitle,
     showSubtitleTranslation: storeTypographySettings.showSubtitleTranslation,

@@ -200,7 +200,7 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                             ? 'liquid-glass-button pointer-events-auto cursor-pointer'
                             : ''}`}
                     >
-                        <LiquidGlassSurface isDaylight={isDaylight} radius={CARD_RADIUS} interactive={Boolean(onActivate) && transitionCue === null} />
+                        <LiquidGlassSurface isDaylight={isDaylight} radius={CARD_RADIUS} legacy="toast" interactive={Boolean(onActivate) && transitionCue === null} />
                         {/* 顶部光线（进场的横向扫光）。混音期间收掉：描边现在正压在卡片边框上，
                             再叠一条亮线就是同一条边上两层东西，读起来是好几层边框套在一起。 */}
                         <motion.span

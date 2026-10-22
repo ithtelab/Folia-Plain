@@ -27,6 +27,16 @@
 .lattice-back:hover { transform: scale(1.05); }
 .lattice-back:active { transform: scale(0.95); }
 
+/* The decoration samples the page directly, rather than an already blurred host layer. */
+html[data-liquid-glass='on'] .lattice-back.liquid-glass-host {
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: var(--glass-shadow, 0 8px 28px -12px rgb(0 0 0 / 44%));
+}
+
+/* Classic mode keeps the wall button's original fill and blur on the host itself. */
+html[data-liquid-glass='off'] .lattice-back > .liquid-glass-surface { display: none; }
+
 /* 隐藏式：出现 / 消失与播放页那颗相同（0.2s 淡入、略缩小并左移 6px）。隐藏时不接指针，热区判定在组件里。 */
 .lattice-back.is-concealed {
     transition: opacity 200ms ease, transform 200ms ease, background-color 200ms ease;

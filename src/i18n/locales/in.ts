@@ -206,6 +206,8 @@ export default {
     "notConfigured": "Belum dikonfigurasi"
   },
   "notifications": {
+    "gpuRestartRequired": "Preferensi akselerasi perangkat keras disimpan. Mulai ulang aplikasi untuk menerapkannya.",
+    "gpuSettingFailed": "Tidak dapat menyimpan akselerasi perangkat keras. Silakan coba lagi.",
     "coverColorAdded": "Warna sampul ditambahkan",
     "coverColorDefault": "Menggunakan warna bawaan",
     "staticModeOn": "Mode statis diaktifkan",
@@ -628,6 +630,8 @@ export default {
       "settings-desktop": { "title": "Pengaturan desktop", "description": "Buka pengaturan aplikasi desktop" },
       "playlist-view-grid": { "title": "Buka playlist sebagai grid sampul", "description": "Jelajahi playlist sebagai grid sampul di antarmuka pustaka grid" },
       "playlist-view-lattice": { "title": "Buka playlist sebagai kolase", "description": "Jelajahi playlist sebagai kolase seperti antrean di antarmuka pustaka grid" },
+      "liquid-glass-toggle": { "title": "Ganti material kaca", "description": "Beralih antara Liquid Glass dan material asli proyek" },
+      "gpu-hardware-acceleration-toggle": { "title": "Ubah akselerasi perangkat keras GPU", "description": "Simpan preferensi GPU untuk diterapkan setelah aplikasi dimulai ulang" },
       "download-update-mirror": {
         "title": "Unduh pembaruan dengan relay Tiongkok",
         "description": "Unduh pemasang baru proyek ini melalui GH-Proxy"
@@ -1752,6 +1756,12 @@ export default {
     "lyricMatchPriorityDesc": "Saat beberapa sumber lirik memiliki kecocokan berkualitas tinggi, utamakan sumber ini terlebih dahulu."
   },
   "options": {
+    "glassMaterial": "Material antarmuka",
+    "liquidGlassEnabled": "Liquid Glass",
+    "liquidGlassEnabledDesc": "Aktifkan Liquid Glass, atau nonaktifkan untuk memakai material asli proyek. Bilah pemutaran selalu statis.",
+    "gpuHardwareAcceleration": "Akselerasi perangkat keras GPU",
+    "gpuHardwareAccelerationDesc": "Aktif secara bawaan. Mulai ulang untuk menerapkan perubahan. Coba nonaktifkan jika layar hitam atau rendering bermasalah.",
+    "gpuRestartPending": "Preferensi disimpan. Mulai ulang aplikasi untuk menerapkannya.",
     "randomVisualizerModes": "Gaya untuk diacak",
     "randomVisualizerSelectAll": "Pilih semua",
     "randomVisualizerCurrentStyle": "Gaya saat ini",
@@ -3207,6 +3217,29 @@ export default {
       "qqPrivatePlaylists": {
         "title": "Playlist Pribadi QQ Music",
         "description": "Setelah masuk, playlist pribadi buatan Anda kini dapat memuat lagu dengan paging sungguhan. Backend yang di-host sendiri harus memakai qq-music-api 3.1.2 atau lebih baru; backend lama beralih otomatis, dan playlist yang tidak dapat dibaca kini menjelaskan bahwa playlist itu tidak publik, alih-alih tampil kosong tanpa keterangan."
+      }
+    },
+    "v0_7_23": {
+      "intro": "Folia Plain 0.7.23 memperjelas kaca, menambahkan kontrol material dan GPU, memperbaiki pintasan pemutar, serta menyediakan unduhan lintas platform.",
+      "glassChoice": {
+        "title": "Pilih material tampilan",
+        "description": "Aktifkan atau nonaktifkan Liquid Glass di Tampilan. Saat dimatikan, material klasik dipulihkan. Pilihan disimpan dan disertakan dalam ekspor serta impor tampilan."
+      },
+      "staticGlass": {
+        "title": "Kaca jernih, pemutar tetap diam",
+        "description": "Kartu daftar putar dan lebih banyak tombol kembali memakai material kaca, dengan lapisan putih lebih tipis pada mode terang. Pemutar mempertahankan buram, pembiasan dan pantulan beku tanpa mengalir saat disorot, ditekan atau diseret."
+      },
+      "playerDestination": {
+        "title": "Langsung ke layar lirik",
+        "description": "Klik bilah pemutar bawah kini membuka layar lirik, bukan kolase antrean. Tombol antrean terpisah dan preferensi kolase daftar putar tetap memiliki perilakunya sendiri."
+      },
+      "gpuAcceleration": {
+        "title": "Kontrol akselerasi GPU",
+        "description": "Pengaturan Performa dan Gerakan desktop kini memiliki akselerasi perangkat keras, aktif secara bawaan. Mulai ulang setelah menyimpan agar berlaku; menonaktifkannya dapat membantu masalah layar hitam atau perenderan."
+      },
+      "platformPackages": {
+        "title": "Unduhan lintas platform",
+        "description": "Repositori ini menyediakan paket desktop Windows, macOS dan Linux, serta ZIP penerapan Web dan checksum. Musik daring Web memerlukan backend; paket macOS tidak ditandatangani atau dinotarisasi."
       }
     },
     "v0_7_22": {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
+import { useThemeSettingsStore } from '../../stores/useThemeSettingsStore';
 import './WallBackButton.css';
 
 // src/components/wall/WallBackButton.tsx
@@ -48,10 +50,12 @@ type WallBackButtonProps = {
 };
 
 export default function WallBackButton({ label, onBack, concealed = false }: WallBackButtonProps) {
+    const isDaylight = useThemeSettingsStore(state => state.isDaylight);
     const revealed = useCornerReveal(concealed);
-    const className = concealed ? `lattice-back is-concealed${revealed ? ' is-revealed' : ''}` : 'lattice-back';
+    const className = `liquid-glass-host ${concealed ? `lattice-back is-concealed${revealed ? ' is-revealed' : ''}` : 'lattice-back'}`;
     return (
         <button type="button" className={className} onClick={onBack} aria-label={label} title={label}>
+            <LiquidGlassSurface isDaylight={isDaylight} />
             <ChevronLeft size={20} />
         </button>
     );

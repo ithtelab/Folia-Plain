@@ -13,7 +13,7 @@ Immersive Lyrics, Simply Music
 [![Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml/badge.svg)](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24-417461?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Version](https://img.shields.io/badge/version-0.7.22-62746b)](package.json)
+[![Version](https://img.shields.io/badge/version-0.7.23-62746b)](package.json)
 [![Stars](https://img.shields.io/github/stars/ithtelab/Folia-Plain?style=social)](https://github.com/ithtelab/Folia-Plain/stargazers)
 
 [Get it](#get-it) · [Run locally](#run-locally) · [Deploy](#deploy) · [Development](docs/plain.en.md)
@@ -26,7 +26,7 @@ Immersive Lyrics, Simply Music
 
 It keeps the lyric animations, provider integrations, local library and theme tools while replacing bundled character artwork with geometric avatars, abstract covers and neutral copy. The interface gives the focus to your music, lyrics and chosen album artwork.
 
-The project supports a React / Vite Web build and Electron desktop builds for Windows, macOS and Linux.
+Releases provide a React / Vite Web deployment archive and Electron desktop packages for Windows, macOS and Linux.
 
 > The upstream is the **chthollyphile/folia-major music player**. This project is unrelated to the **PaperMC/Folia Minecraft server**.
 
@@ -64,9 +64,13 @@ Music categories, Japanese lyrics and your own artwork remain supported. Plain c
 ## Get it
 
 - **Source:** clone this repository and follow the local setup below.
-- **Web artifacts:** successful [Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml) runs provide `folia-plain-web`.
+- **Web downloads:** [Releases](https://github.com/ithtelab/Folia-Plain/releases/latest) provide `Folia-Plain-<version>-web.zip` with static files and deployment instructions. Online music needs the corresponding backends. Successful [Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml) runs also provide frontend artifacts.
 - **Desktop artifacts:** maintainers can run [Build desktop](https://github.com/ithtelab/Folia-Plain/actions/workflows/desktop-build.yml) manually for the required platform.
-- **Windows downloads:** get the x64 `.exe` installer or ZIP from this repository's [Releases](https://github.com/ithtelab/Folia-Plain/releases/latest). Extract the entire ZIP before running `Folia Plain.exe`. SHA-256 checksums are included. Use the desktop workflow above for macOS and Linux builds.
+- **Windows downloads:** x64 `.exe` installer and portable ZIP. Extract the entire ZIP before running `Folia Plain.exe`.
+- **macOS downloads:** Apple Silicon (arm64) and Intel (x64) `.dmg` installers and ZIP archives. These builds are unsigned and not notarized.
+- **Linux downloads:** x64 `.deb`, `.rpm` and portable `.tar.gz` packages. The portable package includes `resources/linux/README-LINUX.txt`.
+
+SHA-256 checksums are included. Available platforms are determined by the actual attachments listed on each release.
 
 Upstream installers, mirrors and AUR packages install the original app.
 

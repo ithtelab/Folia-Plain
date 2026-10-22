@@ -389,7 +389,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     {/* Center Tab Switcher */}
                     <div className="flex justify-center order-3 md:order-none col-span-2 md:col-span-1">
                         <div className="liquid-glass-host relative p-1 rounded-full scale-90 md:scale-100 origin-center">
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="ambient" />
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="ambient" legacy="navigation" />
                             <div className="inline-flex items-center gap-0">
                                 {homeTabs.map((tab) => {
                                     const isActive = homeViewTab === tab.key;
@@ -465,7 +465,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     {/* Right Search Bar */}
                     <div className="flex justify-end order-2 md:order-none">
                         <form onSubmit={handleSearch} className="liquid-glass-host relative rounded-full w-full md:w-56 transition-[width] focus-within:md:w-72">
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} />
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} legacy="search" />
                             {isSearchingActive ? (
                                 <Loader2 className="absolute left-3 top-1/2 w-4 h-4 animate-spin opacity-40 -mt-2" />
                             ) : (

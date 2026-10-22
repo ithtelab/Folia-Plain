@@ -13,7 +13,7 @@ Immersive Lyrics, Simply Music // 歌词入境，听歌归简
 [![Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml/badge.svg)](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24-417461?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Version](https://img.shields.io/badge/version-0.7.22-62746b)](package.json)
+[![Version](https://img.shields.io/badge/version-0.7.23-62746b)](package.json)
 [![Stars](https://img.shields.io/github/stars/ithtelab/Folia-Plain?style=social)](https://github.com/ithtelab/Folia-Plain/stargazers)
 
 [获取方式](#获取方式) · [本地运行](#本地运行) · [部署说明](#部署) · [开发与维护](docs/plain.md)
@@ -26,7 +26,7 @@ Immersive Lyrics, Simply Music // 歌词入境，听歌归简
 
 保留上游丰富的歌词动效、音乐平台接入、本地曲库和主题能力，将默认视觉整理为抽象图形、几何头像与中性文案。没有内置角色立绘、拟人头像或设置页图片彩蛋，让音乐、歌词和你选择的封面成为界面的重点。
 
-提供基于 React / Vite 的 Web 版本与基于 Electron 的 Windows、macOS、Linux 桌面构建方式。
+提供基于 React / Vite 的 Web 部署包，以及基于 Electron 的 Windows、macOS、Linux 桌面安装包。
 
 > 本项目的上游是 **chthollyphile/folia-major 音乐播放器**，与 Minecraft 服务端 **PaperMC/Folia** 无关。
 
@@ -66,9 +66,13 @@ Immersive Lyrics, Simply Music // 歌词入境，听歌归简
 ## 获取方式
 
 - **源码**：克隆本仓库后本地运行，步骤见下文。
-- **Web 构建产物**：检查通过后，可在 [Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml) 的运行页面下载 `folia-plain-web`。
+- **Web 下载**：[本仓库 Releases](https://github.com/ithtelab/Folia-Plain/releases/latest) 提供 `Folia-Plain-<版本>-web.zip`，内含静态网站及部署说明，在线音乐需配置对应后端。检查通过后也可在 [Checks](https://github.com/ithtelab/Folia-Plain/actions/workflows/ci.yml) 下载前端产物。
 - **桌面构建**：维护者可手动运行 [Build desktop](https://github.com/ithtelab/Folia-Plain/actions/workflows/desktop-build.yml)，从运行页面下载对应平台的构建产物。
-- **Windows 下载**：[本仓库 Releases](https://github.com/ithtelab/Folia-Plain/releases/latest) 提供 x64 `.exe` 安装包与免安装 ZIP；完整解压 ZIP 后运行 `Folia Plain.exe`。同时提供 SHA-256 校验值。macOS 与 Linux 可使用上述桌面构建流程。
+- **Windows 下载**：Releases 提供 x64 `.exe` 安装包与免安装 ZIP；完整解压 ZIP 后运行 `Folia Plain.exe`。
+- **macOS 下载**：Releases 提供 Apple Silicon（arm64）与 Intel（x64）的 `.dmg` 安装包及 ZIP。应用未作开发者签名与公证。
+- **Linux 下载**：Releases 提供 x64 `.deb`、`.rpm` 和 `.tar.gz`。按发行版选择安装包，便携包说明见包内 `resources/linux/README-LINUX.txt`。
+
+发布附件同时提供 SHA-256 校验值；各平台以对应版本实际列出的附件为准。
 
 上游的安装包、网盘和 AUR 包仍是原版，不能用来安装 Folia Plain。
 

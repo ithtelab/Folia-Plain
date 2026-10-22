@@ -283,7 +283,8 @@ export const buildAppOverlaysModel = ({
             },
             onTogglePlay: togglePlay,
             onToggleLoop: toggleLoop,
-            onNavigateToPlayer: navigateFromPlayerCapsule,
+            // The explicit player shortcut always opens lyrics, independently of play-entry preferences.
+            onNavigateToPlayer: navigateToPlayer,
             onFocusLatticeCurrentSong: locatePlayingSongOnWall,
             noTrackText,
             primaryColor: 'var(--text-primary)',

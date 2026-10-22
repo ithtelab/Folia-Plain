@@ -206,6 +206,8 @@ export default {
     "notConfigured": "未配置"
   },
   "notifications": {
+    "gpuRestartRequired": "硬件加速设置已保存，重启应用后生效。",
+    "gpuSettingFailed": "硬件加速设置未能保存，请重试。",
     "coverColorAdded": "添加封面色彩",
     "coverColorDefault": "使用默认色彩",
     "staticModeOn": "静态模式已开启",
@@ -628,6 +630,8 @@ export default {
       "settings-desktop": { "title": "桌面端设置", "description": "打开桌面应用设置" },
       "playlist-view-grid": { "title": "歌单以封面网格打开", "description": "在网格界面中用封面网格浏览歌单" },
       "playlist-view-lattice": { "title": "歌单以拼贴打开", "description": "在网格界面中用队列同款拼贴浏览歌单" },
+      "liquid-glass-toggle": { "title": "切换毛玻璃材质", "description": "在液态毛玻璃和原项目材质之间切换" },
+      "gpu-hardware-acceleration-toggle": { "title": "切换 GPU 硬件加速", "description": "保存硬件加速偏好，重启应用后生效" },
       "download-update-mirror": {
         "title": "国内加速下载更新",
         "description": "通过 GH-Proxy 下载本项目的新版本安装包"
@@ -1752,6 +1756,12 @@ export default {
     "lyricMatchPriorityDesc": "在多个歌词源都存在高置信度匹配时，优先选择该歌词源的结果。"
   },
   "options": {
+    "glassMaterial": "界面材质",
+    "liquidGlassEnabled": "液态毛玻璃",
+    "liquidGlassEnabledDesc": "开启使用液态毛玻璃，关闭恢复原项目材质。播放横条始终保持静态。",
+    "gpuHardwareAcceleration": "GPU 硬件加速",
+    "gpuHardwareAccelerationDesc": "默认开启，重启应用后生效。遇到黑屏或渲染异常时，可尝试关闭。",
+    "gpuRestartPending": "新设置已保存，重启应用后生效。",
     "randomVisualizerModes": "参与随机的样式",
     "randomVisualizerSelectAll": "全选",
     "randomVisualizerCurrentStyle": "当前样式",
@@ -3207,6 +3217,29 @@ export default {
       "qqPrivatePlaylists": {
         "title": "QQ 音乐不公开歌单",
         "description": "登录后，自己创建的不公开歌单也能读取歌曲，并支持真正的分页加载。自建后端需要升级到 qq-music-api 3.1.2 或更新版本；旧后端会自动回退，读不到时会明确提示「不是公开歌单」，不再静默显示为空。"
+      }
+    },
+    "v0_7_23": {
+      "intro": "Folia Plain 0.7.23 改善玻璃通透感，增加材质与 GPU 开关，修复播放条跳转，并提供多平台下载。",
+      "glassChoice": {
+        "title": "玻璃与原版随时切换",
+        "description": "在外观设置中开关液态毛玻璃，关闭后恢复原版材质。偏好自动保存，也可随外观配置导入导出。"
+      },
+      "staticGlass": {
+        "title": "通透玻璃，播放条保持静止",
+        "description": "歌单卡片和更多返回键统一使用玻璃，浅色模式减少泛白。播放条保留模糊、折射与静态高光，悬停、点击和拖动时均不流动。"
+      },
+      "playerDestination": {
+        "title": "播放条直达歌词海报",
+        "description": "修复点击底部播放条时误入队列拼贴的问题。现在直接进入歌词播放页，保留独立队列按钮和歌单的拼贴浏览偏好。"
+      },
+      "gpuAcceleration": {
+        "title": "GPU 加速可以关闭",
+        "description": "桌面版性能与动效设置新增 GPU 硬件加速开关，默认开启。保存后重启生效，遇到黑屏或渲染异常时可尝试关闭。"
+      },
+      "platformPackages": {
+        "title": "多平台下载",
+        "description": "本项目 Releases 提供 Windows、macOS、Linux 桌面包与 Web 部署 ZIP，并附校验文件。Web 在线音乐需要后端配置；macOS 包未签名公证。"
       }
     },
     "v0_7_22": {

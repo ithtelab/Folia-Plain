@@ -1,0 +1,15 @@
+# Serve the extracted dist/ directory; replace backend addresses with your own services.
+server {
+    listen 8080;
+    server_name localhost;
+    root /srv/folia-plain/dist;
+    index index.html;
+
+    location / { try_files $uri $uri/ /index.html; }
+    location = /sw.js { add_header Cache-Control "no-cache"; }
+    location = /runtime-config.js { add_header Cache-Control "no-cache"; }
+    location /netease/ { proxy_pass http://127.0.0.1:3001/; }
+    location /qq/ { proxy_pass http://127.0.0.1:3200/; }
+    location /kugou/ { proxy_pass http://127.0.0.1:3002/; }
+    location /api/ { proxy_pass http://127.0.0.1:3100/api/; }
+}

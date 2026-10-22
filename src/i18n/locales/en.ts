@@ -206,6 +206,8 @@ export default {
     "notConfigured": "Not configured"
   },
   "notifications": {
+    "gpuRestartRequired": "Hardware acceleration preference saved. Restart the app to apply it.",
+    "gpuSettingFailed": "Could not save hardware acceleration. Please try again.",
     "coverColorAdded": "Cover color added",
     "coverColorDefault": "Using default color",
     "staticModeOn": "Static mode enabled",
@@ -628,6 +630,8 @@ export default {
       "settings-desktop": { "title": "Desktop settings", "description": "Open desktop app settings" },
       "playlist-view-grid": { "title": "Open playlists as cover grids", "description": "Browse playlists as cover grids in the grid library interface" },
       "playlist-view-lattice": { "title": "Open playlists as collages", "description": "Browse playlists as queue-style collages in the grid library interface" },
+      "liquid-glass-toggle": { "title": "Switch glass material", "description": "Switch between Liquid Glass and the classic upstream material" },
+      "gpu-hardware-acceleration-toggle": { "title": "Toggle GPU hardware acceleration", "description": "Save the GPU preference for the next app launch" },
       "download-update-mirror": {
         "title": "Download update with China relay",
         "description": "Download this project’s new installer through GH-Proxy"
@@ -1752,6 +1756,12 @@ export default {
     "lyricMatchPriorityDesc": "When multiple lyric sources have high-confidence matches, prefer this source first."
   },
   "options": {
+    "glassMaterial": "Interface material",
+    "liquidGlassEnabled": "Liquid Glass",
+    "liquidGlassEnabledDesc": "Use Liquid Glass, or switch off to restore the classic upstream material. The playback bar always stays static.",
+    "gpuHardwareAcceleration": "GPU hardware acceleration",
+    "gpuHardwareAccelerationDesc": "Enabled by default. Restart to apply changes. Try turning it off if the app has a black screen or rendering issues.",
+    "gpuRestartPending": "Preference saved. Restart the app to apply it.",
     "randomVisualizerModes": "Styles to randomize",
     "randomVisualizerSelectAll": "Select all",
     "randomVisualizerCurrentStyle": "Current style",
@@ -3207,6 +3217,29 @@ export default {
       "qqPrivatePlaylists": {
         "title": "Private QQ Music Playlists",
         "description": "When signed in, your own private playlists now load their songs, with real paging. Self-hosted backends must run qq-music-api 3.1.2 or later; older backends fall back automatically, and a playlist that cannot be read now says it is not public instead of silently showing as empty."
+      }
+    },
+    "v0_7_23": {
+      "intro": "Folia Plain 0.7.23 improves glass clarity, adds material and GPU controls, fixes the player shortcut, and provides multi-platform downloads.",
+      "glassChoice": {
+        "title": "Choose your material",
+        "description": "Switch Liquid Glass on or off in Appearance. Turning it off restores classic materials. Your choice is saved and included in appearance exports and imports."
+      },
+      "staticGlass": {
+        "title": "Clear glass, a still player",
+        "description": "Playlist cards and more back buttons share the glass material, with less whitening in light mode. The player retains blur, refraction and frozen reflections without flowing on hover, press or drag."
+      },
+      "playerDestination": {
+        "title": "Go straight to lyrics",
+        "description": "Clicking the bottom player now opens the lyrics screen instead of the queue collage. The separate queue button and playlist collage preference keep their own behavior."
+      },
+      "gpuAcceleration": {
+        "title": "Control GPU acceleration",
+        "description": "Desktop Performance and Motion settings now include hardware acceleration, enabled by default. Restart after saving for it to take effect; disabling it may help with black screens or rendering issues."
+      },
+      "platformPackages": {
+        "title": "Multi-platform downloads",
+        "description": "This repository offers Windows, macOS and Linux desktop packages, plus a Web deployment ZIP and checksums. Online Web music needs backends; macOS packages are unsigned and not notarized."
       }
     },
     "v0_7_22": {

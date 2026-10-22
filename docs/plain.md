@@ -47,8 +47,10 @@ npm run preview -- --host 127.0.0.1
 - 产品身份的唯一数据源在 `shared/productIdentity.json`，渲染进程、构建配置与 Electron 共用。
 - 桌面自动更新只指向 `ithtelab/Folia-Plain`。新仓库尚无正式安装包时，不会回退到上游安装包。
 - Windows Releases 提供 x64 NSIS 安装包、免安装 ZIP、自动更新元数据与 `SHA256SUMS.txt`。发布前检查打包资源、应用身份、隔离配置目录中的实际启动与 preload 接口。
+- macOS 提供 arm64 / x64 DMG 和 ZIP，Linux 提供 x64 DEB、RPM 和便携 TAR.GZ。macOS 包未签名公证，首次打开见[说明](desktop/macos-app-damaged.md)。Web 部署 ZIP 包含单独构建的静态网站与[部署说明](../packaging/web/README.md)。
 - 在 GitHub Actions 的 **Build desktop** 工作流手动选择平台可生成构建产物；默认不发布。勾选 `publish` 后，仅在构建和验证通过后发布本仓库 Release。版本来自 `package.json`，说明来自 `docs/releases/v<版本>.md`；同一版本不能重复创建。
 - 已完成的构建可用 **Publish verified desktop build** 工作流直接发布，输入成功构建的运行 ID 和平台；它检查来源提交、校验文件与 GitHub 接收的摘要，支持续传同一提交的草稿，不覆盖已公开版本。
+- 平台选择 `all` 时三系统并行构建；Web 包随 Windows 任务生成。发布时选择 `All`，逐个平台校验并合并附件，生成统一的校验文件后再公开。
 - 本地 `npm run build:electron` 包含平台原生辅助工具与模型下载步骤，需要联网，并可能需要 Rust、CMake 和平台编译工具。Web 构建通过不等于桌面安装包已经通过验证。
 - 上游技术文档中的 Realeco / Limo / Cielo、网盘、Docker Hub、AUR 和社区入口属于上游，不能当作本分支的下载地址。
 

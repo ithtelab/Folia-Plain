@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import ConfirmDialog from '../../../shared/ConfirmDialog';
@@ -6,6 +6,7 @@ import { MOTION_SURFACE_IDS, useMotionSettingsStore, type MotionSurfaceId } from
 import { usePlayerChromeSettingsStore } from '../../../../stores/usePlayerChromeSettingsStore';
 import { useThemeSettingsStore } from '../../../../stores/useThemeSettingsStore';
 import { useVisualizerSettingsStore } from '../../../../stores/useVisualizerSettingsStore';
+import { useGraphicsSettingsStore } from '../../../../stores/useGraphicsSettingsStore';
 import { VISUALIZER_FRAME_RATE_OPTIONS } from '../../../../utils/frameRateLimiter';
 import { Group, Link, Reveal, Row, Segmented, Toggle, option, useSettingsKitTheme, type SettingsGroupDef, type SettingsOptionDef } from '../kit';
 
@@ -27,6 +28,7 @@ const PERFORMANCE: SettingsGroupDef = { id: 'graphicsPerformance', titleKey: 'op
 const MOTION: SettingsGroupDef = { id: 'graphicsMotion', titleKey: 'options.reduceMotionSection' };
 
 const O = {
+    gpu: option(PERFORMANCE, 'gpuHardwareAcceleration', 'options.gpuHardwareAcceleration', { electronOnly: true }),
     staticMode: option(PERFORMANCE, 'enableStaticMode', 'options.enableStaticMode'),
     homeBackground: option(PERFORMANCE, 'disableHomeDynamicBackground', 'options.disableHomeDynamicBackground'),
     nativeBlur: option(PERFORMANCE, 'enablePlayerPageNativeBlur', 'options.enablePlayerPageNativeBlur'),
@@ -56,6 +58,9 @@ const FRAME_RATE_CHOICES = VISUALIZER_FRAME_RATE_OPTIONS.map(rate => ({ value: S
 const GraphicsPage: React.FC = () => {
     const { t } = useTranslation();
     const { isDaylight } = useSettingsKitTheme();
+    const gpu = useGraphicsSettingsStore();
+    const isElectron = Boolean(window.electron);
+    useEffect(() => { void gpu.refreshGpuSettings(); }, [gpu.refreshGpuSettings]);
     const theme = useThemeSettingsStore(useShallow(state => ({
         staticMode: state.staticMode,
         homeBackgroundOff: state.disableHomeDynamicBackground,
@@ -84,6 +89,12 @@ const GraphicsPage: React.FC = () => {
     return (
         <>
             <Group def={PERFORMANCE}>
+                {isElectron && <Row option={O.gpu} hint={gpu.gpuHardwareAcceleration !== gpu.gpuAtStart
+                    ? `${t('options.gpuHardwareAccelerationDesc')} ${t('options.gpuRestartPending')}`
+                    : t('options.gpuHardwareAccelerationDesc')}>
+                    <Toggle checked={gpu.gpuHardwareAcceleration} disabled={!gpu.gpuReady || gpu.gpuSaving}
+                        onChange={enabled => { void gpu.setGpuHardwareAcceleration(enabled); }} />
+                </Row>}
                 <Row option={O.staticMode} hint={t('options.enableStaticModeDesc')}>
                     <Toggle checked={theme.staticMode} onChange={theme.setStaticMode} />
                 </Row>

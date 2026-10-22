@@ -7,8 +7,9 @@ on:
         description: Platform to build (download the result from workflow artifacts)
         required: true
         type: choice
-        default: windows-latest
+        default: all
         options:
+          - all
           - windows-latest
           - ubuntu-latest
           - macos-latest
@@ -22,7 +23,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ inputs.platform }}
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(inputs.platform == 'all' && '["windows-latest","ubuntu-latest","macos-latest"]' || format('["{0}"]', inputs.platform)) }}
     timeout-minutes: 60
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -42,6 +47,9 @@ jobs:
       - name: Install native helper toolchain
         if: runner.os != 'macOS'
         uses: dtolnay/rust-toolchain@stable
+      - name: Install Linux packaging dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwayland-dev libxkbcommon-dev rpm
       - name: Cache analysis runtime
         uses: actions/cache@v4
         with:
@@ -49,6 +57,15 @@ jobs:
             build/.mnn-src
             build/mnn
           key: plain-mnn-${{ runner.os }}-${{ hashFiles('build/buildMnnRuntime.mjs', 'native/folia-mnn/**') }}
+      - name: Build Web deployment archive
+        if: runner.os == 'Windows'
+        env:
+          VITE_NETEASE_API_BASE: /netease
+          VITE_QQ_API_BASE: /qq
+          VITE_KUGOU_API_BASE: /kugou
+        run: |
+          npm run build
+          node build/packageWebRelease.mjs
       - name: Build frontend and native helpers
         env:
           ELECTRON: 'true'
@@ -101,8 +118,15 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
         with:
-          name: folia-plain-${{ needs.build.result == 'success' && (inputs.platform == 'windows-latest' && 'Windows' || inputs.platform == 'macos-latest' && 'macOS' || 'Linux') }}
-          path: release
+          pattern: folia-plain-*
+          path: artifacts
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Combine verified platform packages
+        env:
+          PLATFORMS: ${{ inputs.platform == 'all' && 'Windows,macOS,Linux' || (inputs.platform == 'windows-latest' && 'Windows' || inputs.platform == 'macos-latest' && 'macOS' || 'Linux') }}
+        run: node build/assembleRelease.mjs artifacts release "$PLATFORMS"
       - name: Verify checksums and publish
         env:
           GH_TOKEN: ${{ github.token }}

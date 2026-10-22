@@ -5,6 +5,7 @@ import { isThemeGenerationSource, type ThemeGenerationSource } from '../../../..
 import { useLibraryWallLookStore } from '../../../../../stores/useLibraryWallLookStore';
 import { useStageSettingsStore } from '../../../../../stores/useStageSettingsStore';
 import { useThemeSettingsStore } from '../../../../../stores/useThemeSettingsStore';
+import { useGlassSettingsStore } from '../../../../../stores/useGlassSettingsStore';
 import { useTypographySettingsStore } from '../../../../../stores/useTypographySettingsStore';
 import { useVisualizerAssetStore } from '../../../../../stores/useVisualizerAssetStore';
 import { useVisualizerSettingsStore } from '../../../../../stores/useVisualizerSettingsStore';
@@ -184,6 +185,9 @@ export const applyImportedConfig = (config: any, keys: string[], theme: ConfigTh
     }
     if (has('staticMode')) {
         storeThemeSettings.handleToggleStaticMode(Boolean(config.staticMode));
+    }
+    if (has('liquidGlassEnabled') && typeof config.liquidGlassEnabled === 'boolean') {
+        useGlassSettingsStore.getState().setLiquidGlassEnabled(config.liquidGlassEnabled);
     }
 
     if (has('lyricsFontStyle') && config.lyricsFontStyle) {

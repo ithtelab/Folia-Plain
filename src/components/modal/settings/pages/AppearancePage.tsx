@@ -6,6 +6,7 @@ import { getVisualizerModeLabel } from '../../../visualizer/registry';
 import { usePlayerChromeSettingsStore } from '../../../../stores/usePlayerChromeSettingsStore';
 import { openSettings } from '../../../../stores/useSettingsModalStore';
 import { useThemeSettingsStore } from '../../../../stores/useThemeSettingsStore';
+import { useGlassSettingsStore } from '../../../../stores/useGlassSettingsStore';
 import { useVisualizerSettingsStore } from '../../../../stores/useVisualizerSettingsStore';
 import { openAIEndpointOf } from '../../../../utils/openAIEndpoint';
 import { Button, FoldedGroup, Group, NumberField, Reveal, Row, Segmented, TextField, Toggle, Value, option, parseNumberText, type SettingsGroupDef, type SettingsOptionDef } from '../kit';
@@ -21,10 +22,12 @@ import { useSettingsPage, type AiApiKeyName } from './settingsPageContext';
 
 const LYRICS: SettingsGroupDef = { id: 'lyricsRenderer', titleKey: 'options.lyricsRenderer' };
 const THEME: SettingsGroupDef = { id: 'themePresets', titleKey: 'options.settingsHeadingTheme' };
+const GLASS: SettingsGroupDef = { id: 'glassMaterial', titleKey: 'options.glassMaterial' };
 const SONG_THEME: SettingsGroupDef = { id: 'songTheme', titleKey: 'options.settingsHeadingSongTheme' };
 const AI: SettingsGroupDef = { id: 'electronSettings', titleKey: 'options.electronSettings', electronOnly: true };
 
 const O = {
+    liquidGlass: option(GLASS, 'liquidGlassEnabled', 'options.liquidGlassEnabled'),
     lyricsAnimation: option(LYRICS, 'lyricsAnimationAdjust', 'options.lyricsAnimationAdjust'),
     daylight: option(THEME, 'daylightMode', 'options.daylightMode'),
     preset: option(THEME, 'themePreset', 'options.themePresets'),
@@ -69,6 +72,8 @@ const AiKeyField: React.FC<AiKeyFieldProps> = ({ value, onChange, saved, onClear
 
 const AppearancePage: React.FC = () => {
     const { t } = useTranslation();
+    const liquidGlass = useGlassSettingsStore(state => state.liquidGlassEnabled);
+    const setLiquidGlass = useGlassSettingsStore(state => state.setLiquidGlassEnabled);
     const { isElectron, themeControls, onOpenVisPlayground, onOpenThemePark, viewProps } = useSettingsPage();
     const { electronSettings, setElectronSettings, onSaveElectronSettings, electronSaveStatus, savedAiApiKeys, savedOpenAIKeyEndpoint, onClearAiApiKey } = viewProps.desktop.model;
     const { isDaylight, followSystemTheme, setDaylightPreference, setFollowSystemTheme } = useThemeSettingsStore(useShallow(state => ({
@@ -108,6 +113,11 @@ const AppearancePage: React.FC = () => {
 
     return (
         <>
+            <Group def={GLASS} bare>
+                <Row option={O.liquidGlass} hint={t('options.liquidGlassEnabledDesc')}>
+                    <Toggle checked={liquidGlass} onChange={setLiquidGlass} />
+                </Row>
+            </Group>
             <Group def={LYRICS} bare>
                 {nativeBlurEnabled && <Row notice={t('options.nativeBlurBackgroundNotice')} />}
                 <Row option={O.lyricsAnimation} hint={t('options.lyricsRendererDesc')} onClick={onOpenVisPlayground}>

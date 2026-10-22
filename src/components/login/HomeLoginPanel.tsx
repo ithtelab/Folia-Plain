@@ -50,7 +50,7 @@ const HomeLoginPanel: React.FC<HomeLoginPanelProps> = ({ account }) => {
                 className="login-rise st-t-fast liquid-glass-host liquid-glass-button relative mt-7 inline-flex h-12 max-w-full items-center gap-2.5 rounded-xl pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-t1)]"
                 style={{ animationDelay: '80ms' }}
             >
-                <LiquidGlassSurface isDaylight={isDaylight} radius={12} />
+                <LiquidGlassSurface isDaylight={isDaylight} radius={12} legacy="login" />
                 <span className="flex shrink-0">
                     {marks.map((row, index) => (
                         <span key={row.providerId} className={`inline-flex rounded-full ${index > 0 ? '-ml-2' : ''}`}>

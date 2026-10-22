@@ -84,6 +84,7 @@ export interface ObsBrowserSourceConfig {
     showHarmonySubtitle?: boolean;
     harmonySubtitleBackground?: boolean;
     staticMode: boolean;
+    liquidGlassEnabled?: boolean;
     hideTranslationSubtitle: boolean;
     showSubtitleTranslation?: boolean;
     subtitleContentMode?: SubtitleContentMode;

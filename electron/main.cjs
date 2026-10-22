@@ -73,6 +73,7 @@ const {
   resolveReleaseChannel,
 } = require('./updateChannels.cjs');
 const { createMirrorUpdateProvider, createUpdateDownloadRunner, getMirrorInstallerUrl } = require('./updateDownloads.cjs');
+const { GPU_HARDWARE_ACCELERATION_KEY, configureHardwareAcceleration } = require('./hardwareAcceleration.cjs');
 const { resolveCacheLimit, selectEvictions } = require('./audioCachePrune.cjs');
 const { removeAudioCacheFileOfSize } = require('./audioCacheRemove.cjs');
 const { createAnalysisHost } = require('./analysis/host.cjs');
@@ -103,6 +104,8 @@ const {
   buildSegmentationSystemPrompt,
   parseSegmentationResponse,
 } = require('../shared/lyricSegmentationPrompt.cjs');
+const store = new Store({ projectName: productIdentity.name });
+const gpuHardwareAccelerationAtStart = configureHardwareAcceleration(app, store);
 const useLinuxGraphicsDebugMode = process.env.ELECTRON_LINUX_PACKAGED_GRAPHICS === 'true';
 const isAppImageRuntime =
   process.platform === 'linux' &&
@@ -167,7 +170,7 @@ app.on('certificate-error', (event, _webContents, requestUrl, error, _certificat
 // Logged once the debug host captures the console, so the decision also reaches the in-app log.
 const linuxVulkan = resolveLinuxVulkanChoice({
   ozonePlatform: app.commandLine.getSwitchValue('ozone-platform'),
-  graphicsMode: linuxGraphicsMode,
+  graphicsMode: gpuHardwareAccelerationAtStart ? linuxGraphicsMode : 'software',
 });
 
 // Fix for Arch Linux / Wayland & Vulkan compatibility issues
@@ -194,7 +197,7 @@ if (process.platform === 'linux') {
     appendChromiumFeature('GlobalShortcutsPortal');
   }
 
-  if (linuxGraphicsMode === 'software') {
+  if (!gpuHardwareAccelerationAtStart || linuxGraphicsMode === 'software') {
     // Hard fallback: safest, but usually slower.
     app.disableHardwareAcceleration();
   } else if (linuxGraphicsMode === 'swiftshader') {
@@ -236,13 +239,12 @@ if (process.platform === 'win32' || process.platform === 'darwin') {
 }
 
 // macOS: GPU 加速优化，解决 Intel Mac + AMD 独显在 Retina 屏幕下的渲染卡顿
-if (process.platform === 'darwin' && process.arch === 'x64') {
+if (gpuHardwareAccelerationAtStart && process.platform === 'darwin' && process.arch === 'x64') {
   app.commandLine.appendSwitch('ignore-gpu-blocklist');
   app.commandLine.appendSwitch('use-angle', 'gl');
   app.commandLine.appendSwitch('enable-gpu-rasterization');
 }
 
-const store = new Store({ projectName: productIdentity.name });
 const transcodeService = createTranscodeService({
   app,
   protocol,
@@ -2392,6 +2394,8 @@ function readStoredBoolean(settingKey, fallback = false) {
 
 function getPublicSettings() {
   return {
+    [GPU_HARDWARE_ACCELERATION_KEY]: readStoredBoolean(GPU_HARDWARE_ACCELERATION_KEY, true),
+    GPU_HARDWARE_ACCELERATION_AT_START: gpuHardwareAccelerationAtStart,
     ...aiCredentials.toPublicSettings(store.store),
     [MINIMIZE_TO_TRAY_SETTING_KEY]: readStoredBoolean(MINIMIZE_TO_TRAY_SETTING_KEY, false),
     [CLOSE_TO_TRAY_SETTING_KEY]: readStoredBoolean(CLOSE_TO_TRAY_SETTING_KEY, false),
@@ -6101,6 +6105,7 @@ ipcMain.handle('save-settings', (event, key, value) => {
     nextValue = channel;
   }
   if (
+    key === GPU_HARDWARE_ACCELERATION_KEY ||
     key === MINIMIZE_TO_TRAY_SETTING_KEY ||
     key === CLOSE_TO_TRAY_SETTING_KEY ||
     key === HIDE_TASKBAR_ICON_SETTING_KEY ||

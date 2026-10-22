@@ -48,13 +48,20 @@ fills settle separately while the existing shared-layout animation moves between
 
 Spring frames stop when they converge; stationary hover also settles. The separate shader uses
 `flow="ambient"` only for home navigation: slow idle reflections, faster hover/focus
-and press. The bottom player passes `interactive={false}`: no flow or pointer/press deformation,
-including hover and dragging. All other hosts default to `flow="interactive"` and stop their shader clock when neither
+and press. The bottom player passes `interactive={false}` and `flow="static"`: the original reflection
+is rendered at a fixed shader frame with no animation or pointer/press deformation, including hover
+and dragging. `flow="none"` skips reflection canvases on the unfocused home cards; only the focused
+playlist card gets a frozen reflection. All other hosts default to `flow="interactive"` and stop their shader clock when neither
 hovered nor focused. Blur pauses the clock, out-of-viewport surfaces pause through Paper's observer,
 and hidden documents or accessibility fallbacks unmount the flow. WebGL failure leaves static
 glass intact. Unmount disposes the runtime and explicitly releases its GPU context.
 Geometry is cached between pointer moves. Keyboard compression applies to buttons, not spaces typed
 into search.
+
+The material switch is owned by `useGlassSettingsStore`. Turning it off unmounts the optical and
+shader layers and restores classic fills/blur, including the original opaque playlist-card base.
+The choice travels through visual config export/import. GPU hardware acceleration is a separate
+desktop startup preference (`electron/hardwareAcceleration.cjs`); changing it requires a restart.
 
 Hidden hosts pass `active={false}`. Document visibility and system accessibility changes release
 the optical filter and flow. Observers, media listeners and timers are disposed on unmount. Browser

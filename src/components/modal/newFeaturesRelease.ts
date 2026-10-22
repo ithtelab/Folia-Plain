@@ -1,4 +1,4 @@
-import { AppWindow, Download, Image, LayoutGrid, Music2, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Cpu, Layers, Monitor, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -17,13 +17,12 @@ type NewFeaturesRelease = {
 
 // Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_7_22',
+    i18nKey: 'releaseNotes.v0_7_23',
     features: [
-        { id: 'liquidGlass', icon: Sparkles },
-        { id: 'clearerPlayer', icon: Music2 },
-        { id: 'saferTitlebar', icon: AppWindow },
-        { id: 'appIcons', icon: Image },
-        { id: 'ownUpdates', icon: Download },
-        { id: 'playlistCollage', icon: LayoutGrid },
+        { id: 'glassChoice', icon: Layers },
+        { id: 'staticGlass', icon: Sparkles },
+        { id: 'playerDestination', icon: ArrowUpRight },
+        { id: 'gpuAcceleration', icon: Cpu },
+        { id: 'platformPackages', icon: Monitor },
     ],
 };

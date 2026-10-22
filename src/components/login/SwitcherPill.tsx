@@ -115,7 +115,7 @@ const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer }) 
             style={{ ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reduced), '--login-edge': 'var(--st-menu)' } as React.CSSProperties}
         >
             <div className="liquid-glass-host relative flex items-center rounded-full p-1 text-[color:var(--st-t1)]">
-                <LiquidGlassSurface isDaylight={isDaylight} />
+                <LiquidGlassSurface isDaylight={isDaylight} legacy="provider" />
                 <Tooltip text={t('home.switchOnlineProvider')} className="inline-flex">
                     <button
                         type="button"

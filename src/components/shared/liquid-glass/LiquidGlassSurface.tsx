@@ -3,6 +3,7 @@ import { createGlassLensMap } from './liquidGlassOptics';
 import './liquidGlass.css';
 import { useLiquidGlassMotion } from './useLiquidGlassMotion';
 import { useReducedMotionFor } from '../../../hooks/useReducedMotionFor';
+import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
 
 // Decorative material only: the host keeps its own layout, controls, hit area and semantics.
 const LiquidGlassFlow = lazy(() => import('./LiquidGlassFlow'));
@@ -14,7 +15,8 @@ interface LiquidGlassSurfaceProps {
     active?: boolean;
     interactive?: boolean;
     /** Ambient flow is reserved for primary navigation; the bottom player disables interaction entirely. */
-    flow?: 'ambient' | 'interactive';
+    flow?: 'ambient' | 'interactive' | 'static' | 'none';
+    legacy?: 'control' | 'navigation' | 'search' | 'player-expanded' | 'player-collapsed' | 'card' | 'toast' | 'login' | 'provider';
 }
 
 interface LensGeometry {
@@ -23,7 +25,8 @@ interface LensGeometry {
     image: string;
 }
 
-export default function LiquidGlassSurface({ isDaylight = false, radius = 999, active = true, interactive = true, flow = 'interactive' }: LiquidGlassSurfaceProps) {
+export default function LiquidGlassSurface({ isDaylight = false, radius = 999, active = true, interactive = true, flow = 'interactive', legacy = 'control' }: LiquidGlassSurfaceProps) {
+    const enabled = useGlassSettingsStore(state => state.liquidGlassEnabled);
     const rootRef = useRef<HTMLSpanElement>(null);
     const filterRef = useRef<SVGFilterElement>(null);
     const imageRef = useRef<SVGFEImageElement>(null);
@@ -33,11 +36,11 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     const [lens, setLens] = useState<LensGeometry | null>(null);
     const [flowAllowed, setFlowAllowed] = useState(false);
     const reducedUiMotion = useReducedMotionFor('uiMicroMotion');
-    useLiquidGlassMotion(rootRef, displacementRef, normalOffsetRef, active && interactive);
+    useLiquidGlassMotion(rootRef, displacementRef, normalOffsetRef, enabled && active && interactive);
 
     useEffect(() => {
         const root = rootRef.current;
-        if (!root || !active) return;
+        if (!root || !active || !enabled) return;
         // SVG backdrop filters are verified in Chromium (including Electron); other engines keep
         // the ordinary CSS frost instead of losing the entire backdrop to an unsupported URL filter.
         if (!/(?:Chrome|Chromium|Edg)\//.test(navigator.userAgent)) return;
@@ -93,12 +96,13 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
             reduced.removeEventListener('change', update);
             document.removeEventListener('visibilitychange', update);
         };
-    }, [active, radius]);
+    }, [active, enabled, radius]);
 
-    const enhanced = active && lens !== null;
+    const enhanced = enabled && active && lens !== null;
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
-    const toneCurve = isDaylight ? '0.55 0.57 0.66 0.82 0.98' : '0 0.24 0.43 0.49 0.5';
+    const toneCurve = isDaylight ? '0.55 0.55 0.55 0.75 1' : '0 0.24 0.43 0.49 0.5';
+    if (!enabled) return <span aria-hidden="true" className="liquid-glass-surface" data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-optics="classic" data-glass-legacy={legacy}><span className="liquid-glass-classic" /></span>;
     return (
         <span ref={rootRef} aria-hidden="true" className="liquid-glass-surface"
             data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-active={active}
@@ -133,7 +137,7 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
             } : undefined} />
             <span className="liquid-glass-tint" />
             <span className="liquid-glass-rim" />
-            {active && interactive && flowAllowed && !reducedUiMotion && <Suspense fallback={null}><LiquidGlassFlow mode={flow} /></Suspense>}
+            {active && flow !== 'none' && (interactive || flow === 'static') && flowAllowed && !reducedUiMotion && <Suspense fallback={null}><LiquidGlassFlow mode={flow} /></Suspense>}
             <span className="liquid-glass-sheen" />
             <span className="liquid-glass-glow" />
         </span>

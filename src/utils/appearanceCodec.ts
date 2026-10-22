@@ -533,6 +533,7 @@ export const compressConfig = (config: any): string => {
     if (config.disableVisualizerGeometricBackground !== undefined) minified.dvgb = config.disableVisualizerGeometricBackground;
     if (config.disableVisualizerVignette !== undefined) minified.dvv = config.disableVisualizerVignette;
     if (config.staticMode !== undefined) minified.stm = config.staticMode;
+    if (typeof config.liquidGlassEnabled === 'boolean') minified.lge = config.liquidGlassEnabled;
     if (config.visualizerOpacity !== undefined) minified.vo = config.visualizerOpacity;
     if (config.hidePlayerTranslationSubtitle !== undefined) minified.hpts = config.hidePlayerTranslationSubtitle;
     if (config.showSubtitleTranslation !== undefined) minified.sst = config.showSubtitleTranslation;
@@ -677,6 +678,7 @@ export const decompressConfig = (str: string): any => {
         if (parsed.dvgb !== undefined) decompressed.disableVisualizerGeometricBackground = parsed.dvgb;
         if (parsed.dvv !== undefined) decompressed.disableVisualizerVignette = parsed.dvv;
         if (parsed.stm !== undefined) decompressed.staticMode = parsed.stm;
+        if (typeof parsed.lge === 'boolean') decompressed.liquidGlassEnabled = parsed.lge;
         if (parsed.vo !== undefined) decompressed.visualizerOpacity = parsed.vo;
         if (parsed.hpts !== undefined) decompressed.hidePlayerTranslationSubtitle = parsed.hpts;
         if (parsed.sst !== undefined) decompressed.showSubtitleTranslation = parsed.sst;
@@ -741,7 +743,7 @@ export const decompressConfig = (str: string): any => {
         // new style. Do not add a lyric style here.
         const validKeys = [
             'theme', 'visualizerMode', 'randomVisualizerModePerSong', 'randomVisualizerModes', 'visualizerBackgroundMode', 'backgroundOpacity',
-            'useCoverColorBg', 'disableVisualizerGeometricBackground', 'disableVisualizerVignette', 'staticMode',
+            'useCoverColorBg', 'disableVisualizerGeometricBackground', 'disableVisualizerVignette', 'staticMode', 'liquidGlassEnabled',
             'visualizerOpacity', 'hidePlayerTranslationSubtitle', 'showSubtitleTranslation', 'subtitleContentMode',
             'subtitleOverlayBackground', 'subtitleUpcomingLyricsBlur', 'subtitleOverlayOpacity',
             'showHarmonySubtitle', 'harmonySubtitleBackground',

@@ -15,11 +15,34 @@ import { libraryWallLookCommands } from './libraryWallLookCommands';
 import { openCurrentPagePonder } from '../../../services/ponder/pagePonderTarget';
 import { copyText } from '../../../utils/system/clipboard';
 import { useHomeLayoutSettingsStore } from '../../../stores/useHomeLayoutSettingsStore';
+import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
+import { useGraphicsSettingsStore } from '../../../stores/useGraphicsSettingsStore';
 
 // src/components/command-palette/commands/settingsCommands.ts
 // Commands in the `settings` group: settings subviews, app toggles, theme, sync, and desktop-only switches.
 
 export const settingsCommands: CommandPaletteCommand[] = [
+    defineCommand({
+        id: 'liquid-glass-toggle', group: 'settings', title: 'Switch glass material',
+        description: 'Switch between Liquid Glass and the classic upstream material',
+        keywords: ['glass appearance', 'classic material', '毛玻璃', '原版材质'],
+        execute: () => {
+            const state = useGlassSettingsStore.getState();
+            state.setLiquidGlassEnabled(!state.liquidGlassEnabled);
+            return true;
+        },
+    }),
+    defineCommand({
+        id: 'gpu-hardware-acceleration-toggle', group: 'settings', platform: ['electron'],
+        title: 'Toggle GPU hardware acceleration', description: 'Save the GPU preference for the next app launch',
+        keywords: ['graphics rendering', 'hardware acceleration', '硬件加速', '显卡'],
+        execute: async () => {
+            await useGraphicsSettingsStore.getState().refreshGpuSettings();
+            const state = useGraphicsSettingsStore.getState();
+            if (!state.gpuReady || state.gpuSaving) return false;
+            return state.setGpuHardwareAcceleration(!state.gpuHardwareAcceleration);
+        },
+    }),
     ...(['grid', 'lattice'] as const).map(style => defineCommand({
         id: `playlist-view-${style}`,
         group: 'settings',

@@ -4,6 +4,37 @@
 @layer properties, theme, base, components, utilities, folium-mods;
 
 @layer components {
+    html[data-liquid-glass='on'] .liquid-glass-card.theme-polaroid-card {
+        background: transparent !important;
+        border-color: transparent !important;
+        backdrop-filter: none !important;
+    }
+
+    .liquid-glass-classic {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: rgb(255 255 255 / 8%);
+        backdrop-filter: blur(8px);
+    }
+    [data-glass-tone='light'] > .liquid-glass-classic { background: rgb(0 0 0 / 5%); }
+    [data-glass-legacy='navigation'] > .liquid-glass-classic { background: rgb(255 255 255 / 10%); backdrop-filter: blur(12px); }
+    [data-glass-legacy='search'] > .liquid-glass-classic { background: rgb(255 255 255 / 5%); backdrop-filter: blur(12px); }
+    [data-glass-tone='light']:is([data-glass-legacy='navigation'], [data-glass-legacy='search']) > .liquid-glass-classic { background: rgb(0 0 0 / 5%); }
+    [data-glass-legacy='player-expanded'] > .liquid-glass-classic { background: rgb(0 0 0 / 40%); backdrop-filter: blur(24px); }
+    [data-glass-legacy='player-collapsed'] > .liquid-glass-classic { background: rgb(0 0 0 / 20%); backdrop-filter: blur(24px); }
+    [data-glass-tone='light'][data-glass-legacy='player-expanded'] > .liquid-glass-classic { background: rgb(255 255 255 / 60%); }
+    [data-glass-tone='light'][data-glass-legacy='player-collapsed'] > .liquid-glass-classic { background: rgb(255 255 255 / 40%); }
+    [data-glass-legacy='toast'] > .liquid-glass-classic { background: rgb(0 0 0 / 65%); backdrop-filter: blur(24px); }
+    [data-glass-tone='light'][data-glass-legacy='toast'] > .liquid-glass-classic { background: rgb(255 255 255 / 80%); }
+    [data-glass-legacy='login'] > .liquid-glass-classic { background: var(--st-accent); backdrop-filter: none; }
+    [data-glass-legacy='provider'] > .liquid-glass-classic { background: var(--st-menu); backdrop-filter: none; }
+    [data-glass-legacy='card'] > .liquid-glass-classic { display: none; }
+    [data-glass-optics='classic'] { border: 1px solid rgb(255 255 255 / 8%); }
+    [data-glass-legacy='card'][data-glass-optics='classic'] { border: none; }
+    html[data-liquid-glass='off'] .liquid-glass-host:has(> [data-glass-legacy='card']) { box-shadow: none; }
+    html[data-liquid-glass='off'] .liquid-glass-selection { animation: none; }
+    html[data-liquid-glass='off'] .liquid-player-bar { overflow: hidden; }
     .liquid-glass-host {
         isolation: isolate;
         background: transparent;
@@ -145,18 +176,20 @@
         .liquid-glass-surface[data-glass-tone='light'][data-glass-optics] { --glass-tint: rgb(247 247 250 / 0.98); --glass-wash: transparent; }
         .liquid-glass-backdrop { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
         .liquid-glass-tint { transition: none; }
+        .liquid-glass-surface[data-glass-optics][data-glass-tone] > .liquid-glass-classic { background: var(--glass-tint); backdrop-filter: none; }
         .liquid-glass-sheen, .liquid-glass-glow, .liquid-glass-flow { display: none; }
     }
 
     @media (forced-colors: active) {
         .liquid-glass-surface { background: Canvas; border: 1px solid CanvasText; }
-        .liquid-glass-backdrop, .liquid-glass-tint, .liquid-glass-rim { display: none; }
+        .liquid-glass-backdrop, .liquid-glass-tint, .liquid-glass-rim, .liquid-glass-classic { display: none; }
         .liquid-glass-host { color: CanvasText; box-shadow: none; text-shadow: none; }
     }
 }
 
 /* Override the stock progress utilities, while keeping the public Folium mod layer last. */
 @layer utilities {
+    html[data-liquid-glass='off'] .liquid-glass-host:has(> [data-glass-legacy='login']) { color: var(--st-on-accent); }
     .liquid-glass-host > input:focus-visible {
         outline: 1px solid rgb(255 255 255 / 0.85);
         outline-offset: -1px;

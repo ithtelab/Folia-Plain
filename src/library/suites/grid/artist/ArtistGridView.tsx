@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence, useDragControls, useIsPresent } from 'framer-motion';
 import { ChevronLeft, ListPlus, RefreshCw } from 'lucide-react';
+import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
 import GridPanelToggleIndicator from '../shared/GridPanelToggleIndicator';
 import { useTranslation } from 'react-i18next';
 import { SongResult, Theme } from '../../../../types';
@@ -1316,9 +1317,10 @@ const ArtistGridView: React.FC<ArtistGridViewProps> = ({
                     // 返回按钮表示看完了（onDone）：宿主清掉浏览会话、让每套 suite 忘掉布局记录，再返回
                     // （Escape 与浏览器后退保留）。P4.5 起这条语义在宿主，不在这里清。
                     onClick={onDone}
-                    className={`w-10 h-10 rounded-full ${closeBtnBg} flex items-center justify-center transition-colors backdrop-blur-md cursor-pointer`}
+                    className="liquid-glass-host liquid-glass-button relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
                     style={{ color: 'var(--text-primary)' }}
                 >
+                    <LiquidGlassSurface isDaylight={isDaylight} />
                     <ChevronLeft size={20} />
                 </button>
                 {offers('enqueue-scope') && (
