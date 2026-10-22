@@ -6,6 +6,7 @@ import type { Theme } from '../../../types';
 import { resolveThemeFontStack } from '../../../utils/fontStacks';
 import { Button, FIELD_CLASS } from '../../modal/settings/kit';
 import FontFallbackStackControl from './FontFallbackStackControl';
+import AdaptiveGlassSurface from '../../shared/liquid-glass/AdaptiveGlassSurface';
 
 // src/components/visualizer/window/FontPicker.tsx
 // The layer the lyric style window draws over itself to choose a custom font, for the lyrics or
@@ -253,8 +254,9 @@ export const FontPicker: React.FC<FontPickerProps> = ({
             <div
                 role="dialog"
                 aria-label={title}
-                className="flex h-full max-h-[640px] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] shadow-[0_24px_60px_rgba(0,0,0,0.35),0_0_0_1px_var(--st-line2)]"
+                className="liquid-glass-adaptive relative flex h-full max-h-[640px] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] shadow-[0_24px_60px_rgba(0,0,0,0.35),0_0_0_1px_var(--st-line2)]"
             >
+                <AdaptiveGlassSurface />
                 <div className="flex items-start gap-3 px-5 pb-3 pt-4">
                     <div className="min-w-0 flex-1">
                         <h3 className="text-[15px] font-semibold leading-6">{title}</h3>

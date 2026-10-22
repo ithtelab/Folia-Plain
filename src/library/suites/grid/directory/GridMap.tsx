@@ -3,6 +3,7 @@ import { motion, useMotionValue, animate, AnimatePresence, useDragControls } fro
 import { Check, ChevronLeft, Disc, Eye, EyeOff, ListFilter, X } from 'lucide-react';
 import GridPanelToggleIndicator from '../shared/GridPanelToggleIndicator';
 import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
+import AdaptiveGlassSurface from '../../../../components/shared/liquid-glass/AdaptiveGlassSurface';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../types';
 import { useFoliaHexViewport } from '../shared/useFoliaHexViewport';
@@ -118,7 +119,7 @@ const MapCard = React.memo<{
 
         return (
             <div
-                className={`rounded-xl p-3 flex flex-col items-center border backdrop-blur-md transition-all duration-300 shadow-lg theme-polaroid-card ${
+                className={`liquid-glass-content-card rounded-xl p-3 flex flex-col items-center border backdrop-blur-md transition-all duration-300 shadow-lg theme-polaroid-card ${
                     isPlaylistSelectionDisabled ? 'cursor-default' : 'cursor-pointer hover:shadow-2xl'
                 } ${isBatchMode && !isBatchSelected ? 'opacity-35 grayscale' : ''}`}
                 style={{
@@ -1095,9 +1096,10 @@ export const GridMap: React.FC<GridMapProps> = ({
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: -60, scale: 0.95 }}
                         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute left-6 top-24 w-80 rounded-3xl z-[80] flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
+                        className="liquid-glass-adaptive absolute left-6 top-24 w-80 rounded-3xl z-[80] flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
                         style={{ bottom: bottomBarPanelBottomPx }}
                     >
+                        <AdaptiveGlassSurface isDaylight={isDaylight} radius={24} />
                         {batchConfig ? (
                             <GridMapBatchPanel
                                 title={title}

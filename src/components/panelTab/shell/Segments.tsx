@@ -1,7 +1,7 @@
 import React, { useId } from 'react';
 import { motion } from 'framer-motion';
-import { kitTransition, useKitReducedMotion } from '../../modal/settings/kit/motion';
 import { Tooltip } from '../../modal/settings/kit/Tooltip';
+import { useGlassTransition } from '../../shared/liquid-glass/glassTransitions';
 
 // src/components/panelTab/shell/Segments.tsx
 // The panel's choice between a few options that are all in view: the tab row, the theme source,
@@ -43,13 +43,13 @@ type SegmentsProps<T extends string> = {
 
 export const Segments = <T extends string>({ value, options, onChange, size = 'm', fill }: SegmentsProps<T>): React.ReactElement => {
     const markId = useId();
-    const reduced = useKitReducedMotion();
+    const transition = useGlassTransition();
     const look = SIZE[size];
     // Where some options show only an icon, they share the room and the named ones take what they need.
     const hasIconOnly = options.some(option => option.iconOnly);
 
     return (
-        <div role="group" className={`${fill ? 'flex w-full' : 'inline-flex'} bg-[var(--st-fill)] p-0.5 ${look.box}`}>
+        <div role="group" className={`liquid-glass-inset ${fill ? 'flex w-full' : 'inline-flex'} bg-[var(--st-fill)] p-0.5 ${look.box}`}>
             {options.map((option) => {
                 const selected = option.value === value;
                 const share = !fill
@@ -76,8 +76,8 @@ export const Segments = <T extends string>({ value, options, onChange, size = 'm
                                 <motion.span
                                     layoutId={markId}
                                     layoutDependency={value}
-                                    transition={kitTransition('move', reduced)}
-                                    className="absolute inset-0 bg-[var(--st-raise)]"
+                                    transition={transition}
+                                    className="liquid-glass-mark absolute inset-0 bg-[var(--st-raise)]"
                                     style={{ borderRadius: look.markRadius, boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
                                 />
                             )}

@@ -1,7 +1,7 @@
 import React, { useId } from 'react';
 import { motion } from 'framer-motion';
-import { kitTransition, useKitReducedMotion } from './motion';
 import { useRowAria } from './Row';
+import { useGlassTransition } from '../../../shared/liquid-glass/glassTransitions';
 
 // src/components/modal/settings/kit/Segmented.tsx
 // A choice between two to four short options, all of them in view. The raised mark under the
@@ -23,14 +23,14 @@ type SegmentedProps<T extends string> = {
 
 export const Segmented = <T extends string>({ value, options, onChange, fill, disabled }: SegmentedProps<T>): React.ReactElement => {
     const markId = useId();
-    const reduced = useKitReducedMotion();
+    const transition = useGlassTransition();
 
     return (
         <div
             role="group"
             {...useRowAria()}
             aria-disabled={disabled || undefined}
-            className={`${fill ? 'flex w-full' : 'inline-flex max-w-full flex-wrap'} min-h-8 rounded-lg bg-[var(--st-fill)] p-0.5${disabled ? ' pointer-events-none opacity-40' : ''}`}
+            className={`liquid-glass-inset ${fill ? 'flex w-full' : 'inline-flex max-w-full flex-wrap'} min-h-8 rounded-lg bg-[var(--st-fill)] p-0.5${disabled ? ' pointer-events-none opacity-40' : ''}`}
         >
             {options.map(option => {
                 const selected = option.value === value;
@@ -53,8 +53,8 @@ export const Segmented = <T extends string>({ value, options, onChange, fill, di
                             <motion.span
                                 layoutId={markId}
                                 layoutDependency={value}
-                                transition={kitTransition('move', reduced)}
-                                className="absolute inset-0 bg-[var(--st-raise)]"
+                                transition={transition}
+                                className="liquid-glass-mark absolute inset-0 bg-[var(--st-raise)]"
                                 style={{ borderRadius: 6, boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}
                             />
                         )}

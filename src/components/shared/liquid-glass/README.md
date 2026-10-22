@@ -69,7 +69,8 @@ compositing decides how to execute the backdrop filter; the reflection rim uses 
 
 Adopted by the floating player, now-playing song card, player panel handle, provider switcher, home sign-in button,
 Grid home navigation/search, Grid collection/directory back and title controls, the shared visualizer
-back control, and the shared slide action button. The song card and panel handle use interactive
+back control, shared dialogs and settings windows, the player panel and its tab groups, Grid filter
+controls, side panels, menus, the command palette and the shared slide action button. The song card and panel handle use interactive
 flow; the song card yields its decorative reflections to the automix progress border during a mix.
 Preserve the panel handle's icon as its first SVG and brighten that icon during sliding, not the
 glass host, because a host filter isolates its backdrop. Album

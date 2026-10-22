@@ -7,6 +7,7 @@ import { SettingsKitThemeContext, settingsTokens } from '../modal/settings/kit/k
 import { kitMotionTokens, kitTransition, useKitReducedMotion } from '../modal/settings/kit/motion';
 import { tabStops } from './Sheet';
 import { tabTarget } from './sheetKeys';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
 
 // src/components/shared/StudioWindow.tsx
 // The frame of a work window that shows what it edits: a header (back, title, a slot, actions), a
@@ -185,11 +186,12 @@ export const StudioWindow: React.FC<StudioWindowProps> = ({
                 initial={ARRIVE_FROM}
                 animate={{ opacity: 1, y: 0, scale: 1, transition: kitTransition('unfold', reduced) }}
                 exit={{ ...LEAVE_TO, transition: kitTransition('move', reduced) }}
-                className="st-window relative grid h-[780px] max-h-full w-[1240px] max-w-full grid-rows-[64px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)]"
+                className="liquid-glass-adaptive st-window relative grid h-[780px] max-h-full w-[1240px] max-w-full grid-rows-[64px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)]"
                 // The window holds focus without a mark of its own.
                 style={{ outline: 'none', ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reduced) }}
             >
                 <SettingsKitThemeContext.Provider value={kitTheme}>
+                    <AdaptiveGlassSurface isDaylight={isDaylight} />
                     <header inert={hasOver} className="flex min-w-0 items-center gap-2 pl-4 pr-5">
                         <Tooltip text={backLabel} className="inline-flex shrink-0">
                             <button

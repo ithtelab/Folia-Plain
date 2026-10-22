@@ -18,6 +18,7 @@ import type { PlayerCapConnectionStatus } from '../../types/playerCap';
 import { PageHeader } from './settings/kit';
 import { SettingsKitThemeContext, settingsTokens } from './settings/kit/kitTheme';
 import { kitMotionTokens, useKitReducedMotion } from './settings/kit/motion';
+import AdaptiveGlassSurface from '../shared/liquid-glass/AdaptiveGlassSurface';
 import { parseNumberText } from './settings/kit/numberText';
 import { SETTINGS_PAGES, SETTINGS_PAGE_OPTIONS } from './settings/pages';
 import HelpPage from './settings/pages/HelpPage';
@@ -1148,11 +1149,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-label={t('options.settingsWindowName')}
-                className="st-window relative flex h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)] md:grid md:h-[86vh] md:w-[960px] md:grid-cols-[212px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]"
+                className="liquid-glass-adaptive st-window relative flex h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)] md:grid md:h-[86vh] md:w-[960px] md:grid-cols-[212px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]"
                 style={{ ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reducedKitMotion) }}
                 onClick={(event) => event.stopPropagation()}
             >
                 <SettingsKitThemeContext.Provider value={kitTheme}>
+                    <AdaptiveGlassSurface isDaylight={isDaylight} />
                     <SettingsSideList
                         groups={settingsNavGroups}
                         activeId={isSearching ? null : activeTab === 'help' ? 'help' : activeSettingsSection}

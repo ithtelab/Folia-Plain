@@ -256,7 +256,7 @@ export const PolaroidCard = React.memo<PolaroidCardProps>(
         return (
             <div
                 {...{ [MORPH_FRAME_ATTR]: '' }}
-                className="rounded-xl p-3 flex flex-col items-center border transition-shadow duration-300 shadow-lg hover:shadow-2xl theme-polaroid-card"
+                className="liquid-glass-content-card rounded-xl p-3 flex flex-col items-center border transition-shadow duration-300 shadow-lg hover:shadow-2xl theme-polaroid-card"
                 style={{
                     width: dynamicWidth,
                     minHeight: dynamicHeight,

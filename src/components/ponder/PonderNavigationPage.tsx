@@ -8,6 +8,7 @@ import { usePonderStore } from '../../stores/usePonderStore';
 import { filterPonderIndex, type PonderIndexFilter } from '../../utils/ponder/ponderIndexFilter';
 import { Group } from '../modal/settings/kit';
 import { SettingsKitThemeContext } from '../modal/settings/kit/kitTheme';
+import AdaptiveGlassSurface from '../shared/liquid-glass/AdaptiveGlassSurface';
 import { tabStops } from '../shared/Sheet';
 import { tabTarget } from '../shared/sheetKeys';
 import { ponderLayerMotion, ponderSwapMotion, ponderTransition } from './ponderMotion';
@@ -164,11 +165,12 @@ const PonderNavigationPage: React.FC<PonderNavigationPageProps> = ({ theme, isDa
                         {...layer.panel}
                         ref={panelRef}
                         tabIndex={-1}
-                        className="st-window relative flex h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)] md:grid md:h-[86vh] md:w-[960px] md:grid-cols-[216px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]"
+                        className="liquid-glass-adaptive st-window relative flex h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[0_36px_90px_rgba(0,0,0,0.5),0_0_0_1px_var(--st-line2)] md:grid md:h-[86vh] md:w-[960px] md:grid-cols-[216px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]"
                         // 窗口本身拿着焦点时不画焦点框。
                         style={{ outline: 'none', ...ponderWindowTokens(isDaylight, theme, calm) }}
                     >
                         <SettingsKitThemeContext.Provider value={kitTheme}>
+                            <AdaptiveGlassSurface isDaylight={isDaylight} />
                             <aside className="flex min-h-0 shrink-0 flex-col border-b border-[var(--st-line)] bg-[var(--st-side)] px-3 pb-2 pt-3 md:border-b-0 md:border-r md:pb-3.5 md:pt-4">
                                 <label className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-transparent bg-[var(--st-fill)] px-2.5 text-[color:var(--st-t3)] pd-t-quick transition-colors focus-within:border-[var(--st-line2)]">
                                     <Search size={14} className="shrink-0" />

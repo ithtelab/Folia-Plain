@@ -8,6 +8,8 @@ import { SettingsKitThemeContext, settingsTokens, useSettingsKitTheme } from '..
 import { KIT_EASE, KIT_MOTION, kitMotionTokens, kitTransition, useKitReducedMotion } from '../modal/settings/kit/motion';
 import { Tooltip } from '../modal/settings/kit';
 import { escapeCloses, tabTarget } from './sheetKeys';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
+import { useGlassTransition } from './liquid-glass/glassTransitions';
 
 // src/components/shared/Sheet.tsx
 // The frame of every dialog: a title and the close button at the top, the content in the middle,
@@ -184,6 +186,7 @@ const SheetFrame: React.FC<SheetFrameProps> = ({
     const isDaylight = isDaylightProp ?? kitTheme.isDaylight;
     const theme = kitTheme.theme;
     const reduced = useKitReducedMotion();
+    const arrival = useGlassTransition('unfold');
     // False from the moment the sheet starts to leave: it lets go of the keyboard and the pointer
     // then, not when its exit has finished.
     const isPresent = useIsPresent();
@@ -303,13 +306,14 @@ const SheetFrame: React.FC<SheetFrameProps> = ({
                 data-ponder={ponderId}
                 tabIndex={-1}
                 initial={cameFrom}
-                animate={{ opacity: 1, x: 0, y: 0, scale: 1, transition: kitTransition('unfold', reduced) }}
+                animate={{ opacity: 1, x: 0, y: 0, scale: 1, transition: arrival }}
                 exit={exit}
-                className={`st-window relative flex max-h-[min(720px,100%)] max-w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[var(--sheet-shadow),0_0_0_1px_var(--st-line2)] ${SIZE_CLASS[size]}${underlay ? ' isolate' : ''}`}
+                className={`liquid-glass-adaptive st-window relative flex max-h-[min(720px,100%)] max-w-full flex-col overflow-hidden rounded-2xl bg-[var(--st-win)] text-[color:var(--st-t1)] shadow-[var(--sheet-shadow),0_0_0_1px_var(--st-line2)] ${SIZE_CLASS[size]}${underlay ? ' isolate' : ''}`}
                 // The panel holds focus without a mark of its own.
                 style={{ outline: 'none', ...panelTokens(isDaylight, theme, reduced) }}
             >
                 <SettingsKitThemeContext.Provider value={childTheme}>
+                    <AdaptiveGlassSurface isDaylight={isDaylight} />
                     {underlay && <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">{underlay}</div>}
                     {overlay && <div aria-hidden className="pointer-events-none absolute inset-0 z-10">{overlay}</div>}
                     {withAside(aside, <>

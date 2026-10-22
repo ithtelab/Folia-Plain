@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { getSizedCoverUrl } from '../../utils/coverUrl';
 import { getSongArtistLabel, getSongCoverUrl } from '../../services/onlineMusic/songMetadata';
 import { useSidePanelBottomPx } from '../../hooks/usePlayerBottomBarBottomPx';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
 
 export interface SidePanelListProps<T> {
     isOpen: boolean;
@@ -106,13 +107,14 @@ export function SidePanelList<T>({
                     exit={{ opacity: 0, x: 60, scale: 0.95 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     data-testid="side-panel-list"
-                    className="absolute right-6 top-24 w-80 max-w-[calc(100vw-3rem)] rounded-3xl z-[80] flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
+                    className="liquid-glass-adaptive absolute right-6 top-24 w-80 max-w-[calc(100vw-3rem)] rounded-3xl z-[80] flex flex-col p-6 shadow-2xl border backdrop-blur-2xl pointer-events-auto theme-glass-panel"
                     style={{
                         bottom: bottomBarBottomPx,
                         boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
                         color: 'var(--text-primary)'
                     }}
                 >
+                    <AdaptiveGlassSurface isDaylight={isDaylight} radius={24} />
                     {/* Header */}
                     <div className="flex items-center justify-between gap-2 mb-4 shrink-0">
                         <div className="min-w-0 flex-1">

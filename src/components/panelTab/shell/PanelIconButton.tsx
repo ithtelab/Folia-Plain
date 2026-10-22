@@ -46,7 +46,7 @@ export const PanelIconButton: React.FC<PanelIconButtonProps> = ({
             aria-pressed={pressed}
             aria-disabled={disabled || undefined}
             onClick={disabled ? undefined : onClick}
-            className={`st-t-fast st-focus-inside grid place-items-center text-[color:var(--st-t2)] transition-[background-color,color,opacity,scale] ${SIZE_CLASS[size]} ${filled ? 'bg-[var(--st-fill)]' : ''} ${disabled
+            className={`st-t-fast st-focus-inside grid place-items-center text-[color:var(--st-t2)] transition-[background-color,color,opacity,scale] ${SIZE_CLASS[size]} ${filled ? 'liquid-glass-inset bg-[var(--st-fill)]' : ''} ${disabled
                 ? 'cursor-not-allowed opacity-40'
                 : `hover:text-[color:var(--st-t1)] active:scale-[0.96] ${filled ? 'hover:bg-[var(--st-fill2)]' : 'hover:bg-[var(--st-fill)]'}`}`}
         >

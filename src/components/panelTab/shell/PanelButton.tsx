@@ -18,7 +18,7 @@ export const PanelButton: React.FC<PanelButtonProps> = ({ icon: Icon, grow, chil
     <button
         type="button"
         {...button}
-        className={`st-t-fast inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-[var(--st-fill)] px-3 text-[13px] text-[color:var(--st-t1)] transition-[background-color,opacity,scale] enabled:hover:bg-[var(--st-fill2)] enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40 ${grow ? 'flex-[1_1_auto]' : 'shrink-0'}`}
+        className={`liquid-glass-inset st-t-fast inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-[var(--st-fill)] px-3 text-[13px] text-[color:var(--st-t1)] transition-[background-color,opacity,scale] enabled:hover:bg-[var(--st-fill2)] enabled:active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40 ${grow ? 'flex-[1_1_auto]' : 'shrink-0'}`}
     >
         {Icon && <Icon size={14} />}
         {children}

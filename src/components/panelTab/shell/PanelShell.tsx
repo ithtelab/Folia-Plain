@@ -7,6 +7,8 @@ import { kitTransition, useKitReducedMotion } from '../../modal/settings/kit/mot
 import { panelTokens } from './panelTheme';
 import { FOLDED_PX } from './SongHeader';
 import { useMeasuredSize } from './useMeasuredSize';
+import AdaptiveGlassSurface from '../../shared/liquid-glass/AdaptiveGlassSurface';
+import { useGlassTransition } from '../../shared/liquid-glass/glassTransitions';
 
 // src/components/panelTab/shell/PanelShell.tsx
 // The frame of the playing page's panel: where it sits, the glass surface, and how tall it is. The
@@ -57,6 +59,7 @@ type PanelSurfaceProps = Omit<PanelShellProps, 'isOpen' | 'handle'> & {
 
 const PanelSurface: React.FC<PanelSurfaceProps> = ({ hasHandle, isCover, tabKey, theme, isDaylight, header, dock, children, layoutRef, onLayoutUpdate }) => {
     const reduced = useKitReducedMotion();
+    const arrival = useGlassTransition('unfold');
     const bottomBarBottomPx = usePlayerBottomBarBottomPx();
     // What is under the surface: the handle, or a small gap. A variable, so the two heights below follow it at once.
     const underPx = hasHandle ? HANDLE_ROOM_PX : BARE_GAP_PX;
@@ -93,11 +96,11 @@ const PanelSurface: React.FC<PanelSurfaceProps> = ({ hasHandle, isCover, tabKey,
             ref={layoutRef}
             onUpdate={onLayoutUpdate}
             initial={away}
-            animate={{ opacity: 1, scale: 1, transition: kitTransition('unfold', reduced) }}
+            animate={{ opacity: 1, scale: 1, transition: arrival }}
             exit={{ ...away, transition: kitTransition('move', reduced) }}
             data-testid="unified-panel-surface"
             data-still={isStill || undefined}
-            className="st-window pointer-events-auto @container hide-scrollbar flex w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto overflow-x-hidden rounded-[20px] bg-[var(--pn-glass)] text-[color:var(--st-t1)] shadow-[var(--pn-shadow)] backdrop-blur-[40px] backdrop-saturate-[1.3] [&[data-still]_*]:transition-none"
+            className="liquid-glass-adaptive relative st-window pointer-events-auto @container hide-scrollbar flex w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto overflow-x-hidden rounded-[20px] bg-[var(--pn-glass)] text-[color:var(--st-t1)] shadow-[var(--pn-shadow)] backdrop-blur-[40px] backdrop-saturate-[1.3] [&[data-still]_*]:transition-none"
             style={{
                 ...panelTokens(isDaylight, theme, reduced),
                 '--pn-under': `${underPx}px`,
@@ -114,6 +117,7 @@ const PanelSurface: React.FC<PanelSurfaceProps> = ({ hasHandle, isCover, tabKey,
                 transformOrigin: `calc(100% - 24px) calc(100% + ${underPx - 24}px)`,
             } as MotionStyle}
         >
+            <AdaptiveGlassSurface isDaylight={isDaylight} radius={20} />
             {header}
 
             {/* As wide as the surface, so the scrollbar (the kit's, as wide as the padding) lies in the surface's own padding. */}

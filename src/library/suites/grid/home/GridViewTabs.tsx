@@ -2,6 +2,7 @@ import React, { useId } from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotionFor } from '../../../../hooks/useReducedMotionFor';
 import { pillChromeClassesFor as gridChromeClassesFor } from '../../../../components/shared/pillChrome';
+import AdaptiveGlassSurface from '../../../../components/shared/liquid-glass/AdaptiveGlassSurface';
 
 // src/library/suites/grid/home/GridViewTabs.tsx
 // The second level of the home header's view capsule: centred right under it, a smaller capsule
@@ -44,7 +45,8 @@ export const GridViewTabs: React.FC<GridViewTabsProps> = ({ tabs, isDaylight, on
     const chrome = gridChromeClassesFor(isDaylight);
 
     return (
-        <div className={`pointer-events-auto flex h-7 items-center rounded-full p-0.5 backdrop-blur-md ${chrome.pill}`}>
+        <div className={`liquid-glass-adaptive relative pointer-events-auto flex h-7 items-center rounded-full p-0.5 backdrop-blur-md ${chrome.pill}`}>
+            <AdaptiveGlassSurface isDaylight={isDaylight} radius={999} />
             {onOpenMap && (
                 <button
                     type="button"

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { List, useListRef, type RowComponentProps } from 'react-window';
 import { useReducedMotionFor } from '../../hooks/useReducedMotionFor';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
 
 // CustomSelectMenu.tsx
 // Renders the viewport-anchored option menu used by CustomSelect.
@@ -272,8 +273,8 @@ export const CustomSelectMenu: React.FC<CustomSelectMenuProps> = ({
             initial={hidden}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={hidden}
-            transition={{ duration: reducedMotion ? 0 : 0.15, ease: 'easeOut' }}
-            className={`fixed z-[200] border overscroll-contain custom-scrollbar ${compact ? 'rounded-[10px]' : 'rounded-xl shadow-xl backdrop-blur-md'}${isVirtualized ? '' : ' overflow-y-auto'}`}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className={`liquid-glass-adaptive fixed z-[200] border overscroll-contain custom-scrollbar ${compact ? 'rounded-[10px]' : 'rounded-xl shadow-xl backdrop-blur-md'}${isVirtualized ? '' : ' overflow-y-auto'}`}
             data-wheel-scroll-region
             role="listbox"
             aria-label={ariaLabel}
@@ -303,6 +304,7 @@ export const CustomSelectMenu: React.FC<CustomSelectMenuProps> = ({
                     : { backgroundColor: isDaylight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(24, 24, 27, 0.96)' }),
             }}
         >
+            <AdaptiveGlassSurface isDaylight={isDaylight} radius={compact ? 10 : 12} />
             {isVirtualized ? (
                 <div className={compact ? 'p-1' : 'p-1.5'}>
                     <List

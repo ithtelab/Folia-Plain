@@ -7,6 +7,7 @@ import type { Theme } from '../../types';
 import { ponderTransition } from './ponderMotion';
 import { ponderLayerTokens, ponderWindowTokens } from './ponderTheme';
 import { PONDER_QUIET_CAP, PonderKeyCombo } from './PonderKeyCap';
+import AdaptiveGlassSurface from '../shared/liquid-glass/AdaptiveGlassSurface';
 
 // src/components/ponder/PonderHintCapsule.tsx
 // 思索的提示胶囊：一行，画着键帽、「思索」和目标的名字。不可点击，不参与布局。
@@ -148,13 +149,14 @@ const PonderHintCapsule: React.FC<PonderHintCapsuleProps> = ({
                 animate={{ scale: 1 }}
                 exit={{ scale: small }}
                 transition={transition}
-                className="relative flex h-8 items-center gap-2 overflow-hidden rounded-[10px] bg-[var(--st-menu)] pl-1.5 pr-3 text-[13px] text-[color:var(--st-t1)] shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_0_1px_var(--st-line2)]"
+                className="liquid-glass-adaptive relative flex h-8 items-center gap-2 overflow-hidden rounded-[10px] bg-[var(--st-menu)] pl-1.5 pr-3 text-[13px] text-[color:var(--st-t1)] shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_0_1px_var(--st-line2)]"
                 style={{
                     ...ponderWindowTokens(isDaylight, theme, calm),
                     originX: isPinned ? 0.5 : 0,
                     originY: isPinned ? 1 : 0,
                 }}
             >
+                <AdaptiveGlassSurface isDaylight={isDaylight} radius={10} />
                 {/* 长按进度：由 WAAPI 把 scaleX 从 0 推到 1，不是 React 状态。 */}
                 <div
                     ref={ownWipeRef}

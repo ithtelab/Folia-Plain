@@ -265,6 +265,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 aria-activedescendant={isMenuShown && activeIndex >= 0 ? customSelectOptionId(listboxId, activeIndex) : undefined}
                 className={triggerClass}
                 style={triggerInlineStyle}
+                data-glass-control="select"
             >
                 <span id={triggerLabelledBy ? valueId : undefined} className="truncate">
                     {selectedOption ? selectedOption.label : (placeholder ?? t('ui.selectPlaceholder'))}

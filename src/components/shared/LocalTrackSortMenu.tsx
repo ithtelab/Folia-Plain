@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDownAZ, ArrowUpAZ, CalendarClock, Check, ListOrdered, Type } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { LocalSongFolderSortDirection, LocalSongFolderSortField } from '../../utils/localSongSorting';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
 
 // src/components/shared/LocalTrackSortMenu.tsx
 // Compact sort controls used by the local folder track list.
@@ -72,8 +73,9 @@ export const LocalTrackSortMenu: React.FC<LocalTrackSortMenuProps> = ({ field, o
                         exit={{ opacity: 0, y: -6, scale: 0.96 }}
                         transition={{ duration: 0.16, ease: 'easeOut' }}
                         role="menu"
-                        className="absolute right-0 top-10 z-10 w-44 rounded-2xl border p-1.5 shadow-xl backdrop-blur-2xl theme-glass-panel"
+                        className="liquid-glass-adaptive absolute right-0 top-10 z-10 w-44 rounded-2xl border p-1.5 shadow-xl backdrop-blur-2xl theme-glass-panel"
                     >
+                        <AdaptiveGlassSurface />
                         <SortFieldButton
                             active={field === 'fileName'}
                             icon={<Type size={15} />}

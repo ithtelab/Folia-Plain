@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, CircleHelp, Command, CornerDownLeft, Loader2, Search, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Theme } from '../../types';
+import AdaptiveGlassSurface from '../shared/liquid-glass/AdaptiveGlassSurface';
+import { useGlassSettingsStore } from '../../stores/useGlassSettingsStore';
 import type { CommandPaletteContext, CommandPaletteMatch, CommandPaletteCommand } from './types';
 import type { CommandPaletteSurface, CommandSurfaceRenderArgs } from './surfaces/types';
 import CommandPaletteSyntaxHints from './CommandPaletteSyntaxHints';
@@ -251,7 +253,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     // A live-preview surface asks for an unblurred backdrop so its own effect stays visible behind
     // the palette; the panel then has to carry its own legibility, hence the denser fill.
-    const hasClearBackdrop = surface?.backdrop === 'clear';
+    const liquidGlass = useGlassSettingsStore(state => state.liquidGlassEnabled);
+    const hasClearBackdrop = liquidGlass || surface?.backdrop === 'clear';
     const panelBg = hasClearBackdrop
         ? (isDaylight ? 'bg-white/95 text-zinc-950' : 'bg-zinc-950/95 text-white')
         : (isDaylight ? 'bg-white/70 text-zinc-950' : 'bg-zinc-950/70 text-white');
@@ -427,7 +430,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         initial={{ opacity: 0, y: 18, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                         onAnimationComplete={() => {
                             // iOS Safari blocks overflow scrolling in sibling containers
                             // when an input is focused inside a fixed + backdrop-blur panel.
@@ -439,13 +442,14 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                         onMouseDown={(event) => event.stopPropagation()}
                     >
                         <div
-                            className={`overflow-hidden rounded-3xl border shadow-2xl ${panelBg}`}
+                            className={`liquid-glass-adaptive relative overflow-hidden rounded-3xl border shadow-2xl ${panelBg}`}
                             data-testid="command-palette-panel"
                             style={{
                                 borderColor: isDaylight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.12)',
                                 color: 'var(--text-primary)',
                             }}
                         >
+                        <AdaptiveGlassSurface isDaylight={isDaylight} radius={24} />
                         <div className="flex items-center gap-3 border-b px-4 py-3" style={{ borderColor: isDaylight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.10)' }}>
                             {isExecuting ? (
                                 <Loader2 size={18} className="animate-spin opacity-60 text-zinc-400" />

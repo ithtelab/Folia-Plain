@@ -7,6 +7,7 @@ import { usePlayerOverlayObstacle } from '../../../hooks/usePlayerOverlayLayout'
 import { holdStatusMessage } from '../../../stores/useStatusMessageStore';
 import type { AppStatusToast } from './buildAppDialogsModel';
 import './statusToast.css';
+import AdaptiveGlassSurface from '../../shared/liquid-glass/AdaptiveGlassSurface';
 
 // src/components/app/dialogs/StatusToast.tsx
 // The app's toast, one line: the platform's mark (or the type's icon), what happened, what to do, the
@@ -59,7 +60,7 @@ export const StatusToast: React.FC<{ toast: AppStatusToast }> = ({ toast }) => {
             initial={calm ? { opacity: 0 } : { opacity: 0, y: -18 }}
             animate={calm ? { opacity: 1, transition: { duration: 0.15 } } : { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE_OUT } }}
             exit={calm ? { opacity: 0, transition: { duration: 0.15 } } : { opacity: 0, y: -10, transition: { duration: 0.22, ease: EASE_IN } }}
-            className={`status-toast${isDaylight ? ' is-daylight' : ''}${cancel || action ? ' has-buttons' : ''}${open ? ' is-open' : ''}${calm ? ' is-calm' : ''}${isPresent ? '' : ' is-leaving'}`}
+            className={`liquid-glass-adaptive relative status-toast${isDaylight ? ' is-daylight' : ''}${cancel || action ? ' has-buttons' : ''}${open ? ' is-open' : ''}${calm ? ' is-calm' : ''}${isPresent ? '' : ' is-leaving'}`}
             onPointerEnter={() => rest(true)}
             onPointerLeave={() => rest(false)}
             onFocus={() => rest(true)}
@@ -67,6 +68,7 @@ export const StatusToast: React.FC<{ toast: AppStatusToast }> = ({ toast }) => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node | null)) rest(false);
             }}
         >
+            <AdaptiveGlassSurface isDaylight={isDaylight} radius={22} />
             <div className="status-toast-line">
                 {/* A message about one online platform leads with that platform's mark; every other message with its type's icon. */}
                 {toast.providerId

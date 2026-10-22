@@ -16,7 +16,7 @@ interface LiquidGlassSurfaceProps {
     interactive?: boolean;
     /** Ambient flow is reserved for primary navigation; the bottom player disables interaction entirely. */
     flow?: 'ambient' | 'interactive' | 'static' | 'none';
-    legacy?: 'control' | 'navigation' | 'search' | 'player-expanded' | 'player-collapsed' | 'card' | 'toast' | 'login' | 'provider';
+    legacy?: 'control' | 'navigation' | 'search' | 'player-expanded' | 'player-collapsed' | 'card' | 'toast' | 'login' | 'provider' | 'surface';
 }
 
 interface LensGeometry {
@@ -102,6 +102,7 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
     const toneCurve = isDaylight ? '0.55 0.55 0.55 0.75 1' : '0 0.24 0.43 0.49 0.5';
+    if (!enabled && legacy === 'surface') return null;
     if (!enabled) return <span aria-hidden="true" className="liquid-glass-surface" data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-optics="classic" data-glass-legacy={legacy}><span className="liquid-glass-classic" /></span>;
     return (
         <span ref={rootRef} aria-hidden="true" className="liquid-glass-surface"

@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { POPOVER_GUTTER, placePopover, type PopoverAlign, type PopoverPlace, type PopoverSide } from './popoverPlace';
+import AdaptiveGlassSurface from '../../../shared/liquid-glass/AdaptiveGlassSurface';
 
 // src/components/modal/settings/kit/Popover.tsx
 // A layer that opens from a control: a menu, a grid of pictures, a colour picker. It is drawn in
@@ -161,8 +162,9 @@ export const Popover: React.FC<PopoverProps> = ({
                 // It holds focus without a mark of its own.
                 outline: 'none',
             }}
-            className={`st-pop st-scroll absolute z-30 flex flex-col overflow-y-auto overscroll-contain rounded-[10px] bg-[var(--st-menu)] text-[color:var(--st-t1)] shadow-[0_14px_36px_rgba(0,0,0,0.34),0_0_0_1px_var(--st-line2)] ${fill ? '' : 'w-max max-w-[calc(100%-16px)] '}${className}`}
+            className={`liquid-glass-adaptive st-pop st-scroll absolute z-30 flex flex-col overflow-y-auto overscroll-contain rounded-[10px] bg-[var(--st-menu)] text-[color:var(--st-t1)] shadow-[0_14px_36px_rgba(0,0,0,0.34),0_0_0_1px_var(--st-line2)] ${fill ? '' : 'w-max max-w-[calc(100%-16px)] '}${className}`}
         >
+            <AdaptiveGlassSurface radius={10} />
             {children}
         </div>,
         host,
