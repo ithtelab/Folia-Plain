@@ -7,19 +7,27 @@ const clearSessionMock = vi.hoisted(() => vi.fn());
 const writeSessionValueMock = vi.hoisted(() => vi.fn());
 const searchQQSongsMock = vi.hoisted(() => vi.fn());
 const fetchQQLyricsMock = vi.hoisted(() => vi.fn());
-const transportState = vi.hoisted(() => ({ hasSession: true }));
+const transportState = vi.hoisted(() => ({ hasSession: true, parked: false }));
 
 vi.mock('@/services/onlineMusic/qq/qqTransport', async importOriginal => ({
     ...await importOriginal<typeof import('@/services/onlineMusic/qq/qqTransport')>(),
     getQqTransportAvailability: () => ({ configured: true }),
     getQqRemoteApiBase: () => 'https://qq.example.test',
     hasQqSession: () => transportState.hasSession,
+    isQqSessionParked: async () => transportState.parked,
     clearQqSession: clearSessionMock,
     requestQq: requestMock,
 }));
 
 vi.mock('@/services/onlineMusic/providerStorage', () => ({
     writeProviderSessionValue: writeSessionValueMock,
+}));
+
+// 登录确认后的续期在后台接着问后端（qqSessionRefresh.ts，有它自己的测试）；这里不让它占 requestMock 排好的回答。
+vi.mock('@/services/onlineMusic/qq/qqSessionRefresh', () => ({
+    keepQqSessionFresh: () => { },
+    stopQqSessionRefresh: () => { },
+    resetQqSessionRefresh: () => { },
 }));
 
 vi.mock('@/services/onlineMusic/qq/qqLyricProvider', () => ({
@@ -717,6 +725,22 @@ describe('qqProvider', () => {
         await expect(qqProvider.auth!.getLoginStatus()).resolves.toBeNull();
         await expect(qqProvider.auth!.getLoginStatus()).resolves.toBeNull();
         expect(requestMock).toHaveBeenCalledWith('login_status');
+    });
+
+    // 主进程这次没读出加密的登录仓库：后端里没有会话，不认这个 session 不等于登出，session 要留着。
+    it('reports the login status as unavailable, not anonymous, while the sign-in store could not be read', async () => {
+        transportState.parked = true;
+        try {
+            requestMock
+                .mockResolvedValueOnce({ code: 200, data: {} })
+                .mockRejectedValueOnce(new OnlineProviderError('auth-required', 'QQMusicApi login required', 'qq'));
+
+            await expect(qqProvider.auth!.getLoginStatus()).rejects.toMatchObject({ code: 'unavailable' });
+            await expect(qqProvider.auth!.getLoginStatus()).rejects.toMatchObject({ code: 'unavailable' });
+            expect(clearSessionMock).not.toHaveBeenCalled();
+        } finally {
+            transportState.parked = false;
+        }
     });
 
     it('propagates non-auth login status failures', async () => {

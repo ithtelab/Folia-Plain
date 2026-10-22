@@ -10,6 +10,8 @@ function createSessionRepository({ store, safeStorage, warn = console.warn }) {
   let loaded = false;
   let current = null;
   let revision = 0;
+  let unread = false;
+  let toldUnsealed = false;
   const canEncrypt = () => safeStorage?.isEncryptionAvailable()
     && safeStorage.getSelectedStorageBackend?.() !== 'basic_text';
   let deviceId = store.get(DEVICE_KEY);
@@ -25,7 +27,15 @@ function createSessionRepository({ store, safeStorage, warn = console.warn }) {
       loaded = true;
       try {
         const sealed = store.get(SESSION_KEY);
-        if (typeof sealed !== 'string' || !canEncrypt()) return null;
+        if (typeof sealed !== 'string') return null;
+        // No OS encryption in this run: the session stays stored, unread, for a run that has it.
+        // What does not unseal while encryption works (another OS account, a keychain that was
+        // reset, damaged) is nothing stored.
+        if (!canEncrypt()) {
+          unread = true;
+          warn('[BodianSession] Stored session cannot be read: OS encryption is unavailable');
+          return null;
+        }
         const value = JSON.parse(safeStorage.decryptString(Buffer.from(sealed, 'base64')));
         if (value.version === 2 && /^[1-9]\d{0,19}$/.test(value.uid) && value.user?.id === value.uid
           && typeof value.token === 'string' && value.token) current = value;
@@ -36,19 +46,38 @@ function createSessionRepository({ store, safeStorage, warn = console.warn }) {
       loaded = true;
       current = { version: 2, uid: String(value.uid), token: value.token, user: value.user };
       revision++;
-      try {
-        if (!canEncrypt()) throw new Error('Encryption unavailable');
-        store.set(SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
-      } catch {
+      // Where nothing can be sealed, the login of this run still replaces the stored one: that one
+      // is deleted, so an older account cannot come back at a later start. Where the store cannot
+      // be written (a file locked for a moment), what is stored stays as it was. The first is said
+      // once a run.
+      if (!canEncrypt()) {
         store.delete(SESSION_KEY);
-        warn('[BodianSession] Login is available for this run only; OS encryption is unavailable');
+        if (!toldUnsealed) warn('[BodianSession] Login is available for this run only; OS encryption is unavailable');
+        toldUnsealed = true;
+        return;
+      }
+      try {
+        store.set(SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
+      } catch (error) {
+        warn(`[BodianSession] Login could not be stored (${error?.code ?? 'unknown'}); what is stored stays as it was`);
       }
     },
-    clear() {
+    // Removes the stored session, but not one this run could not read for want of OS encryption
+    // (see `unreadable`): that one is left for a run that can. A sign-out (`signOut`) removes it
+    // either way.
+    clear({ signOut = false } = {}) {
+      const kept = !signOut && this.unreadable();
       loaded = true;
       current = null;
       revision++;
+      if (kept) return;
       store.delete(SESSION_KEY);
+      unread = false;
+    },
+    // Whether a session is stored that this run could not read (see `get`): who is signed in is
+    // then not known, which is not the same as nobody.
+    unreadable() {
+      return !this.get() && unread;
     },
   };
 }

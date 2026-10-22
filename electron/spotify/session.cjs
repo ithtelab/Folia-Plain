@@ -16,15 +16,25 @@ const publicAccountId = username => crypto.createHash('sha256').update(`folia-sp
 function createSpotifySessionRepository({ store, safeStorage, log = (...args) => console.log(...args), warn = (...args) => console.warn(...args) }) {
   let loaded = false;
   let current = null;
+  // A sign-in is stored that this run could not read for want of OS encryption (see `get`).
+  let unread = false;
   const canEncrypt = () => safeStorage?.isEncryptionAvailable()
     && safeStorage.getSelectedStorageBackend?.() !== 'basic_text';
+  // Where nothing can be sealed, the sign-in of this run still replaces the stored one: that one
+  // is deleted, so an older account cannot come back at a later start. Where the store cannot be
+  // written (a file locked for a moment), what is stored stays as it was. The first is said once a run.
+  let toldUnsealed = false;
   const persist = () => {
-    try {
-      if (!canEncrypt()) throw new Error('Encryption unavailable');
-      store.set(SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
-    } catch {
+    if (!canEncrypt()) {
       store.delete(SESSION_KEY);
-      warn('[Spotify] Sign-in is kept for this run only: OS encryption is unavailable');
+      if (!toldUnsealed) warn('[Spotify] Sign-in is kept for this run only: OS encryption is unavailable');
+      toldUnsealed = true;
+      return;
+    }
+    try {
+      store.set(SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
+    } catch (error) {
+      warn(`[Spotify] Sign-in could not be stored (${error?.code ?? 'unknown'}); what is stored stays as it was`);
     }
   };
   return {
@@ -37,7 +47,11 @@ function createSpotifySessionRepository({ store, safeStorage, log = (...args) =>
           log('[Spotify] No stored sign-in');
           return null;
         }
+        // Only a run without OS encryption leaves it unread, for a run that has it. What does not
+        // unseal while encryption works (sealed by another OS account, a keychain that was reset,
+        // damaged) is nothing stored.
         if (!canEncrypt()) {
+          unread = true;
           warn('[Spotify] Stored sign-in cannot be read: OS encryption is unavailable');
           return null;
         }
@@ -61,9 +75,15 @@ function createSpotifySessionRepository({ store, safeStorage, log = (...args) =>
       current = { ...current, ...(credentials ? { credentials: { ...credentials } } : {}), ...(user ? { user: { ...user } } : {}) };
       persist();
     },
+    // Whether a sign-in is stored that this run could not read (see `get`): who is signed in is
+    // then not known, which is not the same as nobody.
+    unreadable() {
+      return !this.get() && unread;
+    },
     clear() {
       loaded = true;
       current = null;
+      unread = false;
       store.delete(SESSION_KEY);
     },
   };

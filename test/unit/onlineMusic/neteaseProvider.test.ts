@@ -349,6 +349,70 @@ describe('neteaseProvider', () => {
     });
 });
 
+// 谁登录着：null 只在网易云自己说没有登录时给（accountRead.ts 据此删掉保存的登录）。没问到的回答抛错，登录留着。
+describe('neteaseProvider login status', () => {
+    const profile = { userId: 7, nickname: 'Listener' };
+    const signedIn = { data: { code: 200, account: { id: 7 }, profile } };
+    const account = { code: 200, account: { id: 7 }, profile };
+
+    beforeEach(() => vi.clearAllMocks());
+
+    it('names the user where both checks name the same one', async () => {
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(signedIn as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue(account as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).resolves.toMatchObject({ id: 7, nickname: 'Listener' });
+    });
+
+    // What the local backend answers where it cannot reach NetEase (HTTP 502), and what NetEase refuses with.
+    it.each([
+        ['the local service cannot reach NetEase', { code: 502, msg: 'connect ECONNREFUSED 127.0.0.1:7890' }],
+        ['NetEase answers a server error', { code: 503, msg: 'Request failed with status code 503' }],
+        ['NetEase refuses the request', { code: -462, message: '绑定手机号后才能继续操作' }],
+        ['NetEase answers another code', { code: 400 }],
+    ])('rejects, instead of answering nobody, where %s', async (_label, response) => {
+        const refusal = { code: 'unavailable', providerId: 'netease', cause: { code: response.code } };
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(response as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).rejects.toMatchObject(refusal);
+        expect(neteaseApi.getUserAccount).not.toHaveBeenCalled();
+
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(signedIn as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue(response as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).rejects.toMatchObject(refusal);
+    });
+
+    it.each([301, 401, 403])('answers nobody where NetEase says code %s', async code => {
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue({ code } as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).resolves.toBeNull();
+
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(signedIn as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue({ code } as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).resolves.toBeNull();
+    });
+
+    it('answers nobody where NetEase answers without a profile', async () => {
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue({ data: { code: 200, account: null, profile: null } } as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).resolves.toBeNull();
+
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(signedIn as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue({ code: 200, account: null, profile: null } as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).resolves.toBeNull();
+    });
+
+    // A remote API's gateway answering on its own, or an empty answer: NetEase said nothing, so it is not nobody.
+    it.each([
+        ['an answer without a code', {}],
+        ['a gateway error of its own', { error: { message: 'Bad Gateway' } }],
+    ])('rejects, instead of answering nobody, where the answer is %s', async (_label, response) => {
+        const refusal = { code: 'unavailable', providerId: 'netease' };
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(response as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).rejects.toMatchObject(refusal);
+
+        vi.mocked(neteaseApi.getLoginStatus).mockResolvedValue(signedIn as any);
+        vi.mocked(neteaseApi.getUserAccount).mockResolvedValue(response as any);
+        await expect(neteaseProvider.auth!.getLoginStatus()).rejects.toMatchObject(refusal);
+    });
+});
+
 // 网易云 `/user/playlist` 的「我喜欢的音乐」是 `specialType: 5`（数字）；首页特殊集合靠 isLiked 认它。
 describe('neteaseProvider user playlists', () => {
     beforeEach(() => vi.clearAllMocks());

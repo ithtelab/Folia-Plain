@@ -20,7 +20,7 @@ import { toSafePlaybackUrl } from '../../../utils/appPlaybackHelpers';
 import { fetchQQLyrics } from './qqLyricProvider';
 import { writeProviderSessionValue } from '../providerStorage';
 import { normalizeQqCollection, normalizeQqSong, normalizeQqUser } from './qqNormalize';
-import { clearQqSession, getQqRemoteApiBase, getQqTransportAvailability, hasQqSession, requestQq } from './qqTransport';
+import { clearQqSession, getQqRemoteApiBase, getQqTransportAvailability, hasQqSession, isQqSessionParked, requestQq } from './qqTransport';
 import { canRunLoginSelfCheck, runLoginSelfCheck } from '../loginSelfCheck';
 import { diagnosticLine, formatDiagnosticClock } from '../login/loginDiagnosticReport';
 import { collectQqLoginDiagnostics } from './qqLoginDiagnostics';
@@ -491,6 +491,16 @@ const noteLoginStatusCheck = (summary: LoginDiagnosticLine): void => {
     lastLoginStatusCheck = diagnosticLine`${formatDiagnosticClock(Date.now())} ${summary}`;
 };
 
+// 后端不认这个 session 就是登录没了，只有一种例外：主进程这次启动没能读出加密的登录仓库，存着的又是启动时那个 session
+// （isQqSessionParked），请求就没带它。那时是「查不到」：报 unavailable，accountRead 只记这次读失败、留着 session；回 null 会让它删掉
+// session，下次能读出仓库时也找不回来。这次扫码登录得到的 session 后端不认了，就照常是登录没了。
+const signedOutUnlessStoreUnreadable = async (): Promise<null> => {
+    if (!await isQqSessionParked()) return null;
+    noteLoginStatusCheck(diagnosticLine`login_status: the sign-in store could not be read at this start`);
+    console.warn('[QQProvider] login-status:store-unreadable');
+    throw new OnlineProviderError('unavailable', 'QQ sign-in store could not be read at this start', 'qq');
+};
+
 const getLoginStatus = async (): Promise<ProviderUser | null> => {
     // No opaque backend session means the account cannot be authenticated, so the startup request is skipped.
     if (!hasQqSession()) {
@@ -504,10 +514,10 @@ const getLoginStatus = async (): Promise<ProviderUser | null> => {
         if (!profile) {
             noteLoginStatusCheck(diagnosticLine`login_status: the backend does not recognize the stored session`);
             console.info('[QQProvider] login-status:anonymous');
-            return null;
+            return signedOutUnlessStoreUnreadable();
         }
         const user = await withQqVipType(normalizeQqUser(profile));
-        // 登录还在：Serverless 后端的会话要在到期前续（qqSessionRefresh.ts），先等通道探测说出会话存法。
+        // 登录还在：会话要在到期前续（qqSessionRefresh.ts）；续期的请求排在通道探测之后。
         void refreshDeclaredChannels().then(keepQqSessionFresh);
         // The acceptance test account returned a profile without a display name, so the profile itself is the signal.
         noteLoginStatusCheck(diagnosticLine`signed in (user id ${user.id ? 'present' : 'missing'}, nickname ${user.nickname ? 'present' : 'missing'})`);
@@ -521,7 +531,7 @@ const getLoginStatus = async (): Promise<ProviderUser | null> => {
         // Missing, expired, rejected, or non-persisted backend sessions all arrive as 401.
         if (error instanceof OnlineProviderError && error.code === 'auth-required') {
             console.info('[QQProvider] login-status:auth-required');
-            return null;
+            return signedOutUnlessStoreUnreadable();
         }
         console.warn('[QQProvider] login-status:error', error);
         throw error;

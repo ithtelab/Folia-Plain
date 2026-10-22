@@ -18,9 +18,9 @@ import { parseNeteaseChorusRanges, processNeteaseLyrics } from '../../../utils/l
 import { getPlaybackSourceRef } from '../../../utils/appPlaybackGuards';
 import { toFiniteNumber } from '../../../utils/replayGain';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
-import { NeteaseLoginHttpError, getNeteaseRemoteApiBase, neteaseApi, resolveNeteaseSongAvailability } from './netease';
+import { NeteaseLoginHttpError, getNeteaseRemoteApiBase, httpErrorStatusOf, neteaseApi, resolveNeteaseSongAvailability } from './netease';
 import i18n from '../../../i18n/config';
-import { removeProviderSessionValue, writeProviderSessionValue } from '../providerStorage';
+import { readProviderSessionValue, removeProviderSessionValue, writeProviderSessionValue } from '../providerStorage';
 import { readNeteaseOldAccountCache, removeNeteaseOldAccountCache } from './neteaseOldAccountCache';
 import { collectNeteaseLoginDiagnostics } from './neteaseLoginDiagnostics';
 import { describeNeteaseLoginFailure, neteaseCheckFailure } from './neteaseLoginFailure';
@@ -139,6 +139,9 @@ const dropNeteaseSignIn = async (): Promise<void> => {
     await removeNeteaseOldAccountCache();
 };
 
+// 最近一次读登录状态时页面里存着的 cookie，没有就是 null。登录失效时只删它（signInRanOut）。
+let cookieAskedWith: string | null = null;
+
 // 扫码的请求没有得到预期的回答时，给日志和失败的那一行：返回码和后端的原话。
 const describeQrResponse = (response: any): string => (
     `code ${response?.code ?? 'none'}: ${response?.message || response?.msg || 'no message'}`
@@ -150,6 +153,17 @@ const yesNo = (value: boolean): string => (value ? 'yes' : 'no');
 let lastLoginStatusCheck: LoginDiagnosticLine | null = null;
 const noteLoginStatusCheck = (summary: LoginDiagnosticLine): void => {
     lastLoginStatusCheck = diagnosticLine`${formatDiagnosticClock(Date.now())} ${summary}`;
+};
+
+// 只有网易云明说的才算：回答的码是 301、401、403（没有登录），或是 200（有没有人看回答里的用户）。别的回答都是这一次
+// 没问到谁登录着：本地后端连不上网易云时的 502、网易云的 5xx、风控的 -462，还有没有码的 HTTP 错误（比如远程 API 前面
+// 网关自己的回答）。这时抛 'unavailable' 的错（neteaseAnswerError）：accountRead.ts 只把这次读记为失败，cookie 留着。
+// 当成没有人登录，会删掉一个还有效的登录。
+const throwIfLoginCheckRefused = (response: any, route: string): void => {
+    const code = Number(response?.code ?? response?.data?.code);
+    if ([301, 401, 403].includes(code) || (code === 200 && httpErrorStatusOf(response) === undefined)) return;
+    noteLoginStatusCheck(diagnosticLine`${route} code=${code} refused`);
+    throw neteaseAnswerError(response, route);
 };
 
 const extractCloudLyricText = (response: any): string => (
@@ -403,7 +417,9 @@ export const neteaseProvider: OnlineMusicProvider = {
         getLoginTexts: () => ({ title: 'home.loginTitle', note: 'home.loginNote' }),
         localService: neteaseLocalService,
         async getLoginStatus() {
+            cookieAskedWith = readProviderSessionValue('netease', 'cookie', ['netease_cookie']);
             const loginResponse = await neteaseApi.getLoginStatus();
+            throwIfLoginCheckRefused(loginResponse, 'login/status');
             const loginProfile = loginResponse?.data?.profile;
             const loginCode = Number(loginResponse?.code ?? loginResponse?.data?.code);
             if (!loginProfile || [301, 401, 403].includes(loginCode)) {
@@ -412,6 +428,7 @@ export const neteaseProvider: OnlineMusicProvider = {
             }
 
             const accountResponse = await neteaseApi.getUserAccount();
+            throwIfLoginCheckRefused(accountResponse, 'user/account');
             const accountCode = Number(accountResponse?.code ?? accountResponse?.data?.code);
             const accountProfile = accountResponse?.profile;
             const accountId = accountResponse?.account?.id ?? accountProfile?.userId;
@@ -421,9 +438,8 @@ export const neteaseProvider: OnlineMusicProvider = {
                 return null;
             }
 
-            if (typeof loginResponse?.cookie === 'string' && loginResponse.cookie) {
-                writeProviderSessionValue('netease', 'cookie', loginResponse.cookie);
-            }
+            // 这里不写 cookie：登录状态的回答不带 cookie（上游 login_status 的回答正文里没有），真带了也只会是
+            // 那一次请求的 Set-Cookie，可能没有 MUSIC_U，会盖掉扫码时存下的登录。cookie 只在扫码确认时写（checkLogin）。
             noteLoginStatusCheck(diagnosticLine`signed in (login/status code=${loginCode}, user/account code=${accountCode})`);
             const user = normalizeUser({ ...loginProfile, ...accountProfile });
             try {
@@ -442,9 +458,30 @@ export const neteaseProvider: OnlineMusicProvider = {
             const told = neteaseApi.logout();
             await Promise.all([dropNeteaseSignIn(), told]);
         },
-        signInRanOut: dropNeteaseSignIn,
+        // 登录失效：读登录状态说没有人登录之后（accountRead.ts）。只删那一次问的 cookie，存着的已经换了就不删：
+        // 回答还在路上时扫码登录写下的新 cookie，那个回答说的不是它，留着。
+        async signInRanOut() {
+            if (readProviderSessionValue('netease', 'cookie', ['netease_cookie']) === cookieAskedWith) {
+                await dropNeteaseSignIn();
+                return;
+            }
+            console.log('[NeteaseProvider] The sign-in that ran out was replaced meanwhile: the new cookie stays');
+        },
         showsKeptAccountAtStart: true,
-        oldKeptAccount: () => readNeteaseOldAccountCache({ user: normalizeUser, collection: normalizeCollection }),
+        // 旧版本的四份缓存只交出一次：读出来就删掉，accountRead.ts 随后把交出的账号存成快照。留着的话，快照哪一次
+        // 读不出来，它们又会被存成快照，盖掉更新的那一份。快照没存上时，账号要等网易云回答才显示（cookie 不受影响）。
+        // 删不掉不碍事：账号照样交出。
+        async oldKeptAccount() {
+            const old = await readNeteaseOldAccountCache({ user: normalizeUser, collection: normalizeCollection });
+            if (!old) return null;
+            try {
+                await removeNeteaseOldAccountCache();
+                console.log('[NeteaseProvider] The account an older build kept is handed over for the snapshot; its caches are removed');
+            } catch (error) {
+                console.warn('[NeteaseProvider] The caches an older build kept could not be removed:', error);
+            }
+            return old;
+        },
         // 扫码三步：要码（unikey）→ 生成二维码图片 → 检查。没拿到 key 或图片就在那一步失败：空 key 去检查只会
         // 被拒绝，空图片会让登录窗口一直转圈。失败带着网易云的回答（cause），日志里看得到它回了什么。
         async startLogin() {

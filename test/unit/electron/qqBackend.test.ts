@@ -176,6 +176,32 @@ describe('QQ backend lifecycle', () => {
         expect(close).toHaveBeenCalledOnce();
     });
 
+    it('tells the renderer when the encrypted sign-in store could not be read at start', async () => {
+        const fake = createFakePackage();
+        const { createQqAuthSessionRepository } = require('../../../electron/qq/qqAuthSessionRepository.cjs');
+        const authSessionRepository = createQqAuthSessionRepository({
+            store: { get: () => 'ciphertext', set: vi.fn() },
+            safeStorage: { isEncryptionAvailable: () => false },
+        });
+        // 包加载时就读仓库，读不出只记一行日志（sessionState.js restore），照常监听。
+        const startServer = vi.fn(async ({ authSessionRepository: repository }: { authSessionRepository: { load: () => unknown } }) => {
+            try { repository.load(); } catch { /* the package logs qq-auth.auth-session.load-failed */ }
+            return { close: vi.fn() };
+        });
+        const backend = createQqBackend({
+            broadcast: vi.fn(),
+            authSessionRepository,
+            logger: quietLogger,
+            resolvePackageRoot: () => PACKAGE_ROOT,
+            startServer,
+            loadFile: fake.loadFile,
+        });
+
+        await backend.start();
+
+        expect(backend.getStatus()).toMatchObject({ status: 'running', sessionStoreUnreadable: true });
+    });
+
     it('names the failed step in the status error', async () => {
         const backend = createQqBackend({
             broadcast: vi.fn(),

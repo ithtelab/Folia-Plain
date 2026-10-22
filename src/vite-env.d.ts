@@ -227,6 +227,8 @@ declare global {
     status: 'starting' | 'running' | 'error' | 'unavailable';
     port: number | null;
     error: string | null;
+    /** 这次启动没能读出加密的登录仓库：后端里没有任何会话，后端不认一个 session 不说明登录没了。 */
+    sessionStoreUnreadable?: boolean;
     updatedAt: number;
   }
 

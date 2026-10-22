@@ -44,7 +44,8 @@ import { errorMessage } from '../../../utils/errorText';
 //
 // What a part that fails leaves:
 // - Who is signed in could not be asked, or was not answered within WHO_WAIT_MS: the account stays
-//   as shown, marked as failed.
+//   as shown, marked as failed. Where that leaves nobody shown, the account is read again when the
+//   home screen is next entered (`readAtHome`).
 // - The playlists could not be read: the same, and the liked songs are not read.
 // - The cloud entry could not be read: the one held stays.
 // - The liked songs could not be read: the hearts stay as they were; the rest is kept.
@@ -108,6 +109,8 @@ interface PlatformReads {
     playlistsBeganAt: number | null;
     /** The saves of the snapshot, one after another. */
     saving: Promise<unknown>;
+    /** When who is signed in last could not be asked; null once anything has answered since. */
+    whoUnknownAt: number | null;
 }
 
 // Long enough that going between the home screen, the player and a collection does not read the
@@ -150,7 +153,7 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
     const readsOf = (providerId: OnlineProviderId): PlatformReads => {
         let reads = platforms.get(providerId);
         if (!reads) {
-            reads = { generation: 0, whole: null, playlistsAlone: 0, playlistsBeganAt: null, saving: Promise.resolve() };
+            reads = { generation: 0, whole: null, playlistsAlone: 0, playlistsBeganAt: null, saving: Promise.resolve(), whoUnknownAt: null };
             platforms.set(providerId, reads);
         }
         return reads;
@@ -209,6 +212,7 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
     // again when the store changes. Then the last save is waited for and what was kept goes.
     const drop = async (providerId: OnlineProviderId, reads: PlatformReads, error: string | undefined, tell: () => unknown): Promise<void> => {
         reads.generation += 1;
+        reads.whoUnknownAt = null;
         let told: Promise<unknown>;
         try {
             told = Promise.resolve(tell()).then(() => null, messageOf);
@@ -234,6 +238,7 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
         } catch (error) {
             if (reads.generation !== generation) return 'unknown';
             if (!isAuthRequired(error)) {
+                reads.whoUnknownAt = deps.now();
                 markFailed(provider.id, error);
                 console.warn(`[Account] ${said}: who is signed in could not be asked, the account stays as it is shown: ${messageOf(error)}`);
                 return 'unknown';
@@ -241,6 +246,7 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
             user = null;
         }
         if (reads.generation !== generation) return 'unknown';
+        reads.whoUnknownAt = null;
         if (user) return user;
         // The platform names nobody, or refuses the sign-in: the account leaves.
         await drop(provider.id, reads, had ? 'auth-required' : undefined, () => provider.auth?.signInRanOut?.());
@@ -424,7 +430,7 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
         }
     };
 
-    return {
+    const accountReads = {
         readPlaylists,
 
         // Reads the account of a platform whole (see the top of this file). Never rejects.
@@ -458,10 +464,17 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
         // while a read of the platform is under way, and not within HOME_WAIT_MS of the last time
         // they were begun to be read; after a failure the next entry reads at once. A read that
         // is refused for the sign-in is checked as in the read of the whole account, so the
-        // account may leave ('ran out'). Never rejects.
+        // account may leave ('ran out'). Where nobody is shown because who is signed in could not
+        // be asked, the account is read whole instead, once for the entry (joining a read under
+        // way), so that it comes back once the platform can be reached; not within HOME_WAIT_MS
+        // of the last time it could not be asked. Never rejects.
         async readAtHome(providerId: OnlineProviderId): Promise<AccountReadOutcome> {
             const provider = getOnlineMusicProvider(providerId);
             const reads = readsOf(providerId);
+            if (provider?.auth && !shownUser(providerId) && reads.whoUnknownAt !== null) {
+                if (!reads.whole && deps.now() - reads.whoUnknownAt <= HOME_WAIT_MS) return 'not asked';
+                return accountReads.read(providerId, 'sync');
+            }
             if (!provider?.auth || !shownUser(providerId) || reads.whole || reads.playlistsAlone > 0) return 'not asked';
             if (reads.playlistsBeganAt !== null && deps.now() - reads.playlistsBeganAt <= HOME_WAIT_MS) return 'not asked';
             const generation = reads.generation;
@@ -499,4 +512,5 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
             return whole.liked.then(alike => alike && !begunBefore);
         },
     };
+    return accountReads;
 };
