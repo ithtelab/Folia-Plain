@@ -29,6 +29,9 @@ import { OWN_SECTION_IDS, listenedSongsOf, useOwnExploreSections } from './ownSe
 
 // How far down from its top edge the list fades what has scrolled up to it, in pixels.
 const TOP_FADE = 56;
+// Fade entries into the shared background before the reserved player area, without a painted overlay.
+const BOTTOM_FADE = 80;
+const LIST_MASK = `linear-gradient(to bottom, transparent, black var(--ex-top-fade, 0px), black calc(100% - ${BOTTOM_FADE}px), transparent)`;
 // The mark that more is being read and the offer to try again, at the list's end, are one height: the list does not move under a listener who stands there when one takes the other's place. (It does once, by this much, when the list turns out to end there.)
 const END = 'flex h-28 items-center justify-center';
 const NO_BATCHES = {};
@@ -164,9 +167,9 @@ export const ExploreSurface: React.FC<ExploreSurfaceProps> = ({ providerId, acco
                     follow();
                 }}
                 className="h-full w-full overflow-y-auto"
-                style={{ maskImage: 'linear-gradient(to bottom, transparent, black var(--ex-top-fade, 0px))' }}
+                style={{ maskImage: LIST_MASK, WebkitMaskImage: LIST_MASK }}
             >
-                <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-2 md:px-8">
+                <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-2 md:px-8">
                     {sections.length === 0 ? (
                         // No section to show: the state of the provider's page stands alone.
                         isLoading ? (
