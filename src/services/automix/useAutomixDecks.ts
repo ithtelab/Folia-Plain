@@ -17,7 +17,8 @@ import {
     type AutomixDeckId,
     type AutomixSession,
 } from './automixSession';
-import { AUTOMIX_MAX_OVERLAP_SEC } from './transitionPlanner';
+import { AUTOMIX_MAX_OVERLAP_SEC, linesOnClipClock } from './transitionPlanner';
+import { omni } from '../onlineMusic/omni';
 import type { TransitionSettings } from './transitionStrategy';
 import { usePlaybackStore, type TransitionDisplay } from '../../stores/usePlaybackStore';
 import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
@@ -604,7 +605,13 @@ export function useAutomixDecks({
         const plan = session.requestTransition({
             time,
             audioSrc,
-            from: { duration, lines: lyrics?.lines ?? null, profile: getTrackProfile(currentSong) },
+            // `duration` is the clip's own for a preview clip, and its lyric file is timed on the whole
+            // song: the lines are moved onto the clip's clock to be read against it.
+            from: {
+                duration,
+                lines: linesOnClipClock(lyrics?.lines ?? null, omni.previewClipStartMsOfAudioSource(audioSrc) / 1000),
+                profile: getTrackProfile(currentSong),
+            },
             to: {
                 duration: nextSong.durationMs / 1000,
                 // Already in memory for online tracks: the queue prefetcher fetches the next few
