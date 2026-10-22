@@ -594,7 +594,7 @@ describe('YouTube Music adapter at the level ultra', () => {
         // One that lists no levels keeps the four it had, and one that lists two keeps its two.
         expect(omni.getAudioQualityLevels(unlisted.id)).toEqual(['standard', 'high', 'lossless', 'hires']);
         expect(LEVELS.map(level => omni.resolveAudioQuality(unlisted.id, level))).toEqual(['standard', 'high', 'high', 'lossless', 'hires']);
-        expect(omni.getAudioQualityLevels('netease')).toEqual(['standard', 'high', 'lossless', 'hires']);
+        expect(omni.getAudioQualityLevels('netease')).toEqual(['standard', 'high', 'lossless', 'hires', 'spatial', 'master', 'surround']);
         expect(omni.resolveAudioQuality('netease', 'ultra')).toBe('high');
         expect(omni.getAudioQualityLevels('spotify')).toEqual(['standard', 'high']);
         expect(omni.resolveAudioQuality('spotify', 'ultra')).toBe('high');
