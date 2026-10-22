@@ -1,0 +1,5 @@
+/* Match child buttons' cursor utilities while the fullscreen session is idle. */
+[data-fullscreen-cursor-hidden='true'],
+[data-fullscreen-cursor-hidden='true'] * {
+    cursor: none !important;
+}

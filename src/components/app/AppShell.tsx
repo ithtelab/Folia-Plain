@@ -11,6 +11,7 @@ import { usePlayerOverlayRoot, usePlayerOverlayReservation } from '../../hooks/u
 import type { FoliumLayoutRect } from '../../mods/folium/contract';
 import { TITLEBAR_REVEAL_EDGE, TITLEBAR_SAFE_TOP } from './titlebar/titlebarHover';
 import { useTitlebarReveal } from './titlebar/useTitlebarReveal';
+import { useFullscreenPresentation } from './fullscreen/useFullscreenPresentation';
 
 // Shared shell for the app container, Electron titlebar, and mounted audio node.
 type AppShellProps = {
@@ -62,6 +63,7 @@ const AppShell: React.FC<AppShellProps> = ({
 }) => {
     const { t } = useTranslation();
     const layoutRootRef = useRef<HTMLDivElement>(null);
+    useFullscreenPresentation(layoutRootRef);
     usePlayerOverlayRoot(layoutRootRef, isPlayerView, { top: usesCustomWindowChrome ? TITLEBAR_SAFE_TOP : 0, right: 0, bottom: 0, left: 0 });
     usePlayerOverlayReservation('window-titlebar-reveal', 'window', titlebarRevealArea, usesCustomWindowChrome);
     // Click-through keeps forwarding mouse-move into the renderer, so the titlebar would keep

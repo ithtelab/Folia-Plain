@@ -2666,6 +2666,9 @@ function setMainWindowFullscreen(win, fullscreen) {
     win.__transparentFullscreen = fullscreen;
   }
   win.setFullScreen(fullscreen);
+  if (process.platform === 'win32' && win.__wallpaperWindowTransparent === true && !win.webContents.isDestroyed()) {
+    win.webContents.send('window-fullscreen-changed', fullscreen);
+  }
 }
 
 function isWindowsThumbarSupported() {
@@ -6647,6 +6650,12 @@ ipcMain.handle('window-toggle-fullscreen', (event) => {
   const nextFullscreen = !isMainWindowFullscreen(mainWindow);
   setMainWindowFullscreen(mainWindow, nextFullscreen);
   return nextFullscreen;
+});
+
+ipcMain.handle('window-exit-fullscreen', (event) => {
+  if (!isTrustedMainWindowContents(event.sender) || !mainWindow || mainWindow.isDestroyed() || isWallpaperModeEnabled()) return false;
+  if (isMainWindowFullscreen(mainWindow)) setMainWindowFullscreen(mainWindow, false);
+  return false;
 });
 
 ipcMain.handle('window-close', () => {

@@ -3238,7 +3238,7 @@ export default {
       },
       "playerDestination": {
         "title": "Langsung ke layar lirik",
-        "description": "Klik bilah pemutar bawah kini membuka layar lirik, bukan kolase antrean. Tombol antrean terpisah dan preferensi kolase daftar putar tetap memiliki perilakunya sendiri."
+        "description": "Bilah pemutar bawah membuka lirik; tombol antrean dan preferensi daftar putar tetap terpisah. Escape keluar dari layar penuh jendela. Penunjuk menghilang setelah sekitar 3 detik diam dan kembali saat digunakan, tetap terlihat selama dialog atau menyeret."
       },
       "gpuAcceleration": {
         "title": "Kontrol akselerasi GPU",

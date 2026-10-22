@@ -3238,7 +3238,7 @@ export default {
       },
       "playerDestination": {
         "title": "播放条直达歌词海报",
-        "description": "修复点击底部播放条时误入队列拼贴的问题。现在直接进入歌词播放页，保留独立队列按钮和歌单的拼贴浏览偏好。"
+        "description": "点击底部播放条直接进入歌词页，队列按钮与歌单偏好各自保留。Esc 可退出窗口全屏；全屏中鼠标静止约 3 秒后隐藏，操作后立即恢复，弹窗与拖动期间保持可见。"
       },
       "gpuAcceleration": {
         "title": "GPU 加速可以关闭",

@@ -3238,7 +3238,7 @@ export default {
       },
       "playerDestination": {
         "title": "Go straight to lyrics",
-        "description": "Clicking the bottom player now opens the lyrics screen instead of the queue collage. The separate queue button and playlist collage preference keep their own behavior."
+        "description": "The bottom player opens lyrics while the queue button and playlist preference keep their own behavior. Escape exits window fullscreen. The pointer hides after about 3 idle seconds and returns on activity, staying visible during dialogs and dragging."
       },
       "gpuAcceleration": {
         "title": "Control GPU acceleration",
