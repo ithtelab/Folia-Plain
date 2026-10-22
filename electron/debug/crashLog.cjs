@@ -308,4 +308,4 @@ const installCrashHandlers = ({ app, crashLog, isRendererCrashRecovered = () => 
     });
 };
 
-module.exports = { createCrashLog, installCrashHandlers, resolveCrashLogDir, orderedCrashFiles, describeError };
+module.exports = { createCrashLog, installCrashHandlers, resolveCrashLogDir, orderedCrashFiles, describeError, flushPageStorage };

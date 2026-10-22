@@ -510,6 +510,12 @@ export interface OnlineAuthProvider {
      * no snapshot is found; null where there is nothing. Only for an adapter that had such caches.
      */
     oldKeptAccount?(): Promise<{ user: ProviderUser; collections: ProviderCollection[]; likedSongIds: MediaId[] } | null>;
+    /**
+     * What `oldKeptAccount` answered has been saved as the snapshot: the adapter removes those caches,
+     * so that they are not made a snapshot again over a newer one. Not called where the save failed:
+     * the caches are then asked for again at the next start. Never rejects.
+     */
+    forgetOldKeptAccount?(): Promise<void>;
     // 登录窗口里这个平台自己的标题和说明。
     getLoginTexts?(): LoginTexts;
     // 登录要靠的本地服务：它没起来时登录窗口显示它的错误原话和重启的按钮。

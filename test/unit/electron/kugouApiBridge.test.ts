@@ -259,6 +259,47 @@ describe('Electron KuGou API bridge', () => {
         expect(next.getStatus()).toMatchObject({ authenticated: false });
     });
 
+    // 每次删除都要把整份配置文件读一遍、写一遍：没有系统加密时，存着的只在这次运行第一次存不下时删一次，不是每个请求都删。
+    it('removes what is stored once a run where nothing can be sealed, not at every request', async () => {
+        const store = createStore();
+        const remove = vi.spyOn(store, 'delete');
+        const bridge = createKugouApiBridge({ store, safeStorage: createSafeStorage('basic_text'), platform: 'linux', warn: vi.fn(), apiLoader: () => ({
+            register_dev: async () => ({ body: {}, cookie: ['dfid=device'] }),
+            search: async () => ({ body: { data: { lists: [] } }, cookie: [] }),
+        }) });
+        for (const keyword of ['a', 'b', 'c']) await bridge.request('search', { keyword });
+        expect(remove.mock.calls.map(([key]) => key)).toEqual([SESSION_KEY, LEGACY_SESSION_KEY]);
+    });
+
+    it('goes on with the request when the store cannot remove what it holds either', async () => {
+        const store = createStore();
+        const locked = { ...store, delete: () => { throw Object.assign(new Error('locked'), { code: 'EBUSY' }); } };
+        const warn = vi.fn();
+        const bridge = createKugouApiBridge({ store: locked, safeStorage: createSafeStorage('basic_text'), platform: 'linux', warn, apiLoader: () => ({
+            register_dev: async () => ({ body: {}, cookie: ['dfid=device'] }),
+            search: async () => ({ body: { data: { lists: [] } }, cookie: [] }),
+        }) });
+        await expect(bridge.request('search', { keyword: 'a' })).resolves.toEqual({ data: { lists: [] } });
+        expect(warn).toHaveBeenCalledWith('[KuGouSession] remove-failed', { name: 'Error' });
+    });
+
+    // 只是这一次写不进去时存着的留着，等下一次存；可这次登录的是另一个账号时，存着的那个删掉，下次启动不会回到它。
+    it('removes the stored session of another account when only the write of a new sign-in failed', async () => {
+        const store = createStore();
+        const safeStorage = createSafeStorage();
+        seedEncryptedCookies(store, safeStorage, { dfid: 'device', token: 'old-token', userid: '9' });
+        const locked = { ...store, set: (key: string, value: unknown) => {
+            if (key === SESSION_KEY) throw Object.assign(new Error('locked'), { code: 'EPERM' });
+            return store.set(key, value);
+        } };
+        const bridge = createKugouApiBridge({ store: locked, safeStorage, platform: 'win32', warn: vi.fn(), apiLoader: () => ({
+            login_qr_check: async () => ({ body: { data: { status: 4 } }, cookie: ['token=new-token', 'userid=10'] }),
+        }) });
+        await bridge.request('login_qr_check', {});
+        expect(bridge.getStatus()).toMatchObject({ authenticated: true });
+        expect(store.get(SESSION_KEY)).toBeUndefined();
+    });
+
     it('treats a stored session the keychain will not unseal while encryption works as nothing stored', async () => {
         const store = createStore();
         const safeStorage = createSafeStorage();

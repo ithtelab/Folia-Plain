@@ -69,9 +69,11 @@ function createYtmWebSessionRepository({
     && safeStorage.getSelectedStorageBackend?.() !== 'basic_text';
   // Where nothing can be sealed, the sign-in of this run still replaces the stored one: that one
   // is deleted, so an older account cannot come back at a later start. Where the store cannot be
-  // written (a file locked for a moment), what is stored stays as it was. The first is said once a run.
+  // written (a file locked for a moment), what is stored stays as it was, unless it is another
+  // account's: `replaced` is the sign-in a new one takes the place of (`set`), and where its account
+  // is not the new one's, it is deleted as well. The first is said once a run.
   let toldUnsealed = false;
-  const persist = () => {
+  const persist = (replaced = null) => {
     if (!canEncrypt()) {
       store.delete(WEB_SESSION_KEY);
       if (!toldUnsealed) warn('[Ytm] Web sign-in is kept for this run only: OS encryption is unavailable');
@@ -81,7 +83,14 @@ function createYtmWebSessionRepository({
     try {
       store.set(WEB_SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
     } catch (error) {
-      warn(`[Ytm] Web sign-in could not be stored (${error?.code ?? 'unknown'}); what is stored stays as it was`);
+      let removed = false;
+      if (replaced && replaced.user.id !== current.user.id) {
+        try {
+          store.delete(WEB_SESSION_KEY);
+          removed = true;
+        } catch { /* as locked as the write: what is stored stays, as said below */ }
+      }
+      warn(`[Ytm] Web sign-in could not be stored; ${removed ? 'the one of another account stored before was removed' : 'what is stored stays as it was'}`, error);
     }
   };
   return {
@@ -113,9 +122,10 @@ function createYtmWebSessionRepository({
     set({ cookie, userAgent, user }) {
       const value = { version: 1, cookie, userAgent, user: { ...user }, storedAt: now() };
       if (!isWebSession(value)) throw new Error('Invalid YouTube Music web session');
+      const replaced = canEncrypt() ? this.get() : null;
       loaded = true;
       current = value;
-      persist();
+      persist(replaced);
     },
     // Whether the account has Premium was learnt anew (`user.premium`). The stored sign-in stays
     // the object it was: a request under way tells by it whether the sign-in changed meanwhile.

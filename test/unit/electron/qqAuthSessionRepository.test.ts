@@ -117,6 +117,40 @@ describe('QQ auth session repository', () => {
         expect((repository.load() as Array<{ token: string }>).map(saved => saved.token)).toEqual(['refreshable']);
     });
 
+    // 宽限的一小时不写盘、每次启动重给，所以只给到期不久的：到期超过 30 天的照包的规则删掉，没人再用的旧会话不会一直留在盘上。
+    it('brings back only a session that expired within the refresh window', () => {
+        const NOW = 1_800_000_000_000;
+        const DAY = 24 * 60 * 60 * 1000;
+        const credential = { musicid: 123, musickey: 'key', loginType: 2, refresh_key: 'refresh-key', musickeyCreateTime: 1, keyExpiresIn: 259200 };
+        const store = createStore();
+        const repository = createQqAuthSessionRepository({ store, safeStorage: createSafeStorage(), now: () => NOW, logger: { info: vi.fn() } });
+        repository.save([
+            { token: 'recent', credential, expiresAt: NOW - DAY },
+            { token: 'long-gone', credential, expiresAt: NOW - 31 * DAY },
+        ]);
+
+        expect((repository.load() as Array<{ token: string; expiresAt: number }>).map(({ token, expiresAt }) => [token, expiresAt])).toEqual([
+            ['recent', NOW + 60 * 60 * 1000],
+            ['long-gone', NOW - 31 * DAY],
+        ]);
+    });
+
+    // 没有系统加密时，这次的新登录替掉存着的（和别的平台一样）：读不出的那份删掉，下次启动不会回到它；主进程从此也答「读得出」，
+    // 渲染进程不再把这次的 session 当成停用的那个。
+    it('lets a sign-in of a run without OS encryption replace the stored sessions it could not read', () => {
+        const store = createStore();
+        createQqAuthSessionRepository({ store, safeStorage: createSafeStorage() }).save([{ token: 'earlier' }]);
+        const repository = createQqAuthSessionRepository({ store, safeStorage: { ...createSafeStorage(), isEncryptionAvailable: () => false } });
+        expect(() => repository.load()).toThrow();
+        expect(repository.loadFailed()).toBe(true);
+
+        expect(() => repository.save([{ token: 'this-run' }])).toThrow(/unavailable/);
+
+        expect(store.values.has(SESSION_KEY)).toBe(false);
+        expect(store.set).toHaveBeenCalledTimes(1);
+        expect(repository.loadFailed()).toBe(false);
+    });
+
     // 只有这次没有系统加密时才算「这次读不出」；加密能用却解不开、或是别的版本，就是没存东西。
     it.each([
         ['without OS encryption', { isEncryptionAvailable: () => false }, true],

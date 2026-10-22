@@ -147,16 +147,24 @@ const describeEmbeddedStatus = async (): Promise<string> => {
     }
 };
 
-// 主进程这次启动没能读出加密的登录仓库（electron/qq/qqAuthSessionRepository.cjs：这次没有系统加密），内嵌后端里一个会话都没有。
-// 网页版没有这个仓库；状态问不到时也当作读出来了，和以前一样。后端起来以后这个答案整次运行都不变，问到一次就记下。
-let storeUnreadableAnswer: boolean | null = null;
+// 主进程这次启动没能读出加密的登录仓库（electron/qq/qqAuthSessionRepository.cjs：这次没有系统加密），这次运行里也还没有
+// 新登录替掉它：内嵌后端里没有一个会话是这次运行之前的。网页版没有这个仓库；状态问不到时也当作读出来了，和以前一样。
+// 读得出（或被替掉）以后整次运行都不会再变回去，所以只记下「读得出」；读不出时每次现问，这次运行里的新登录一到，下一个
+// 请求就照常带上它（页面重新载入以后也是）。lastStoreUnreadable 是最近一次问到的答案，给要同步判断的地方用（hasUsableQqSession）。
+let storeReadable = false;
+let lastStoreUnreadable = false;
 const isQqSessionStoreUnreadable = async (): Promise<boolean> => {
-    if (storeUnreadableAnswer !== null) return storeUnreadableAnswer;
-    if (typeof window === 'undefined') return false;
+    if (storeReadable) return false;
+    const readStatus = typeof window === 'undefined' ? undefined : window.electron?.getQqApiStatus;
+    if (typeof readStatus !== 'function') {
+        storeReadable = true;
+        return false;
+    }
     try {
-        const status = await window.electron?.getQqApiStatus?.();
+        const status = await readStatus();
         const unreadable = Boolean(status?.sessionStoreUnreadable);
-        if (status?.status === 'running') storeUnreadableAnswer = unreadable;
+        if (status?.status === 'running' && !unreadable) storeReadable = true;
+        lastStoreUnreadable = unreadable;
         return unreadable;
     } catch {
         return false;
@@ -207,21 +215,19 @@ const isSameOriginBase = (base: string): boolean => base.startsWith('/');
 
 export const hasQqSession = (): boolean => Boolean(getWebSessionCookie());
 
-// 这次运行开始时存着的 session，第一次用到时记下：那时这次还没有扫码登录过，扫码本身也要经 requestQq。
-let sessionAtStart: string | null = null;
-const isStartSession = (cookie: string): boolean => {
-    if (sessionAtStart === null) sessionAtStart = getWebSessionCookie();
-    return Boolean(cookie) && cookie === sessionAtStart;
-};
+/**
+ * 存着的 session 是不是停用的那个：主进程这次启动没读出加密的登录仓库、这次运行里也还没有新登录（isQqSessionStoreUnreadable），
+ * 存着的就只能是之前一次运行的，后端不可能认得，带上它每个要登录的请求（连播放）都回 401。所以这次不带它（requestQq），按游客播放；
+ * 它照旧存着，等能读出仓库的那次启动，读账号时报「查不到」而不是「没登录」（qqProvider 的 getLoginStatus）。这次运行里扫码登录过，
+ * 仓库里读不出的那份就被替掉了：之后存着的 session 照常带，到期了也照常清掉。
+ */
+export const isQqSessionParked = async (): Promise<boolean> => hasQqSession() && await isQqSessionStoreUnreadable();
 
 /**
- * 存着的 session 是不是这次停用的那个：主进程这次启动没读出加密的登录仓库，启动时存着的 session 后端不可能认得，
- * 带上它每个要登录的请求（连播放）都回 401。所以这次不带它（requestQq），按游客播放；它照旧存着，等能读出仓库的那次启动，
- * 读账号时报「查不到」而不是「没登录」（qqProvider 的 getLoginStatus）。这次扫码登录得到的 session 照常带，到期了也照常清掉。
+ * 有 session，而且这次请求会带上它：只有登录才有的栏目、推荐、收藏状态、试听按它分开走，停用的 session（isQqSessionParked）照游客走。
+ * 要同步回答，用的是最近一次问到的仓库状态；还没问过时当作能带。读账号、退出登录、续期仍看 hasQqSession。
  */
-export const isQqSessionParked = async (): Promise<boolean> => (
-    isStartSession(getWebSessionCookie()) && await isQqSessionStoreUnreadable()
-);
+export const hasUsableQqSession = (): boolean => hasQqSession() && !lastStoreUnreadable;
 
 export const clearQqSession = (): void => removeProviderSessionValue('qq', 'cookie');
 
@@ -401,11 +407,9 @@ export const requestQq = async <T = unknown>(
         );
     }
     const stored = getWebSessionCookie();
-    // Whether it is the session stored at the start of this run is told before the first wait, as the session itself.
-    const startSession = isStartSession(stored);
     const base = await resolveApiBase();
     // The session parked for this run is not sent (isQqSessionParked). The status is read once the backend has a port.
-    const cookie = startSession && await isQqSessionStoreUnreadable() ? '' : stored;
+    const cookie = stored && await isQqSessionStoreUnreadable() ? '' : stored;
 
     const endpoint = endpointFor(operation, params);
     const query = new URLSearchParams();

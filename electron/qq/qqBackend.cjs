@@ -170,8 +170,8 @@ function createQqBackend({
 
       // 加密的登录仓库这次没读出来（qqAuthSessionRepository）：后端里一个会话都没有，渲染进程不能把「后端不认这个 session」
       // 当成登录没了（qqProvider 的 getLoginStatus 据此报「查不到」）。仓库在加载包时就读过了（qqApiStartup）。
-      const sessionStoreUnreadable = Boolean(authSessionRepository?.loadFailed?.());
-      if (sessionStoreUnreadable) logger.warn('[QQ API] the encrypted sign-in store could not be read; kept sign-ins are unknown this run');
+      // 渲染进程拿到的是 getStatus 每次现问的答案（sessionStoreUnreadable）：这次运行里一有新登录，仓库就把读不出的那份删了。
+      if (authSessionRepository?.loadFailed?.()) logger.warn('[QQ API] the encrypted sign-in store could not be read; kept sign-ins are unknown this run');
 
       await step('login-hooks', async (note) => {
         try {
@@ -185,7 +185,7 @@ function createQqBackend({
         note({ version: packageVersion, installed: hooks.installed, ...(hooks.error ? { error: hooks.error } : {}) });
       });
 
-      status.update({ status: 'running', port, error: null, sessionStoreUnreadable });
+      status.update({ status: 'running', port, error: null });
       startup.finish('running');
     } catch (error) {
       handle = null;
@@ -211,8 +211,13 @@ function createQqBackend({
     }
   };
 
+  // 这次启动没读出的加密登录仓库还在磁盘上（qqAuthSessionRepository 的 loadFailed）。后端在跑时才答：仓库是在拉起时读的。
+  const sessionStoreUnreadable = () => status.get().status === 'running' && Boolean(authSessionRepository?.loadFailed?.());
+  // 渲染进程问到的状态：主进程的状态加上上面那个现问的答案。
+  const statusForRenderer = () => ({ ...status.get(), sessionStoreUnreadable: sessionStoreUnreadable() });
+
   const getDiagnostics = () => ({
-    backend: { ...status.get() },
+    backend: statusForRenderer(),
     version: packageVersion,
     startup: startup.snapshot(),
     hooks: { installed: [...hooks.installed], error: hooks.error },
@@ -225,7 +230,7 @@ function createQqBackend({
     statusChannel: STATUS_CHANNEL,
     start,
     stop,
-    getStatus: () => status.get(),
+    getStatus: statusForRenderer,
     getPort: () => (status.get().status === 'running' ? status.get().port : null),
     getDiagnostics,
     selfCheckHosts: SELF_CHECK_HOSTS,

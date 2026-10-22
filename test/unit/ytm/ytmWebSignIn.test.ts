@@ -184,7 +184,12 @@ describe('YouTube Music stored web sign-in', () => {
         const lockedWarn = vi.fn();
         createYtmWebSessionRepository({ store: locked, safeStorage: cipher(), log: vi.fn(), warn: lockedWarn }).set({ cookie: 'SAPISID=other', userAgent: AGENT, user });
         expect(store.get(WEB_SESSION_KEY)).toBe(sealed);
-        expect(lockedWarn).toHaveBeenLastCalledWith('[Ytm] Web sign-in could not be stored (EPERM); what is stored stays as it was');
+        expect(lockedWarn).toHaveBeenLastCalledWith('[Ytm] Web sign-in could not be stored; what is stored stays as it was', expect.objectContaining({ code: 'EPERM' }));
+        // Another account's sign-in that cannot be written: the one stored before goes, so it does not come back at a later start.
+        createYtmWebSessionRepository({ store: locked, safeStorage: cipher(), log: vi.fn(), warn: lockedWarn })
+            .set({ cookie: 'SAPISID=another', userAgent: AGENT, user: { ...user, id: publicAccountId('another-gaia-id') } });
+        expect(store.get(WEB_SESSION_KEY)).toBeUndefined();
+        expect(lockedWarn).toHaveBeenLastCalledWith('[Ytm] Web sign-in could not be stored; the one of another account stored before was removed', expect.objectContaining({ code: 'EPERM' }));
     });
 
     it('refuses what it cannot unseal, damaged data and an incomplete sign-in', () => {

@@ -834,6 +834,29 @@ describe.each([
             expect(getLoginStatus).toHaveBeenCalledTimes(2);
         });
 
+        // A platform that cannot answer for the whole run (a sign-in stored that this run cannot unseal) is not
+        // asked at every entry: the wait doubles with each time in a row, up to a minute.
+        it('waits twice as long after each time in a row who is signed in could not be asked, up to a minute', async () => {
+            const getLoginStatus = vi.fn<() => Promise<ProviderUser | null>>().mockRejectedValue(new Error('unreadable'));
+            platform({ auth: { getLoginStatus } });
+            await expect(omni.readAccount(providerId, 'start')).resolves.toBe('unknown');
+
+            const asksAfter = async (wait: number) => {
+                const before = getLoginStatus.mock.calls.length;
+                clock += wait - 1;
+                await expect(omni.accountMoment('home-entered')).resolves.toBe('not asked');
+                clock += 2;
+                await expect(omni.accountMoment('home-entered')).resolves.toBe('unknown');
+                expect(getLoginStatus).toHaveBeenCalledTimes(before + 1);
+            };
+            await asksAfter(5_000);
+            await asksAfter(10_000);
+            await asksAfter(20_000);
+            await asksAfter(40_000);
+            await asksAfter(60_000);
+            await asksAfter(60_000);
+        });
+
         it('asks nothing at the next entry where the platform named nobody', async () => {
             const { auth } = platform({ auth: { getLoginStatus: vi.fn(async () => null) } });
             await expect(omni.readAccount(providerId, 'start')).resolves.toBe('nobody');

@@ -86,7 +86,7 @@ const { resolveCacheLimit, selectEvictions } = require('./audioCachePrune.cjs');
 const { removeAudioCacheFileOfSize } = require('./audioCacheRemove.cjs');
 const { createAnalysisHost } = require('./analysis/host.cjs');
 const { createDebugHost, runtimeLine } = require('./debug/debugHost.cjs');
-const { createCrashLog, installCrashHandlers } = require('./debug/crashLog.cjs');
+const { createCrashLog, installCrashHandlers, flushPageStorage } = require('./debug/crashLog.cjs');
 const { measureLeftovers, removeDownloadedLeftovers } = require('./analysis/modelPaths.cjs');
 const { resolveLinuxPasswordStore } = require('./linuxPasswordStore.cjs');
 const { resolveLinuxVulkanChoice, logLinuxVulkanChoice } = require('./linuxVulkan.cjs');
@@ -376,6 +376,18 @@ function resolveWindowToLayerPath() {
   return fs.existsSync(candidate) ? candidate : null;
 }
 
+// app.exit() does not wait for the pages' storage (localStorage, a sign-in among it) to reach the
+// disk: it is asked to be written first (crashLog.cjs `flushPageStorage`). That only asks, so the
+// exit is not held. `what` names the exit in the line that says the asking failed.
+const exitAfterAskingStorageWritten = (code, what) => {
+  try {
+    flushPageStorage();
+  } catch (error) {
+    console.error(`[Wallpaper] Failed to ask for the pages' storage to be written before the ${what}`, error);
+  }
+  app.exit(code);
+};
+
 // Enables wallpaper mode on Wayland: spawn windowtolayer wrapping a fresh Folia child, then the
 // old process exits once the wrapper has spawned. Spawn failure (ENOENT/EACCES) arrives on the
 // async 'error' event, never as a synchronous throw, so we revert the setting instead of crashing.
@@ -410,14 +422,7 @@ function launchWrappedSelf({ onError } = {}) {
       } catch (error) {
         console.error('[Mods] Failed to take up the start note', error);
       }
-      // app.exit() does not wait for the pages' storage (localStorage, a sign-in among it) to
-      // reach the disk: it is asked to be written first. That only asks, so the exit is not held.
-      try {
-        session.defaultSession.flushStorageData();
-      } catch (error) {
-        console.error('[Wallpaper] Failed to ask for the pages\' storage to be written before the restart', error);
-      }
-      app.exit(0);
+      exitAfterAskingStorageWritten(0, 'restart');
     });
   });
 }
@@ -432,14 +437,7 @@ const wallpaperWatchdog = wallpaperWatchdogModule.createWallpaperWatchdog({
   argv: () => process.argv.slice(1),
   getPpid: () => process.ppid,
   // As at the restart above: the pages' storage is asked to be written before app.exit().
-  exit: (code) => {
-    try {
-      session.defaultSession.flushStorageData();
-    } catch (error) {
-      console.error('[Wallpaper] Failed to ask for the pages\' storage to be written before the relaunch', error);
-    }
-    app.exit(code);
-  },
+  exit: (code) => exitAfterAskingStorageWritten(code, 'relaunch'),
   killFn: process.kill.bind(process),
   probeIntervalMs: 2000,
 });

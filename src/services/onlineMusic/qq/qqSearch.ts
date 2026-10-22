@@ -3,7 +3,7 @@ import type { ProviderPage } from '../../../types/onlineMusic';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import { searchQQSongs } from './qqLyricProvider';
 import { normalizeQqSong } from './qqNormalize';
-import { hasQqSession, requestQq } from './qqTransport';
+import { hasUsableQqSession, requestQq } from './qqTransport';
 
 // src/services/onlineMusic/qq/qqSearch.ts
 //
@@ -78,7 +78,7 @@ export const searchQqSongs = async (query: string, limit: number, offset: number
     const pageSize = Math.max(1, Math.min(limit, QQ_SEARCH_MAX_PAGE_SIZE));
     const page = Math.floor(Math.max(0, offset) / pageSize) + 1;
 
-    if (hasQqSession()) {
+    if (hasUsableQqSession()) {
         try {
             return await searchWithSession(keyword, page, pageSize);
         } catch (error) {

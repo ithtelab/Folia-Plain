@@ -85,7 +85,11 @@ describe('Bodian desktop bridge', () => {
         const lockedWarn = vi.fn();
         createSessionRepository({ store: locked, safeStorage: cipher(), warn: lockedWarn }).set({ ...account, token: 'fixture-other' });
         expect(store.get(SESSION_KEY)).toBe(sealed);
-        expect(lockedWarn).toHaveBeenLastCalledWith('[BodianSession] Login could not be stored (EPERM); what is stored stays as it was');
+        expect(lockedWarn).toHaveBeenLastCalledWith('[BodianSession] Login could not be stored; what is stored stays as it was', expect.objectContaining({ code: 'EPERM' }));
+        // Another account's login that cannot be written: the one stored before goes, so it does not come back at a later start.
+        createSessionRepository({ store: locked, safeStorage: cipher(), warn: lockedWarn }).set({ uid: '456', token: 'fixture-another', user: { ...account.user, id: '456' } });
+        expect(store.get(SESSION_KEY)).toBeUndefined();
+        expect(lockedWarn).toHaveBeenLastCalledWith('[BodianSession] Login could not be stored; the one of another account stored before was removed', expect.objectContaining({ code: 'EPERM' }));
     });
     it('uses the package to clear a rejected persisted session', async () => {
         const store = createStore(), safeStorage = cipher();

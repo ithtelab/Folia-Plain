@@ -20,7 +20,7 @@ import { toSafePlaybackUrl } from '../../../utils/appPlaybackHelpers';
 import { fetchQQLyrics } from './qqLyricProvider';
 import { writeProviderSessionValue } from '../providerStorage';
 import { normalizeQqCollection, normalizeQqSong, normalizeQqUser } from './qqNormalize';
-import { clearQqSession, getQqRemoteApiBase, getQqTransportAvailability, hasQqSession, isQqSessionParked, requestQq } from './qqTransport';
+import { clearQqSession, getQqRemoteApiBase, getQqTransportAvailability, hasQqSession, hasUsableQqSession, isQqSessionParked, requestQq } from './qqTransport';
 import { canRunLoginSelfCheck, runLoginSelfCheck } from '../loginSelfCheck';
 import { diagnosticLine, formatDiagnosticClock } from '../login/loginDiagnosticReport';
 import { collectQqLoginDiagnostics } from './qqLoginDiagnostics';
@@ -456,14 +456,15 @@ const getAudioSource = async (song: SongResult, quality: AudioQualityPreference)
     if (firstUnreachable !== undefined && !standardTierEmpty) throw firstUnreachable;
     // 没有一档回过空链接：照第一次的失败报，和以前一样。
     if (firstFailure !== undefined && !sawEmptyPlayLink) throw firstFailure;
-    // 有会话、所有音质都没给链接：这个账号可能只能听试听片段，不限后端说的可能原因。没会话时后端不给试听。
-    if (sawEmptyPlayLink && hasQqSession()) {
+    // 有会话、所有音质都没给链接：这个账号可能只能听试听片段，不限后端说的可能原因。没会话时后端不给试听，停用的会话也不带
+    // （hasUsableQqSession）。
+    if (sawEmptyPlayLink && hasUsableQqSession()) {
         const preview = await requestQqPreviewSource(songmid, mediaId);
         if (preview) return preview;
     }
     // 没有会话、而后端只是没给链接：登录后可能能放（只是可能，不能当成登录失效）。形态坏掉的回答不是没给链接。
     throw new OnlineProviderError('not-playable', 'QQMusicApi gave no play link for this song', 'qq', {
-        likelyCause: likelyCause ?? (sawEmptyPlayLink && !hasQqSession() ? 'sign-in' : undefined),
+        likelyCause: likelyCause ?? (sawEmptyPlayLink && !hasUsableQqSession() ? 'sign-in' : undefined),
     });
 };
 
@@ -491,9 +492,9 @@ const noteLoginStatusCheck = (summary: LoginDiagnosticLine): void => {
     lastLoginStatusCheck = diagnosticLine`${formatDiagnosticClock(Date.now())} ${summary}`;
 };
 
-// 后端不认这个 session 就是登录没了，只有一种例外：主进程这次启动没能读出加密的登录仓库，存着的又是启动时那个 session
-// （isQqSessionParked），请求就没带它。那时是「查不到」：报 unavailable，accountRead 只记这次读失败、留着 session；回 null 会让它删掉
-// session，下次能读出仓库时也找不回来。这次扫码登录得到的 session 后端不认了，就照常是登录没了。
+// 后端不认这个 session 就是登录没了，只有一种例外：主进程这次启动没能读出加密的登录仓库，这次运行里也还没有新登录替掉它，
+// 存着的 session 就是停用的（isQqSessionParked），请求没带它。那时是「查不到」：报 unavailable，accountRead 只记这次读失败、留着
+// session；回 null 会让它删掉 session，下次能读出仓库时也找不回来。这次运行里扫码登录过，后端不认了就照常是登录没了。
 const signedOutUnlessStoreUnreadable = async (): Promise<null> => {
     if (!await isQqSessionParked()) return null;
     noteLoginStatusCheck(diagnosticLine`login_status: the sign-in store could not be read at this start`);

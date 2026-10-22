@@ -468,19 +468,16 @@ export const neteaseProvider: OnlineMusicProvider = {
             console.log('[NeteaseProvider] The sign-in that ran out was replaced meanwhile: the new cookie stays');
         },
         showsKeptAccountAtStart: true,
-        // 旧版本的四份缓存只交出一次：读出来就删掉，accountRead.ts 随后把交出的账号存成快照。留着的话，快照哪一次
-        // 读不出来，它们又会被存成快照，盖掉更新的那一份。快照没存上时，账号要等网易云回答才显示（cookie 不受影响）。
-        // 删不掉不碍事：账号照样交出。
-        async oldKeptAccount() {
-            const old = await readNeteaseOldAccountCache({ user: normalizeUser, collection: normalizeCollection });
-            if (!old) return null;
+        oldKeptAccount: () => readNeteaseOldAccountCache({ user: normalizeUser, collection: normalizeCollection }),
+        // 旧版本的四份缓存只交出一次：accountRead.ts 把交出的账号存成快照之后才删。留着的话，快照哪一次读不出来，它们又会被
+        // 存成快照，盖掉更新的那一份；先删的话，快照没存上时账号就两处都没了。删不掉不碍事，下次启动有快照，不会再读它们。
+        async forgetOldKeptAccount() {
             try {
                 await removeNeteaseOldAccountCache();
-                console.log('[NeteaseProvider] The account an older build kept is handed over for the snapshot; its caches are removed');
+                console.log('[NeteaseProvider] The account an older build kept is now the snapshot; its caches are removed');
             } catch (error) {
                 console.warn('[NeteaseProvider] The caches an older build kept could not be removed:', error);
             }
-            return old;
         },
         // 扫码三步：要码（unikey）→ 生成二维码图片 → 检查。没拿到 key 或图片就在那一步失败：空 key 去检查只会
         // 被拒绝，空图片会让登录窗口一直转圈。失败带着网易云的回答（cause），日志里看得到它回了什么。

@@ -549,30 +549,40 @@ describe('QQ Music Web transport', () => {
         expect(fetchMock).toHaveBeenCalledTimes(4);
     });
 
-    // 主进程这次没读出加密的登录仓库（没有系统加密）：启动时存着的 session 不带，按游客播放，session 留着；
-    // 这次扫码登录得到的 session 照常带。
-    it('does not send the session stored at the start while the sign-in store is unreadable, but sends one signed in this run', async () => {
+    // 主进程这次没读出加密的登录仓库（没有系统加密）：存着的 session 不带，按游客播放，session 留着。这次扫码登录时仓库把读不出的
+    // 那份删掉（qqAuthSessionRepository 的 save），主进程从此答读得出：新 session 照常带，页面重新载入以后也带。
+    it('does not send the stored session while the sign-in store is unreadable, but sends one signed in this run, also after a reload', async () => {
         vi.stubEnv('VITE_QQ_API_BASE', '');
         storage.set('online_provider:qq:cookie', CONFIRMED_COOKIE);
-        vi.stubGlobal('window', { electron: {
-            getQqPort: vi.fn().mockResolvedValue(4000),
-            getQqApiStatus: vi.fn().mockResolvedValue({ status: 'running', port: 4000, error: null, sessionStoreUnreadable: true }),
-        } });
-        const fetchMock = vi.fn(async (url: string) => (url.includes('/login/qr/check')
-            ? Response.json({ code: 803, cookie: 'qqmusic_session=signed-in-now' })
-            : Response.json({ code: 200, data: {} })));
+        const backend = { storeUnreadable: true };
+        const getQqApiStatus = vi.fn(async () => ({ status: 'running', port: 4000, error: null, sessionStoreUnreadable: backend.storeUnreadable }));
+        vi.stubGlobal('window', { electron: { getQqPort: vi.fn().mockResolvedValue(4000), getQqApiStatus } });
+        const fetchMock = vi.fn(async (url: string) => {
+            if (!url.includes('/login/qr/check')) return Response.json({ code: 200, data: {} });
+            backend.storeUnreadable = false;
+            return Response.json({ code: 803, cookie: 'qqmusic_session=signed-in-now' });
+        });
         vi.stubGlobal('fetch', fetchMock);
-        const { isQqSessionParked, requestQq } = await import('@/services/onlineMusic/qq/qqTransport');
+        const transport = await import('@/services/onlineMusic/qq/qqTransport');
 
-        await requestQq('login_status');
+        await transport.requestQq('login_status');
         expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('cookie=');
-        expect(await isQqSessionParked()).toBe(true);
+        expect(await transport.isQqSessionParked()).toBe(true);
+        expect(transport.hasUsableQqSession()).toBe(false);
         expect(storage.get('online_provider:qq:cookie')).toBe(CONFIRMED_COOKIE);
 
-        await requestQq('login_qr_check', { key: 'k' });
-        await requestQq('login_status');
+        await transport.requestQq('login_qr_check', { key: 'k' });
+        await transport.requestQq('login_status');
         expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain(`cookie=${encodeURIComponent('qqmusic_session=signed-in-now')}`);
-        expect(await isQqSessionParked()).toBe(false);
+        expect(await transport.isQqSessionParked()).toBe(false);
+        expect(transport.hasUsableQqSession()).toBe(true);
+
+        // The page is loaded again in the same run (a renderer crash, a reopening without mods).
+        vi.resetModules();
+        const reloaded = await import('@/services/onlineMusic/qq/qqTransport');
+        await reloaded.requestQq('login_status');
+        expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain(`cookie=${encodeURIComponent('qqmusic_session=signed-in-now')}`);
+        expect(await reloaded.isQqSessionParked()).toBe(false);
     });
 
     it('maps upstream failures to a network error carrying the backoff body', async () => {

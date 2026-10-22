@@ -180,7 +180,7 @@ describe('QQ backend lifecycle', () => {
         const fake = createFakePackage();
         const { createQqAuthSessionRepository } = require('../../../electron/qq/qqAuthSessionRepository.cjs');
         const authSessionRepository = createQqAuthSessionRepository({
-            store: { get: () => 'ciphertext', set: vi.fn() },
+            store: { get: () => 'ciphertext', set: vi.fn(), delete: vi.fn() },
             safeStorage: { isEncryptionAvailable: () => false },
         });
         // 包加载时就读仓库，读不出只记一行日志（sessionState.js restore），照常监听。
@@ -200,6 +200,9 @@ describe('QQ backend lifecycle', () => {
         await backend.start();
 
         expect(backend.getStatus()).toMatchObject({ status: 'running', sessionStoreUnreadable: true });
+        // 这次运行里扫码登录：仓库把读不出的那份删掉，之后问到的状态就是读得出。
+        try { authSessionRepository.save([{ token: 'this-run' }]); } catch { /* the package logs qq-auth.auth-session.save-failed */ }
+        expect(backend.getStatus()).toMatchObject({ status: 'running', sessionStoreUnreadable: false });
     });
 
     it('names the failed step in the status error', async () => {

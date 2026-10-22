@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { assertEncryptionAvailable, encryptionAvailable } = require('../osEncryption.cjs');
 
 // electron/kugou/kugouApiBridge.cjs
 
@@ -49,35 +50,6 @@ const randomUpperHex = (bytes) => crypto.randomBytes(bytes).toString('hex').toUp
 const isRecord = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
 /**
- * Electron may expose Linux's `basic_text` password backend as available even though it only
- * obfuscates data. Refusing it keeps KuGou account tokens out of Folia's plaintext config file.
- */
-function assertEncryptionAvailable(safeStorage, platform) {
-  if (!safeStorage || typeof safeStorage.isEncryptionAvailable !== 'function') {
-    throw new Error('Electron safeStorage is unavailable');
-  }
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('Electron safeStorage encryption is unavailable');
-  }
-  const backend = platform === 'linux' && typeof safeStorage.getSelectedStorageBackend === 'function'
-    ? safeStorage.getSelectedStorageBackend()
-    : null;
-  if (backend === 'basic_text') {
-    throw new Error('Electron safeStorage selected the unencrypted basic_text backend');
-  }
-}
-
-// Whether this run can seal and unseal at all (`assertEncryptionAvailable` passes).
-const encryptionAvailable = (safeStorage, platform) => {
-  try {
-    assertEncryptionAvailable(safeStorage, platform);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-/**
  * Stores one encrypted cookie map. Failures deliberately degrade to the bridge's in-memory copy:
  * login keeps working for the current run, but no credential is written without OS encryption.
  */
@@ -89,6 +61,25 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
   const report = (event, error) => warn(`[KuGouSession] ${event}`, {
     name: error instanceof Error ? error.name : 'Error',
   });
+  const userIdOf = cookies => cookies?.userid || cookies?.user_id || null;
+  // The account of the cookies that are on disk as far as this run knows (loaded, or last saved); null for none.
+  let storedUserId = null;
+  // What is stored was removed in this run for want of OS encryption: nothing can be written in its place until the
+  // next start, so a save that fails again does not remove it again (each removal rewrites the whole store file).
+  let removedUnsealed = false;
+  // Removes both stored sessions after a save that failed. A store that cannot be written now either is told of and
+  // left as it is: the save itself had already failed, and the request it came with goes on.
+  const removeStored = () => {
+    try {
+      remove(SESSION_KEY);
+      remove(LEGACY_SESSION_KEY);
+      storedUserId = null;
+      return true;
+    } catch (error) {
+      report('remove-failed', error);
+      return false;
+    }
+  };
 
   return {
     // Answers the stored cookies (null for none), and whether a V2 session is stored that this run
@@ -110,6 +101,7 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
           ) {
             throw new Error('Stored KuGou session envelope is invalid');
           }
+          storedUserId = userIdOf(envelope.cookies);
           return { cookies: { ...envelope.cookies }, unreadable };
         } catch (error) {
           report('load-failed', error);
@@ -124,6 +116,7 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
       // cannot seal at all removes it here, also beside a V2 session it keeps: the value lives on
       // in memory for this run only, and no credential stays on disk unencrypted.
       if (!encryptionAvailable(safeStorage, platform)) remove(LEGACY_SESSION_KEY);
+      else storedUserId = userIdOf(legacy);
       return { cookies: { ...legacy }, unreadable };
     },
     save(cookies) {
@@ -135,6 +128,7 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
         });
         const encrypted = safeStorage.encryptString(plaintext);
         store.set(SESSION_KEY, encrypted.toString('base64'));
+        storedUserId = userIdOf(cookies);
         remove(LEGACY_SESSION_KEY);
       } catch (error) {
         report('save-failed', error);
@@ -142,10 +136,12 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
         // they replace what is stored (a save is never asked for while a stored session is kept):
         // the V2 session of an earlier sign-in is removed, so that account cannot come back at a
         // later start. Where only the write failed (a file locked for a moment), what is stored
-        // stays for the next save.
+        // stays for the next save, unless it is another account's (a sign-in of another account
+        // in this run): that one goes as well.
         if (!encryptionAvailable(safeStorage, platform)) {
-          remove(SESSION_KEY);
-          remove(LEGACY_SESSION_KEY);
+          if (!removedUnsealed) removedUnsealed = removeStored();
+        } else if (storedUserId && userIdOf(cookies) !== storedUserId) {
+          removeStored();
         }
       }
     },
@@ -154,6 +150,7 @@ function createSessionPersistence({ store, safeStorage, platform, warn }) {
     clear() {
       remove(SESSION_KEY);
       remove(LEGACY_SESSION_KEY);
+      storedUserId = null;
     },
   };
 }

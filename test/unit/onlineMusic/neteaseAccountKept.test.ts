@@ -12,9 +12,14 @@ import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccount
 const stored = vi.hoisted(() => new Map<string, string>());
 // Keys that cannot be read: db.ts answers null for a read that failed, as for a key that is not there.
 const unreadable = vi.hoisted(() => new Set<string>());
+// Keys that cannot be written: the save rejects.
+const unwritable = vi.hoisted(() => new Set<string>());
 vi.mock('@/services/db', async importOriginal => ({
     ...(await importOriginal<typeof import('@/services/db')>()),
-    saveToCache: async (key: string, data: unknown) => { stored.set(key, JSON.stringify(data)); },
+    saveToCache: async (key: string, data: unknown) => {
+        if (unwritable.has(key)) throw new Error('quota');
+        stored.set(key, JSON.stringify(data));
+    },
     getFromCache: async (key: string) => (stored.has(key) && !unreadable.has(key) ? JSON.parse(stored.get(key)!) : null),
     removeFromCache: async (key: string) => { stored.delete(key); },
     removeCacheEntries: async (keys: string[]) => { keys.forEach(key => stored.delete(key)); },
@@ -48,6 +53,7 @@ const held = () => {
 beforeEach(() => {
     stored.clear();
     unreadable.clear();
+    unwritable.clear();
     page.clear();
     fetchMock.mockReset();
     vi.stubEnv('VITE_NETEASE_API_BASE', 'http://netease.test');
@@ -99,7 +105,7 @@ describe('what NetEase keeps of a sign-in', () => {
         expect([...stored.keys()]).toEqual([SNAPSHOT_KEY]);
     });
 
-    it('reads a cache from under the key it had before the caches were named by platform, and removes them once read; nothing where no user was kept', async () => {
+    it('reads a cache from under the key it had before the caches were named by platform, and removes them when told they are the snapshot; nothing where no user was kept', async () => {
         await expect(neteaseProvider.auth!.oldKeptAccount!()).resolves.toBeNull();
 
         stored.set('user_profile', OLD_USER);
@@ -109,7 +115,24 @@ describe('what NetEase keeps of a sign-in', () => {
             collections: [],
             likedSongIds: [11, 12],
         });
+        // Read, not removed: the read moves them under their names by platform (`getProviderCacheWithLegacyMigration`).
+        expect(stored.size).toBeGreaterThan(0);
+        await neteaseProvider.auth!.forgetOldKeptAccount!();
         expect(stored.size).toBe(0);
+    });
+
+    // 快照没存上：旧版本的缓存留着，下次启动再拿它存一次，不会两处都没了。
+    it('keeps the caches of an older build where the snapshot made of them cannot be saved', async () => {
+        stored.set(OLD_KEYS.user, OLD_USER);
+        stored.set(OLD_KEYS.playlists, OLD_PLAYLISTS);
+        unwritable.add(SNAPSHOT_KEY);
+        fetchMock.mockRejectedValue(new Error('offline'));
+
+        await expect(omni.readAccount('netease', 'start')).resolves.toBe('unknown');
+
+        expect(stored.get(OLD_KEYS.user)).toBe(OLD_USER);
+        expect(stored.get(OLD_KEYS.playlists)).toBe(OLD_PLAYLISTS);
+        expect(stored.has(SNAPSHOT_KEY)).toBe(false);
     });
 
     it('at a start where the snapshot cannot be read, brings nothing an older build kept back over it', async () => {

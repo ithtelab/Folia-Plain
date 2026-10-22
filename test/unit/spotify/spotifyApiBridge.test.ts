@@ -83,7 +83,12 @@ describe('Spotify stored sign-in', () => {
         const lockedWarn = vi.fn();
         createSpotifySessionRepository({ store: locked, safeStorage: cipher(), log: vi.fn(), warn: lockedWarn }).set({ credentials, user: account });
         expect(store.values.get(SESSION_KEY)).toBe(sealed);
-        expect(lockedWarn).toHaveBeenLastCalledWith('[Spotify] Sign-in could not be stored (EPERM); what is stored stays as it was');
+        expect(lockedWarn).toHaveBeenLastCalledWith('[Spotify] Sign-in could not be stored; what is stored stays as it was', expect.objectContaining({ code: 'EPERM' }));
+        // Another account's sign-in that cannot be written: the one stored before goes, so it does not come back at a later start.
+        createSpotifySessionRepository({ store: locked, safeStorage: cipher(), log: vi.fn(), warn: lockedWarn })
+            .set({ credentials, user: { ...account, id: publicAccountId('fixture-another') } });
+        expect(store.values.has(SESSION_KEY)).toBe(false);
+        expect(lockedWarn).toHaveBeenLastCalledWith('[Spotify] Sign-in could not be stored; the one of another account stored before was removed', expect.objectContaining({ code: 'EPERM' }));
     });
 
     it.each([

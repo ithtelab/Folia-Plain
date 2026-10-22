@@ -22,9 +22,11 @@ function createSpotifySessionRepository({ store, safeStorage, log = (...args) =>
     && safeStorage.getSelectedStorageBackend?.() !== 'basic_text';
   // Where nothing can be sealed, the sign-in of this run still replaces the stored one: that one
   // is deleted, so an older account cannot come back at a later start. Where the store cannot be
-  // written (a file locked for a moment), what is stored stays as it was. The first is said once a run.
+  // written (a file locked for a moment), what is stored stays as it was, unless it is another
+  // account's: `replaced` is the sign-in a new one takes the place of (`set`), and where its account
+  // is not the new one's, it is deleted as well. The first is said once a run.
   let toldUnsealed = false;
-  const persist = () => {
+  const persist = (replaced = null) => {
     if (!canEncrypt()) {
       store.delete(SESSION_KEY);
       if (!toldUnsealed) warn('[Spotify] Sign-in is kept for this run only: OS encryption is unavailable');
@@ -34,7 +36,14 @@ function createSpotifySessionRepository({ store, safeStorage, log = (...args) =>
     try {
       store.set(SESSION_KEY, safeStorage.encryptString(JSON.stringify(current)).toString('base64'));
     } catch (error) {
-      warn(`[Spotify] Sign-in could not be stored (${error?.code ?? 'unknown'}); what is stored stays as it was`);
+      let removed = false;
+      if (replaced && replaced.user.id !== current.user.id) {
+        try {
+          store.delete(SESSION_KEY);
+          removed = true;
+        } catch { /* as locked as the write: what is stored stays, as said below */ }
+      }
+      warn(`[Spotify] Sign-in could not be stored; ${removed ? 'the one of another account stored before was removed' : 'what is stored stays as it was'}`, error);
     }
   };
   return {
@@ -64,9 +73,10 @@ function createSpotifySessionRepository({ store, safeStorage, log = (...args) =>
     },
     set({ credentials, user }) {
       if (!isCredentials(credentials) || !isUser(user)) throw new Error('Invalid Spotify session');
+      const replaced = canEncrypt() ? this.get() : null;
       loaded = true;
       current = { version: 1, credentials: { ...credentials }, user: { ...user } };
-      persist();
+      persist(replaced);
     },
     // A renewed access token, or the account read again, replaces what is stored; without a
     // session there is nothing to replace.
