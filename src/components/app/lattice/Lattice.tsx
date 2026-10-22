@@ -43,6 +43,8 @@ type LatticeProps = {
     currentSong: SongResult | null;
     playerState: PlayerState;
     currentTime: MotionValue<number>;
+    /** The lyric clock, for the lyric timeline: media time + preview clip start - manual lyric offset. */
+    lyricCurrentTime: MotionValue<number>;
     playbackDuration: number;
     canTogglePlayback: boolean;
     queue: SongResult[];
@@ -69,6 +71,7 @@ export default function Lattice({
     currentSong,
     playerState,
     currentTime,
+    lyricCurrentTime,
     playbackDuration,
     canTogglePlayback,
     queue,
@@ -187,7 +190,7 @@ export default function Lattice({
     return (
         <LatticeTransportContext.Provider value={transport}>
         <LatticePlaybackProvider actions={controls} currentSong={currentSong} queue={queue} lyrics={lyrics}
-            currentTime={currentTime} duration={playbackDuration} onSeek={onSeek} isDaylight={isDaylight}>
+            currentTime={currentTime} lyricCurrentTime={lyricCurrentTime} duration={playbackDuration} onSeek={onSeek} isDaylight={isDaylight}>
         <LatticeLyricsProvider source={lyricSource} songKey={currentSong ? getPlaybackSongKey(currentSong) : ''}
             keywordColoringEnabled={lyricKeywordColoringEnabled}>
         <section
