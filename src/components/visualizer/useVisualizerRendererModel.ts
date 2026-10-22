@@ -105,8 +105,8 @@ export const useVisualizerRendererModel = ({
     const displayCoverUrl = usePlaybackStore(selectDisplayCoverUrl);
     const displayPlayerState = usePlaybackStore(selectDisplayPlayerState);
     const displayDuration = usePlaybackStore(selectDisplayDuration);
-    // 后台节流 holds the lyric animation in the background: drawn as if paused, which every style and
-    // background already settles into, and back on the first frame the window is in front again.
+    // 后台节流 holds the lyric animation while the window is minimised or hidden: drawn as if paused,
+    // which every style and background already settles into, and moving again once it is back on screen.
     const backgroundLyricHeld = useBackgroundLyricHoldStore(state => state.held);
     // The theme too: the live one is the incoming song's once it comes (useShownTheme).
     const liveThemes = useMemo(() => ({ theme, subtitleTheme }), [theme, subtitleTheme]);

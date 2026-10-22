@@ -260,7 +260,7 @@ interface FoliumBackgroundContext extends FoliumMountHelpers
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | `readonly staticMode` | `boolean` | A still preview: draw one frame, do not animate. |
-| `isPaused()` | `(): boolean` | Playback is paused. |
+| `isPaused()` | `(): boolean` | Playback is paused, or the host holds the picture still while it plays (the background throttling setting, while the window is minimised or hidden). Either way, settle and stop animating. |
 | `getTheme()` | `(): FoliumTheme` | The current theme. |
 | `getSettings()` | `(): FoliumSettingValues` | This background's settings values (defaults merged). |
 | `getCoverUrl()` | `(): string \| null` | Cover image URL of the displayed song. |
@@ -673,7 +673,7 @@ interface FoliumStageContext extends FoliumMountHelpers
 | `readonly lyricTime` | `FoliumClock` | The lyric clock: the time lyric lines are timed in (`line.startTime`), seconds. It can differ from the playback position (the user's lyric offset, Stage sources); in previews it is the preview's own clock. |
 | `getDuration()` | `(): number` | The song's length, seconds; 0 while unknown (`onChange` fires when it becomes known). In a settings preview it is the preview's length, in the export window the exported song's. Progress through the song is `lyricTime.get() / getDuration()` when the duration is above 0; it can be off by the user's lyric offset, since the lyric clock is not the playback position. |
 | `getLineIndex()` | `(): number` | Index into `lines` of the active line; -1 between lines. |
-| `isPaused()` | `(): boolean` | Playback is paused. |
+| `isPaused()` | `(): boolean` | Playback is paused, or the host holds the picture still while it plays (the background throttling setting, while the window is minimised or hidden; the lyric clock and the line stand still too). Either way, settle and stop animating. |
 | `getTheme()` | `(): FoliumTheme` | The current theme. |
 | `getSubtitleTheme()` | `(): FoliumTheme` | The theme the host's subtitles use; equals getTheme() where there is none. |
 | `getCoverUrl()` | `(): string \| null` | Cover image URL of the displayed song, or null. |

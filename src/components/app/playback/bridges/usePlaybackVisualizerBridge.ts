@@ -18,7 +18,7 @@ import { getTransitionHandoffProgress } from '../../../../services/automix/trans
 import { tickBeatFx } from '../../../../services/beatFx/beatFxLive';
 import { useBeatFxTrack } from '../../../../hooks/useBeatFxTrack';
 import { readIncomingLyricClock } from './incomingLyricClock';
-import { isBackgroundLyricHeld, useBackgroundLyricHoldStore } from '../../backgroundThrottling/backgroundLyricHoldStore';
+import { isBackgroundLyricHeld, setHeldLyricTime, useBackgroundLyricHoldStore } from '../../backgroundThrottling/backgroundLyricHoldStore';
 
 // src/components/app/playback/bridges/usePlaybackVisualizerBridge.ts
 
@@ -149,12 +149,14 @@ export function usePlaybackVisualizerBridge({
     }), [audioRef]);
 
     const updateLoop = useCallback(() => {
-        // 后台节流 holds the lyric animation while the window is in the background: the clocks below
+        // 后台节流 holds the lyric animation while the window is minimised or hidden: the clocks below
         // keep running, while the lyric read-head, the line and the audio bands stay where they are
-        // until the window comes back (the pass that lets go catches them up).
+        // until the window is back on screen (the pass that lets go catches them up).
         const backgroundHold = isBackgroundLyricHeld();
+        setHeldLyricTime(null);
         const showLyricTime = (seconds: number) => {
-            if (!backgroundHold) lyricCurrentTime.set(seconds);
+            if (backgroundHold) setHeldLyricTime(seconds);
+            else lyricCurrentTime.set(seconds);
         };
         const showLine = (index: number) => {
             if (backgroundHold || index === currentLineIndexRef.current) return;
@@ -355,12 +357,16 @@ export function usePlaybackVisualizerBridge({
         schedule();
         const unsubscribeHold = useBackgroundLyricHoldStore.subscribe((state, previous) => {
             if (state.held === previous.held) return;
+            // A song change while held set the line in the store (-1) behind this loop's back; compare
+            // against that, or a new song's first line that happens to match the held one is never written.
+            if (!state.held) currentLineIndexRef.current = usePlaybackStore.getState().currentLineIndex;
             cancel();
             tick();
         });
         return () => {
             unsubscribeHold();
             cancel();
+            setHeldLyricTime(null);
         };
     }, [animationFrameRef, updateLoop]);
 }

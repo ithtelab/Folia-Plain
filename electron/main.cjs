@@ -1289,6 +1289,8 @@ function deferMacWallpaperEnterUntilFullScreenExit() {
 
 function notifyMacWallpaperModeChanged() {
   refreshTrayMenu();
+  // macOS switches wallpaper mode in place, not always through save-settings: every change ends here.
+  backgroundThrottling.refresh();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('wallpaper-mode-changed', getPublicSettings());
   }
@@ -2242,7 +2244,6 @@ const backgroundThrottling = createBackgroundThrottling({
   isEnabled: () => readStoredBoolean(BACKGROUND_THROTTLING_SETTING_KEY, false),
   getStandDownReason: () => {
     if (isWallpaperModeEnabled()) return 'wallpaper mode';
-    if (mainWindowAlwaysOnTop) return 'always on top';
     if (videoExportWindowRestoreState) return 'video export';
     if (obsBrowserSourceClients.size > 0) return 'OBS browser source';
     return null;
@@ -2970,7 +2971,6 @@ function setMainWindowAlwaysOnTop(enabled) {
   mainWindowAlwaysOnTop = Boolean(enabled);
   store.set(MAIN_WINDOW_ALWAYS_ON_TOP_SETTING_KEY, mainWindowAlwaysOnTop);
   applyMainWindowAlwaysOnTop();
-  backgroundThrottling.refresh();
   patchRemoteControlSnapshot({
     mainWindowAlwaysOnTop,
   });
@@ -6116,9 +6116,12 @@ ipcMain.handle('wallpaper-display-set', (event, displayId) => {
   return setWallpaperDisplayChoice(displayId);
 });
 
-// Whether the 后台节流 switch is in force for the main window right now (on, and not standing down).
+// The 后台节流 switch as the main window sees it: in force (on, not standing down), and the window
+// minimised or hidden while it is.
 ipcMain.handle('background-throttling-get', (event) => (
-  isTrustedMainWindowContents(event.sender) && backgroundThrottling.isActive()
+  isTrustedMainWindowContents(event.sender)
+    ? backgroundThrottling.getState()
+    : { active: false, hidden: false }
 ));
 ipcMain.handle('playback-display-sleep-set-active', (event, active) => {
   if (!isTrustedMainWindowContents(event.sender)) {

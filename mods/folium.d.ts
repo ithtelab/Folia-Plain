@@ -648,7 +648,11 @@ export interface FoliumStageContext extends FoliumMountHelpers {
     getDuration(): number;
     /** Index into `lines` of the active line; -1 between lines. */
     getLineIndex(): number;
-    /** Playback is paused. */
+    /**
+     * Playback is paused, or the host holds the picture still while it plays (the background throttling
+     * setting, while the window is minimised or hidden; the lyric clock and the line stand still too).
+     * Either way, settle and stop animating.
+     */
     isPaused(): boolean;
     /** The current theme. */
     getTheme(): FoliumTheme;
@@ -760,7 +764,10 @@ export interface FoliumCommandDef {
 export interface FoliumBackgroundContext extends FoliumMountHelpers {
     /** A still preview: draw one frame, do not animate. */
     readonly staticMode: boolean;
-    /** Playback is paused. */
+    /**
+     * Playback is paused, or the host holds the picture still while it plays (the background throttling
+     * setting, while the window is minimised or hidden). Either way, settle and stop animating.
+     */
     isPaused(): boolean;
     /** The current theme. */
     getTheme(): FoliumTheme;

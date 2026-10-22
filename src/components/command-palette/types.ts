@@ -328,7 +328,7 @@ export type CommandPaletteSettingsContext = {
     modSystemEnabled: boolean;
     toggleVoiceInputPause: () => void;
     togglePreventDisplaySleepDuringPlayback: () => void;
-    /** 后台节流: throttle the hidden window and hold the lyric animation out of focus (main process applies it). */
+    /** 后台节流: throttle the window and hold the lyric animation while it is minimised or hidden (main process applies it). */
     toggleBackgroundThrottling: () => void;
     toggleWallpaperMode: () => void;
     /** Close button hides the main window to the tray instead of quitting (main process owns it). */

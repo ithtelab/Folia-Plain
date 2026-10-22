@@ -7,16 +7,18 @@ import { isBackgroundLyricHeld } from '@/components/app/backgroundThrottling/bac
 
 // test/unit/app/backgroundLyricHold.test.ts
 // When 后台节流 holds the lyric animation: only while the main process says the switch is in force,
-// and only while the window is hidden or out of focus; focus coming back lets go at once.
+// and only while the window is minimised / hidden (or the page is hidden); losing the focus alone
+// never holds it.
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+type State = { active: boolean; hidden: boolean };
+
 let container: HTMLDivElement;
 let root: Root;
-let hasFocus: boolean;
 let visibility: DocumentVisibilityState;
-let pushActive: ((active: boolean) => void) | null;
-let initialActive: boolean;
+let push: ((state: State) => void) | null;
+let initial: State;
 const unsubscribe = vi.fn();
 
 const Probe = () => {
@@ -27,22 +29,20 @@ const Probe = () => {
 const mount = async () => {
     await act(async () => root.render(createElement(Probe)));
 };
-const fire = (target: EventTarget, type: string) => {
-    act(() => { target.dispatchEvent(new Event(type)); });
+const send = (state: State) => {
+    act(() => push?.(state));
 };
 
 beforeEach(() => {
-    hasFocus = true;
     visibility = 'visible';
-    pushActive = null;
-    initialActive = false;
+    push = null;
+    initial = { active: false, hidden: false };
     unsubscribe.mockClear();
-    vi.spyOn(document, 'hasFocus').mockImplementation(() => hasFocus);
     vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibility);
     window.electron = {
-        getBackgroundThrottlingActive: () => Promise.resolve(initialActive),
-        onBackgroundThrottlingChanged: (callback: (active: boolean) => void) => {
-            pushActive = callback;
+        getBackgroundThrottlingState: () => Promise.resolve(initial),
+        onBackgroundThrottlingChanged: (callback: (state: State) => void) => {
+            push = callback;
             return unsubscribe;
         },
     } as unknown as typeof window.electron;
@@ -59,53 +59,55 @@ afterEach(() => {
 });
 
 describe('useBackgroundLyricHold', () => {
-    it('never holds while the switch is not in force', async () => {
-        await mount();
-        hasFocus = false;
-        fire(window, 'blur');
-        expect(isBackgroundLyricHeld()).toBe(false);
-    });
-
-    it('holds out of focus and lets go when the focus comes back', async () => {
-        initialActive = true;
+    it('holds while the switch is in force and the window is out of sight, and lets go when it is back', async () => {
+        initial = { active: true, hidden: false };
         await mount();
         expect(isBackgroundLyricHeld()).toBe(false);
 
-        hasFocus = false;
-        fire(window, 'blur');
+        send({ active: true, hidden: true });
         expect(isBackgroundLyricHeld()).toBe(true);
 
-        hasFocus = true;
-        fire(window, 'focus');
+        send({ active: true, hidden: false });
         expect(isBackgroundLyricHeld()).toBe(false);
     });
 
-    it('holds a hidden window even if it still reports the focus', async () => {
-        initialActive = true;
+    it('starts held when the window is already out of sight', async () => {
+        initial = { active: true, hidden: true };
+        await mount();
+        expect(isBackgroundLyricHeld()).toBe(true);
+    });
+
+    it('never holds while the switch is not in force, whatever the window does', async () => {
+        await mount();
+        send({ active: false, hidden: true });
+        visibility = 'hidden';
+        act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+        expect(isBackgroundLyricHeld()).toBe(false);
+    });
+
+    it('takes a page Chromium reports hidden as out of sight too', async () => {
+        initial = { active: true, hidden: false };
         await mount();
         visibility = 'hidden';
-        fire(document, 'visibilitychange');
+        act(() => { document.dispatchEvent(new Event('visibilitychange')); });
         expect(isBackgroundLyricHeld()).toBe(true);
+
+        visibility = 'visible';
+        act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+        expect(isBackgroundLyricHeld()).toBe(false);
     });
 
-    it('starts holding a window already in the background when the switch comes into force, and stops when it stands down', async () => {
+    it('does not hold a window that only lost the focus', async () => {
+        initial = { active: true, hidden: false };
         await mount();
-        hasFocus = false;
-        fire(window, 'blur');
-        expect(isBackgroundLyricHeld()).toBe(false);
-
-        act(() => pushActive?.(true));
-        expect(isBackgroundLyricHeld()).toBe(true);
-
-        act(() => pushActive?.(false));
+        vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+        act(() => { window.dispatchEvent(new Event('blur')); });
         expect(isBackgroundLyricHeld()).toBe(false);
     });
 
     it('lets go and unsubscribes on unmount', async () => {
-        initialActive = true;
+        initial = { active: true, hidden: true };
         await mount();
-        hasFocus = false;
-        fire(window, 'blur');
         expect(isBackgroundLyricHeld()).toBe(true);
 
         act(() => root.unmount());
@@ -117,8 +119,8 @@ describe('useBackgroundLyricHold', () => {
     it('does nothing outside the desktop app', async () => {
         delete (window as { electron?: unknown }).electron;
         await mount();
-        hasFocus = false;
-        fire(window, 'blur');
+        visibility = 'hidden';
+        act(() => { document.dispatchEvent(new Event('visibilitychange')); });
         expect(isBackgroundLyricHeld()).toBe(false);
     });
 });

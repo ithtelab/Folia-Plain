@@ -90,9 +90,9 @@ export type DesktopSettingsState = {
     /** Windows only: the saved GPU choice, which the next launch starts with. */
     gpuPreference: GpuPreference;
     /**
-     * 后台节流: let Chromium throttle the hidden window, and hold the lyric animation while the window
-     * is out of focus. The main process owns the value and stands it down where the window has to
-     * stay live (wallpaper, always on top, video export, OBS browser source).
+     * 后台节流: let Chromium throttle the window and hold the lyric animation while it is minimised or
+     * hidden. The main process owns the value and stands it down where the window has to stay live
+     * even out of sight (wallpaper, video export, OBS browser source).
      */
     backgroundThrottling: boolean;
     /** Transient (never persisted), from the main process: false on native Wayland, where always-on-top is silently ignored. */
