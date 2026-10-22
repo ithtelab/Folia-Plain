@@ -3253,6 +3253,33 @@ export default {
         "description": "This repository offers Windows, macOS and Linux desktop packages, plus a Web deployment ZIP and checksums. Online Web music needs backends; macOS packages are unsigned and not notarized."
       }
     },
+    "v0_7_24": {
+      "intro": "Folia Plain 0.7.24 starts new installs on the grid, lets you skip the first-run guide, and keeps polishing Liquid Glass and playback smoothness.",
+      "gridFirst": {
+        "title": "New installs start on the grid",
+        "description": "The library interface you see first is now the grid instead of the collage wall, matching the default already selected in the first-run guide. Switch back to the wall any time from Options or the command palette."
+      },
+      "glassChoice": {
+        "title": "Glass or the original material, any time",
+        "description": "Options \u2192 Appearance has a Liquid Glass switch; turning it off restores the original material. The choice is saved and travels with your visual config exports."
+      },
+      "staticGlass": {
+        "title": "Thinner, more consistent glass",
+        "description": "Cards and controls now share one set of blur, edge highlight and film values, and the whole material is thinner, so you can see the page through it. Light mode gains a deepened tone with a lit top edge over a shaded lower one, and pressing a card sends two liquid waves out from where you pressed."
+      },
+      "playerDestination": {
+        "title": "The player bar goes straight to lyrics",
+        "description": "Pressing the bottom player bar opens the lyrics page directly, while the queue button and your playback preference stay as they were. Esc leaves window fullscreen; the pointer hides after about 3 seconds still and returns as soon as you move."
+      },
+      "gpuAcceleration": {
+        "title": "GPU acceleration can be turned off",
+        "description": "Desktop Options \u2192 Performance & motion has a GPU acceleration switch, on by default. A restart applies it; turn it off if you hit a black screen or rendering glitches."
+      },
+      "musicAccount": {
+        "title": "Membership level and expiry",
+        "description": "Supported accounts show VIP or SVIP, the level and expiry date the platform returns, and its official badge. Expired memberships are marked, and a missing date is never guessed."
+      }
+    },
     "v0_7_22": {
       "intro": "Folia Plain 0.7.22 brings a shared Liquid Glass material, clearer bottom playback controls, fewer accidental titlebar interactions, and refreshed app and music-provider icons.",
       "liquidGlass": {
@@ -4171,7 +4198,9 @@ export default {
       "description": "Hold Ctrl + G now until the capsule fills, and the guide for the page you are on opens.",
       "touchDescription": "Tap the button below now to open the guide for this page.",
       "shortcut": "Hold Ctrl + G",
-      "required": "Try the page Ponder once to continue."
+      "required": "You can come back to it from Settings or Help any time.",
+      "skip": "I know my way around — let me wander",
+      "skipTouch": "Skip for now, I'll explore"
     },
     "allChaptersDone": "That is all of them.",
     "nextChapter": "Next chapter",

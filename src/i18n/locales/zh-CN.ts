@@ -3253,6 +3253,33 @@ export default {
         "description": "本项目 Releases 提供 Windows、macOS、Linux 桌面包与 Web 部署 ZIP，并附校验文件。Web 在线音乐需要后端配置；macOS 包未签名公证。"
       }
     },
+    "v0_7_24": {
+      "intro": "Folia Plain 0.7.24 让新装用户直接从网格开始，首次引导可以跳过，并继续打磨液态玻璃与播放流畅度。",
+      "gridFirst": {
+        "title": "新装默认就是网格",
+        "description": "首次打开看到的资料库界面从拼贴墙改为网格，与首启引导里默认选中的那一项一致。想换回拼贴墙随时可以在设置或命令面板里切换。"
+      },
+      "glassChoice": {
+        "title": "玻璃与原版随时切换",
+        "description": "在外观设置中开关液态毛玻璃，关闭后恢复原版材质。偏好自动保存，也可随外观配置导入导出。"
+      },
+      "staticGlass": {
+        "title": "更薄、更一致的玻璃",
+        "description": "卡片与控件的模糊、边缘高光和薄膜统一到同一套参数，整体减薄后能透过玻璃看清背后的画面。亮色模式补上压暗的色调与上亮下暗的边缘，不再显得没有玻璃感；按住卡片会有两道液波从按下处向外扩散。"
+      },
+      "playerDestination": {
+        "title": "播放条直达歌词海报",
+        "description": "点击底部播放条直接进入歌词页，队列按钮与歌单偏好各自保留。Esc 可退出窗口全屏；全屏中鼠标静止约 3 秒后隐藏，操作后立即恢复。"
+      },
+      "gpuAcceleration": {
+        "title": "GPU 加速可以关闭",
+        "description": "桌面版性能与动效设置新增 GPU 硬件加速开关，默认开启。保存后重启生效，遇到黑屏或渲染异常时可尝试关闭。"
+      },
+      "musicAccount": {
+        "title": "会员等级与到期日期",
+        "description": "支持的账号可区分 VIP 与 SVIP，显示平台返回的等级、到期日期和官方会员标识。已到期会明确标注，平台没有返回的日期不会猜测。"
+      }
+    },
     "v0_7_22": {
       "intro": "Folia Plain 0.7.22 带来统一的液态玻璃材质，更清楚的底部播放器、更少误触的窗口顶栏，以及新的应用与音乐平台图标。",
       "liquidGlass": {
@@ -4171,7 +4198,9 @@ export default {
       "description": "按住 Ctrl + G，等进度走满，打开当前页面介绍。",
       "touchDescription": "现在点下面的按钮，打开当前页面的介绍。",
       "shortcut": "按住 Ctrl + G",
-      "required": "完成一次页面思索后才能继续。"
+      "required": "随时可以在设置或帮助里再来一次。",
+      "skip": "我是老手，自己逛",
+      "skipTouch": "先不用，我自己逛"
     },
     "allChaptersDone": "全部章节都看完了。",
     "nextChapter": "下一章",

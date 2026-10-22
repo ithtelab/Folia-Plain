@@ -196,13 +196,13 @@ describe('declared actions and core capabilities', () => {
 describe('initial choice and the effective suite (B0)', () => {
     it('keeps the fallback suite and the initial choice apart', () => {
         expect(DEFAULT_LIBRARY_SUITE_ID).toBe('grid');
-        // 测试配置用 VITE_LIBRARY_INITIAL_SUITE=grid 钉住；没有覆盖时是开发阶段的 bravais。
+        // 测试配置用 VITE_LIBRARY_INITIAL_SUITE=grid 钉住；没有覆盖时也是 grid（2026-10-22 起的初始选择）。
         expect(LIBRARY_SUITE_INITIAL_CHOICE).toBe('grid');
-        expect(resolveLibrarySuiteInitialChoice(undefined)).toBe('bravais');
-        expect(resolveLibrarySuiteInitialChoice('')).toBe('bravais');
-        expect(resolveLibrarySuiteInitialChoice('  ')).toBe('bravais');
+        expect(resolveLibrarySuiteInitialChoice(undefined)).toBe('grid');
+        expect(resolveLibrarySuiteInitialChoice('')).toBe('grid');
+        expect(resolveLibrarySuiteInitialChoice('  ')).toBe('grid');
         expect(resolveLibrarySuiteInitialChoice(' tui ')).toBe('tui');
-        expect(resolveLibrarySuiteInitialChoice(true)).toBe('bravais');
+        expect(resolveLibrarySuiteInitialChoice(true)).toBe('grid');
     });
 
     it('resolves an unavailable initial choice and unknown ids to the default suite', () => {

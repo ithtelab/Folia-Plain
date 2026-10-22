@@ -3253,6 +3253,33 @@ export default {
         "description": "Repositori ini menyediakan paket desktop Windows, macOS dan Linux, serta ZIP penerapan Web dan checksum. Musik daring Web memerlukan backend; paket macOS tidak ditandatangani atau dinotarisasi."
       }
     },
+    "v0_7_24": {
+      "intro": "Folia Plain 0.7.24 memulai pemasangan baru di grid, membolehkan panduan awal dilewati, dan terus merapikan Liquid Glass serta kelancaran pemutaran.",
+      "gridFirst": {
+        "title": "Pemasangan baru mulai di grid",
+        "description": "Antarmuka pustaka yang pertama terlihat kini grid, bukan dinding kolase, sama dengan pilihan bawaan di panduan awal. Kembali ke dinding kapan saja lewat Opsi atau palet perintah."
+      },
+      "glassChoice": {
+        "title": "Kaca atau material asli, kapan saja",
+        "description": "Opsi \u2192 Tampilan punya sakelar Liquid Glass; mematikannya mengembalikan material asli. Pilihan tersimpan dan ikut dalam ekspor konfigurasi tampilan."
+      },
+      "staticGlass": {
+        "title": "Kaca lebih tipis dan konsisten",
+        "description": "Kartu dan kontrol kini memakai satu set nilai buram, sorotan tepi dan lapisan tipis, dan seluruh material lebih tipis sehingga halaman di belakangnya terlihat. Mode terang mendapat warna lebih pekat dengan tepi atas terang di atas tepi bawah redup, dan menekan kartu memancarkan dua gelombang cair dari titik tekanan."
+      },
+      "playerDestination": {
+        "title": "Bilah pemutar langsung ke lirik",
+        "description": "Menekan bilah pemutar bawah langsung membuka halaman lirik, sementara tombol antrean dan preferensi pemutaran tetap seperti semula. Esc keluar dari layar penuh jendela; penunjuk disembunyikan setelah sekitar 3 detik diam dan kembali saat digerakkan."
+      },
+      "gpuAcceleration": {
+        "title": "Akselerasi GPU bisa dimatikan",
+        "description": "Opsi desktop \u2192 Performa & gerak punya sakelar akselerasi GPU, aktif secara bawaan. Mulai ulang untuk menerapkannya; matikan bila layar hitam atau render bermasalah."
+      },
+      "musicAccount": {
+        "title": "Tingkat keanggotaan dan masa berlaku",
+        "description": "Akun yang didukung menampilkan VIP atau SVIP, tingkat dan tanggal kedaluwarsa dari platform, serta lencana resminya. Keanggotaan kedaluwarsa ditandai, dan tanggal yang tidak tersedia tidak ditebak."
+      }
+    },
     "v0_7_22": {
       "intro": "Folia Plain 0.7.22 menghadirkan material Liquid Glass yang seragam, kontrol pemutar bawah yang lebih jelas, lebih sedikit salah klik pada bilah judul, serta ikon aplikasi dan platform musik yang diperbarui.",
       "liquidGlass": {
@@ -4171,7 +4198,9 @@ export default {
       "description": "Tahan Ctrl + G sampai kapsulnya terisi penuh, lalu panduan halaman ini akan terbuka.",
       "touchDescription": "Ketuk tombol di bawah untuk membuka panduan halaman ini.",
       "shortcut": "Tahan Ctrl + G",
-      "required": "Coba Ponder halaman sekali untuk melanjutkan."
+      "required": "Kamu bisa membukanya lagi dari Pengaturan atau Bantuan kapan saja.",
+      "skip": "Sudah biasa — biar aku jelajah sendiri",
+      "skipTouch": "Lewati dulu, aku mau coba sendiri"
     },
     "allChaptersDone": "Semuanya sudah selesai.",
     "nextChapter": "Bab berikutnya",

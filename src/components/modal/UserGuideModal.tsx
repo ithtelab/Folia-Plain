@@ -17,6 +17,18 @@ export const UserGuideModal: React.FC<{ theme?: Theme | null }> = ({ theme }) =>
     const supportsFinePointer = useSupportsFinePointer();
     const accent = theme?.accentColor || (isDaylight ? '#18181b' : '#f4f4f5');
 
+    /**
+     * Leaves without opening Ponder. Records the gate as seen, which is what the open button does too
+     * (openCurrentPagePonder), so the gate never comes back and later releases still show their notes.
+     */
+    const skipOnboarding = () => {
+        const modal = useSettingsModalStore.getState();
+        if (typeof __APP_VERSION__ !== 'undefined') {
+            modal.setLastSeenGuideVersion(__APP_VERSION__);
+        }
+        modal.setIsUserGuideModalOpen(false);
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -70,6 +82,17 @@ export const UserGuideModal: React.FC<{ theme?: Theme | null }> = ({ theme }) =>
                         </button>
 
                         <p className="mt-6 text-xs opacity-45">{t('ponder.onboarding.required')}</p>
+
+                        {/* 跳过：这道门只在安装后出现一次，但「先自己逛逛」是正当选择。
+                            它和上面的按钮做同一件收尾的事（记下看过、关上这道门），只是不进思索。 */}
+                        <button
+                            type="button"
+                            data-testid="ponder-onboarding-skip-button"
+                            onClick={skipOnboarding}
+                            className="mt-5 text-xs opacity-50 underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
+                        >
+                            {t(supportsFinePointer ? 'ponder.onboarding.skip' : 'ponder.onboarding.skipTouch')}
+                        </button>
                     </motion.div>
                 </motion.div>
             )}

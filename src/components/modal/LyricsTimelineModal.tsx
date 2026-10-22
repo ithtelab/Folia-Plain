@@ -3,6 +3,7 @@ import { motion, AnimatePresence, MotionValue, useMotionValueEvent } from 'frame
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LyricData, Theme } from '../../types';
+import AdaptiveGlassSurface from '../shared/liquid-glass/AdaptiveGlassSurface';
 
 interface LyricsTimelineModalProps {
     isOpen: boolean;
@@ -35,6 +36,8 @@ const LyricsTimelineModal: React.FC<LyricsTimelineModalProps> = ({
 }) => {
     const { t } = useTranslation();
     // const isDaylight = theme?.name === 'Daylight Default'; // Deprecated, passed as prop
+    // The window uses the shared glass material instead of a fill of its own: `glassBg` is only the
+    // classic material's ground, applied when Liquid Glass is off (adaptiveGlassRules).
     const glassBg = isDaylight ? 'bg-white/70' : 'bg-black/40';
     const borderColor = isDaylight ? 'border-black/5' : 'border-white/10';
 
@@ -228,9 +231,10 @@ const LyricsTimelineModal: React.FC<LyricsTimelineModalProps> = ({
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className={`w-[90vw] max-w-4xl h-[80vh] ${glassBg} border ${borderColor} rounded-2xl p-8 relative flex flex-col`}
+                        className={`liquid-glass-adaptive w-[90vw] max-w-4xl h-[80vh] ${glassBg} border ${borderColor} rounded-2xl p-8 relative flex flex-col`}
                         onClick={(e) => e.stopPropagation()}
                     >
+                        <AdaptiveGlassSurface isDaylight={isDaylight} radius={16} />
                         {/* Header */}
                         <div className="flex justify-between items-center mb-8 flex-shrink-0">
                             <h2 className={`text-2xl font-bold ${headerText}`}>{t('timeline.title')}</h2>

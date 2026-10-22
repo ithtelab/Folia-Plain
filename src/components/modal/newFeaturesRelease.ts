@@ -17,13 +17,13 @@ type NewFeaturesRelease = {
 
 // Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_7_23',
+    i18nKey: 'releaseNotes.v0_7_24',
     features: [
+        { id: 'gridFirst', icon: Monitor },
         { id: 'glassChoice', icon: Layers },
         { id: 'staticGlass', icon: Sparkles },
         { id: 'playerDestination', icon: ArrowUpRight },
         { id: 'gpuAcceleration', icon: Cpu },
-        { id: 'platformPackages', icon: Monitor },
         { id: 'musicAccount', icon: Headphones },
     ],
 };

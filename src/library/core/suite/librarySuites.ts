@@ -25,8 +25,12 @@ import { assertLibrarySuiteChromeActions } from './suiteChrome';
 /** 默认 suite：任何 suite 没实现的 surface 都由它渲染，所以它必须实现全部 surface。 */
 export const DEFAULT_LIBRARY_SUITE_ID: LibrarySuiteId = 'grid';
 
-/** 没有构建变量覆盖时的初始选择：bravais（下一版起的默认，2026-10-10 用户定）。 */
-const LIBRARY_SUITE_INITIAL_CHOICE_FALLBACK: LibrarySuiteId = 'bravais';
+/**
+ * 没有构建变量覆盖时的初始选择：grid（2026-10-22 用户定；此前是 bravais）。
+ * 首次安装的人先看到网格 —— 它和「资料库界面」引导页里网格那一项是同一个默认，选哪套都还能在
+ * 设置 → 一般 或命令面板里随时换。构建变量（VITE_LIBRARY_INITIAL_SUITE）仍可覆盖。
+ */
+const LIBRARY_SUITE_INITIAL_CHOICE_FALLBACK: LibrarySuiteId = 'grid';
 
 /**
  * 初始选择的取值：构建变量（VITE_LIBRARY_INITIAL_SUITE）给了非空值就用它，否则用内置的初始选择。

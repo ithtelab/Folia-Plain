@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // test/unit/library/core/librarySuiteStore.test.ts
 // suite 选择的持久化（B0）：只在选择时写 localStorage `library_suite`，读回的是上次的选择；
-// 没有记录时用初始选择（LIBRARY_SUITE_INITIAL_CHOICE，开发阶段 bravais，可被 VITE_LIBRARY_INITIAL_SUITE 覆盖）；
+// 没有记录时用初始选择（LIBRARY_SUITE_INITIAL_CHOICE，默认 grid，可被 VITE_LIBRARY_INITIAL_SUITE 覆盖）；
 // 存储坏了退回初始选择、写不进去时这次会话仍然生效。合法性不归 store 管（见 librarySuiteChoice.test）。
 
 const STORAGE_KEY = 'library_suite';
@@ -39,10 +39,10 @@ describe('library suite store', () => {
         expect(setItem).not.toHaveBeenCalled();
     });
 
-    it('uses the built-in initial choice (bravais) when the build does not override it', async () => {
+    it('uses the built-in initial choice (grid) when the build does not override it', async () => {
         vi.stubEnv('VITE_LIBRARY_INITIAL_SUITE', undefined);
         const { useLibrarySuiteStore, setItem } = await loadStore();
-        expect(useLibrarySuiteStore.getState().suite).toBe('bravais');
+        expect(useLibrarySuiteStore.getState().suite).toBe('grid');
         expect(setItem).not.toHaveBeenCalled();
     });
 
