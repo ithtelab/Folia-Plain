@@ -1,6 +1,7 @@
 // src/stores/useDesktopSettingsStore.ts
 // Desktop-shell behaviour: tray and taskbar, wallpaper mode, display-sleep and voice-input
-// interlocks, launch target, the experimental mod system switch, and the Windows render GPU.
+// interlocks, launch target, the experimental mod system switch, the Windows render GPU, and the
+// opt-in background throttling.
 //
 // Split out of useSettingsUiStore.
 
@@ -44,6 +45,10 @@ export const OPEN_PLAYER_ON_LAUNCH_STORAGE_KEY = 'open_player_on_launch';
 // before the GPU process starts. Windows only; a change takes effect on the next launch.
 export const GPU_PREFERENCE_STORAGE_KEY = 'gpu_preference';
 
+// Mirrored from the main process's BACKGROUND_THROTTLING (electron/backgroundThrottling.cjs), which
+// applies it to the main window. Off by default: some streamers capture the window while it is covered.
+export const BACKGROUND_THROTTLING_STORAGE_KEY = 'background_throttling';
+
 /** Which GPU Chromium renders on: its own choice, the high-performance one, or the power-saving one. */
 export type GpuPreference = 'auto' | 'high-performance' | 'low-power';
 
@@ -84,9 +89,15 @@ export type DesktopSettingsState = {
     openPlayerOnLaunch: boolean;
     /** Windows only: the saved GPU choice, which the next launch starts with. */
     gpuPreference: GpuPreference;
+    /**
+     * 后台节流: let Chromium throttle the hidden window, and hold the lyric animation while the window
+     * is out of focus. The main process owns the value and stands it down where the window has to
+     * stay live (wallpaper, always on top, video export, OBS browser source).
+     */
+    backgroundThrottling: boolean;
     /** Transient (never persisted), from the main process: false on native Wayland, where always-on-top is silently ignored. */
     windowAlwaysOnTopSupported: boolean;
-    setDesktopPreferenceSnapshot: (settings: { MINIMIZE_TO_TRAY?: unknown; CLOSE_TO_TRAY?: unknown; HIDE_TASKBAR_ICON?: unknown; REMOTE_CONTROL_SKIP_TASKBAR?: unknown; REMOTE_CONTROL_HIDE_TITLEBAR?: unknown; REMOTE_CONTROL_CLICK_THROUGH?: unknown; REMOTE_CONTROL_EXPAND_COVER?: unknown; VOICE_INPUT_PAUSE_ENABLED?: unknown; PREVENT_DISPLAY_SLEEP_DURING_PLAYBACK?: unknown; MOD_SYSTEM_ENABLED?: unknown; GPU_PREFERENCE?: unknown; wallpaper_mode?: unknown; wallpaper_entry_confirmed?: unknown; wallpaper_mac_autohide_dock?: unknown; window_always_on_top_supported?: unknown; }) => void;
+    setDesktopPreferenceSnapshot: (settings: { MINIMIZE_TO_TRAY?: unknown; CLOSE_TO_TRAY?: unknown; HIDE_TASKBAR_ICON?: unknown; REMOTE_CONTROL_SKIP_TASKBAR?: unknown; REMOTE_CONTROL_HIDE_TITLEBAR?: unknown; REMOTE_CONTROL_CLICK_THROUGH?: unknown; REMOTE_CONTROL_EXPAND_COVER?: unknown; VOICE_INPUT_PAUSE_ENABLED?: unknown; PREVENT_DISPLAY_SLEEP_DURING_PLAYBACK?: unknown; MOD_SYSTEM_ENABLED?: unknown; GPU_PREFERENCE?: unknown; BACKGROUND_THROTTLING?: unknown; wallpaper_mode?: unknown; wallpaper_entry_confirmed?: unknown; wallpaper_mac_autohide_dock?: unknown; window_always_on_top_supported?: unknown; }) => void;
     handleToggleMinimizeToTray: (enable: boolean) => void;
     handleToggleCloseToTray: (enable: boolean) => void;
     handleToggleVoiceInputPause: (enable: boolean) => void;
@@ -110,6 +121,7 @@ export type DesktopSettingsState = {
     handleToggleWallpaperMacAutohideDock: (enable: boolean) => void;
     handleToggleOpenPlayerOnLaunch: (enable: boolean) => void;
     handleSetGpuPreference: (preference: GpuPreference) => void;
+    handleToggleBackgroundThrottling: (enable: boolean) => void;
 };
 
 export const useDesktopSettingsStore = create<DesktopSettingsState>((set, get) => ({
@@ -129,6 +141,7 @@ export const useDesktopSettingsStore = create<DesktopSettingsState>((set, get) =
     wallpaperMacAutohideDock: getStoredBoolean(WALLPAPER_MAC_AUTOHIDE_DOCK_STORAGE_KEY, true),
     openPlayerOnLaunch: getStoredBoolean(OPEN_PLAYER_ON_LAUNCH_STORAGE_KEY, false),
     gpuPreference: readGpuPreference(getStoredString(GPU_PREFERENCE_STORAGE_KEY, 'auto')) ?? 'auto',
+    backgroundThrottling: getStoredBoolean(BACKGROUND_THROTTLING_STORAGE_KEY, false),
     windowAlwaysOnTopSupported: true,
     setDesktopPreferenceSnapshot: (settings) => {
         const patch: Partial<DesktopSettingsState> = {};
@@ -189,6 +202,10 @@ export const useDesktopSettingsStore = create<DesktopSettingsState>((set, get) =
         if (gpuPreference) {
             patch.gpuPreference = gpuPreference;
             setStoredString(GPU_PREFERENCE_STORAGE_KEY, gpuPreference);
+        }
+        if (typeof settings.BACKGROUND_THROTTLING === 'boolean') {
+            patch.backgroundThrottling = settings.BACKGROUND_THROTTLING;
+            setStoredBoolean(BACKGROUND_THROTTLING_STORAGE_KEY, settings.BACKGROUND_THROTTLING);
         }
         if (typeof settings.window_always_on_top_supported === 'boolean') {
             patch.windowAlwaysOnTopSupported = settings.window_always_on_top_supported;
@@ -362,6 +379,18 @@ export const useDesktopSettingsStore = create<DesktopSettingsState>((set, get) =
         setStatusMessage({
             type: 'info',
             text: i18n.t('notifications.gpuPreferenceChanged'),
+        });
+    },
+    // The main process owns the value: it switches the window's throttling and tells the renderer.
+    handleToggleBackgroundThrottling: (enable) => {
+        setStoredBoolean(BACKGROUND_THROTTLING_STORAGE_KEY, enable);
+        set({ backgroundThrottling: enable });
+        if (window.electron?.saveSettings) {
+            void window.electron.saveSettings('BACKGROUND_THROTTLING', enable);
+        }
+        setStatusMessage({
+            type: 'info',
+            text: i18n.t('notifications.' + (enable ? 'backgroundThrottlingOn' : 'backgroundThrottlingOff')),
         });
     },
 }));

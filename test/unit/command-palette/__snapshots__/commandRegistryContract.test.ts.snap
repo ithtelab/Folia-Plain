@@ -137,6 +137,7 @@ exports[`command palette registry contract > keeps the registered command order 
   "download-update-mirror",
   "desktop-toggle-voice-input-pause",
   "desktop-toggle-prevent-display-sleep",
+  "desktop-toggle-background-throttling",
   "settings-wallpaper-mode",
   "desktop-toggle-wallpaper-mode",
   "desktop-toggle-wallpaper-dock-autohide",

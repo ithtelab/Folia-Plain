@@ -393,6 +393,15 @@ export const settingsCommands: CommandPaletteCommand[] = [
             return true;
         },
     },
+    createToggleCommand(
+        'desktop-toggle-background-throttling',
+        'settings',
+        'Background throttling',
+        'Toggle throttling rendering and holding the lyric animation while Folia is in the background',
+        ['throttle when hidden', 'pause lyrics when unfocused', 'stop animation in background', 'power saving', '后台节流', '后台暂停歌词', '失焦暂停动画', '省电'],
+        context => context.settings.toggleBackgroundThrottling(),
+        { platform: ['electron'] },
+    ),
     createSettingsCommand('settings-wallpaper-mode', 'Wallpaper mode settings', 'Open wallpaper mode settings', ['wallpaper mode', 'desktop wallpaper', 'lyrics wallpaper', '壁纸模式', '桌面壁纸', '歌词壁纸'], 'options', 'desktop', { platform: ['linux', 'win', 'mac'] }),
     {
         id: 'desktop-toggle-wallpaper-mode',

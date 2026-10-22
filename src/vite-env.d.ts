@@ -855,6 +855,9 @@ declare global {
       /** A display was connected, removed or changed, or the choice changed. */
       onWallpaperDisplaysChanged?: (callback: (state: ElectronWallpaperDisplaysState) => void) => () => void;
       setPlaybackDisplaySleepBlockingActive: (active: boolean) => Promise<boolean>;
+      /** Whether the 后台节流 switch is in force for the main window now: on, and not standing down (wallpaper, always on top, export, OBS). */
+      getBackgroundThrottlingActive?: () => Promise<boolean>;
+      onBackgroundThrottlingChanged?: (callback: (active: boolean) => void) => () => void;
       setAppLocale: (localeKey: 'en' | 'zh-CN' | 'zh-TW' | 'in') => Promise<string>;
       getCacheDirectory: () => Promise<ElectronCacheDirectoryResult>;
       chooseCacheDirectory: () => Promise<ElectronCacheDirectoryResult>;

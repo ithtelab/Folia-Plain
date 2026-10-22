@@ -16,6 +16,7 @@ const { createModSystem } = require('./modSystem/modSystem.cjs');
 const { MOD_PROTOCOL_PRIVILEGED_SCHEME } = require('./modSystem/modProtocol.cjs');
 const { createWindowPlaybackHandoffStore } = require('./windowPlaybackHandoff.cjs');
 const { applyTileMemoryBudget } = require('./tileMemoryBudget.cjs');
+const { BACKGROUND_THROTTLING_SETTING_KEY, createBackgroundThrottling } = require('./backgroundThrottling.cjs');
 const {
   GPU_PREFERENCE_SETTING_KEY,
   applyGpuPreference,
@@ -2236,6 +2237,17 @@ let mainWindowClickThroughUnlockHover = false;
 let mainWindowClickThroughUnlockHoverTimer = null;
 let mainWindowSkipTaskbarEnabled = false;
 let videoExportWindowRestoreState = null;
+// The 后台节流 switch; refresh() wherever one of its stand-down reasons can change.
+const backgroundThrottling = createBackgroundThrottling({
+  isEnabled: () => readStoredBoolean(BACKGROUND_THROTTLING_SETTING_KEY, false),
+  getStandDownReason: () => {
+    if (isWallpaperModeEnabled()) return 'wallpaper mode';
+    if (mainWindowAlwaysOnTop) return 'always on top';
+    if (videoExportWindowRestoreState) return 'video export';
+    if (obsBrowserSourceClients.size > 0) return 'OBS browser source';
+    return null;
+  },
+});
 // Chromium's fragmented MP4 leaves the movie duration at the first fragment (#549); patch it
 // from the fragment timeline once recording ends.
 const videoExportFileWriter = createVideoExportFileWriter({ finalizeFile: finalizeVideoExportFile });
@@ -2422,6 +2434,7 @@ function getPublicSettings() {
     [VOICE_INPUT_PAUSE_ENABLED_SETTING_KEY]: readStoredBoolean(VOICE_INPUT_PAUSE_ENABLED_SETTING_KEY, false),
     [PREVENT_DISPLAY_SLEEP_DURING_PLAYBACK_SETTING_KEY]: readStoredBoolean(PREVENT_DISPLAY_SLEEP_DURING_PLAYBACK_SETTING_KEY, false),
     [MOD_SYSTEM_ENABLED_SETTING_KEY]: readStoredBoolean(MOD_SYSTEM_ENABLED_SETTING_KEY, false),
+    [BACKGROUND_THROTTLING_SETTING_KEY]: readStoredBoolean(BACKGROUND_THROTTLING_SETTING_KEY, false),
     [UPDATE_CHANNEL_SETTING_KEY]: getCurrentReleaseChannel().id,
     'enable_player_page_native_blur': store.get('enable_player_page_native_blur') === true,
     'wallpaper_attach_mode': process.platform === 'win32' ? wallpaperWindowsAttachMode : null,
@@ -2482,6 +2495,7 @@ function buildObsBrowserSourceStatus() {
 }
 
 function broadcastObsBrowserSourceStatus() {
+  backgroundThrottling.refresh();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('obs-browser-source-status-changed', buildObsBrowserSourceStatus());
   }
@@ -2956,6 +2970,7 @@ function setMainWindowAlwaysOnTop(enabled) {
   mainWindowAlwaysOnTop = Boolean(enabled);
   store.set(MAIN_WINDOW_ALWAYS_ON_TOP_SETTING_KEY, mainWindowAlwaysOnTop);
   applyMainWindowAlwaysOnTop();
+  backgroundThrottling.refresh();
   patchRemoteControlSnapshot({
     mainWindowAlwaysOnTop,
   });
@@ -5471,6 +5486,7 @@ function createWindow(options = {}) {
   }
 
   mainWindow = win;
+  backgroundThrottling.attach(win);
   ensureTray();
   setMainWindowSkipTaskbarEnabled(mainWindowSkipTaskbarEnabled);
   // Full initializer, not just applyMainWindowMouseIgnoreState(): when click-through is on at
@@ -6100,6 +6116,10 @@ ipcMain.handle('wallpaper-display-set', (event, displayId) => {
   return setWallpaperDisplayChoice(displayId);
 });
 
+// Whether the 后台节流 switch is in force for the main window right now (on, and not standing down).
+ipcMain.handle('background-throttling-get', (event) => (
+  isTrustedMainWindowContents(event.sender) && backgroundThrottling.isActive()
+));
 ipcMain.handle('playback-display-sleep-set-active', (event, active) => {
   if (!isTrustedMainWindowContents(event.sender)) {
     return false;
@@ -6161,6 +6181,7 @@ ipcMain.handle('save-settings', (event, key, value) => {
     key === VOICE_INPUT_PAUSE_ENABLED_SETTING_KEY ||
     key === PREVENT_DISPLAY_SLEEP_DURING_PLAYBACK_SETTING_KEY ||
     key === MOD_SYSTEM_ENABLED_SETTING_KEY ||
+    key === BACKGROUND_THROTTLING_SETTING_KEY ||
     key === WALLPAPER_MODE_SETTING_KEY ||
     key === WALLPAPER_ENTRY_CONFIRMED_SETTING_KEY ||
     key === WALLPAPER_FORWARD_MOUSE_SETTING_KEY ||
@@ -6170,6 +6191,10 @@ ipcMain.handle('save-settings', (event, key, value) => {
     nextValue = Boolean(value);
   }
   store.set(key, nextValue);
+
+  if (key === BACKGROUND_THROTTLING_SETTING_KEY || key === WALLPAPER_MODE_SETTING_KEY) {
+    backgroundThrottling.refresh();
+  }
 
   if (key === MOD_SYSTEM_ENABLED_SETTING_KEY && modSystem) {
     // Turning the switch off deactivates every running mod immediately rather
@@ -7274,6 +7299,7 @@ ipcMain.handle('video-export-prepare-window', (event, size) => {
       isMaximized: mainWindow.isMaximized(),
       isFullScreen: isMainWindowFullscreen(mainWindow),
     };
+    backgroundThrottling.refresh();
   }
 
   if (isMainWindowFullscreen(mainWindow)) {
@@ -7303,11 +7329,13 @@ ipcMain.handle('video-export-restore-window', (event) => {
 
   if (!mainWindow || mainWindow.isDestroyed() || !videoExportWindowRestoreState) {
     videoExportWindowRestoreState = null;
+    backgroundThrottling.refresh();
     return false;
   }
 
   const restoreState = videoExportWindowRestoreState;
   videoExportWindowRestoreState = null;
+  backgroundThrottling.refresh();
   mainWindow.setBounds(restoreState.bounds, true);
 
   if (restoreState.isFullScreen) {

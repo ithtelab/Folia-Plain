@@ -109,6 +109,12 @@ contextBridge.exposeInMainWorld('electron', {
         return () => ipcRenderer.removeListener('wallpaper-displays-changed', listener);
     },
     setPlaybackDisplaySleepBlockingActive: (active) => ipcRenderer.invoke('playback-display-sleep-set-active', active),
+    getBackgroundThrottlingActive: () => ipcRenderer.invoke('background-throttling-get'),
+    onBackgroundThrottlingChanged: (callback) => {
+        const listener = (_event, active) => callback(active === true);
+        ipcRenderer.on('background-throttling-changed', listener);
+        return () => ipcRenderer.removeListener('background-throttling-changed', listener);
+    },
     setAppLocale: (localeKey) => ipcRenderer.invoke('set-app-locale', localeKey),
     getCacheDirectory: () => ipcRenderer.invoke('get-cache-directory'),
     chooseCacheDirectory: () => ipcRenderer.invoke('choose-cache-directory'),
