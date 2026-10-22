@@ -6,7 +6,7 @@
 
 ## 使用前先确认
 
-- 只从本项目 Releases 页面下载对应版本的 macOS 安装包，例如 `Folia Plain-0.7.23-arm64.dmg`
+- 只从本项目 Releases 页面下载对应版本的 macOS 安装包，例如 `Folia-Plain-0.7.23-macos-arm64.dmg`
 - 先把 `Folia Plain.app` 从 dmg 窗口拖到 `Applications`，不要直接在 dmg 挂载盘里运行
 - 如果下载过程中中断过，先重新下载一次再试
 

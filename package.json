@@ -172,7 +172,7 @@
         }
       ],
       "icon": "build/icon.png",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "artifactName": "Folia-Plain-${version}-macos-${arch}.${ext}"
     },
     "win": {
       "artifactName": "Folia-Plain-${version}-windows-${arch}.${ext}",
