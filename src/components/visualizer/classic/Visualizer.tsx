@@ -14,6 +14,7 @@ import { resolveWordColor } from '../wordColoring';
 import { GlowWord } from '../GlowWord';
 import { getGlowWordLineContainerMotion, resolveGlowWordRenderProfile } from '../glowWordTiming';
 import { buildGlowWordLayoutVariants, glowWordBodyVariants } from '../glowWordVariants';
+import './classicVisualizer.css';
 
 // This mode is the most straightforward lyric pipeline in the folder.
 // First we ask runtime which line is active right now, then read renderHints from that line,
@@ -276,7 +277,10 @@ const Visualizer: React.FC<VisualizerProps> = (props) => {
             return null;
         }
 
-        // Small whole-line breathing motion so the screen never feels fully static between word events.
+        // Small whole-line breathing motion so the screen never feels fully static between word
+        // events. Written as CSS custom properties (classicVisualizer.css) so the loop runs on the
+        // compositor: as a framer loop on this full-screen layer it rewrote an inline transform
+        // every frame for the whole song, which is the steadiest main-thread cost of playback.
         const configByIntensity = {
             calm: { distance: 10, duration: 8.5 },
             normal: { distance: 14, duration: 7 },
@@ -284,19 +288,12 @@ const Visualizer: React.FC<VisualizerProps> = (props) => {
         } as const;
 
         const { distance, duration } = configByIntensity[theme.animationIntensity];
-        const scaledDistance = distance * multiplier;
-
         return {
-            animate: {
-                y: [0, -scaledDistance, 0, scaledDistance * 0.45, 0],
-                scale: [1, 1 + 0.01 * multiplier, 1, 1 - 0.005 * multiplier, 1]
-            },
-            transition: {
-                duration,
-                repeat: Infinity,
-                ease: "easeInOut" as const
-            }
-        };
+            '--line-float-distance': `${(distance * multiplier).toFixed(2)}px`,
+            '--line-float-duration': `${duration}s`,
+            '--line-float-swell': (0.01 * multiplier).toFixed(4),
+            '--line-float-contract': (0.005 * multiplier).toFixed(4),
+        } as React.CSSProperties;
     }, [resolvedClassicTuning.breathingFloatMultiplier, theme.animationIntensity]);
 
     return (
@@ -307,10 +304,9 @@ const Visualizer: React.FC<VisualizerProps> = (props) => {
             sharedProps={props}
         >
             {/* Main Container */}
-            <motion.div
-                className="relative z-10 w-full h-[70vh] flex items-center justify-center p-8 pointer-events-none will-change-transform"
-                animate={lyricContainerFloat?.animate}
-                transition={lyricContainerFloat?.transition}
+            <div
+                className={`relative z-10 w-full h-[70vh] flex items-center justify-center p-8 pointer-events-none${lyricContainerFloat ? ' visualizer-line-float' : ''}`}
+                style={lyricContainerFloat ?? undefined}
             >
                 {/* A line hidden because the text is (a window over the player) only fades: the next line's
                     exit grows and blurs it, and this layer covers most of the screen. */}
@@ -368,7 +364,7 @@ const Visualizer: React.FC<VisualizerProps> = (props) => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </motion.div>
+            </div>
 
             <VisualizerSubtitleOverlay
                 currentTime={currentTime}

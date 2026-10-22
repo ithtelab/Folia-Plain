@@ -44,6 +44,7 @@ import { buildDebugSnapshot } from './components/app/presentation/buildDebugSnap
 import { buildHomeSurfacePresentation } from './components/app/presentation/buildHomeSurfacePresentation';
 import { shouldMountPlayerVisualizer } from './components/app/presentation/playerVisualizerMount';
 import { resolveWallHandoffPresentation } from './components/app/presentation/wallHandoffPresentation';
+import { useHomeReveal } from './components/app/presentation/useHomeReveal';
 import { useWallHandoffDirector } from './components/app/presentation/wallHandoffDirector';
 import WallToolsDockHost from './components/wall/WallToolsDock';
 import { buildPlayerViewFlags } from './components/app/presentation/buildPlayerViewFlags';
@@ -2361,6 +2362,8 @@ export default function App() {
     // it was, for the wall fades in over it.
     const holdsHomeForFlight = useMorphKeepsHost(currentView === 'lattice');
     const isHomeSurfaceRevealed = shouldRevealHomeSurface || holdsHomeForFlight;
+    // The fade starts only once the remounted surface has been painted (see useHomeReveal).
+    const homeReveal = useHomeReveal(isHomeSurfaceRevealed, wallHandoff.active || !visualizerAroundWall.hasWallLeft);
     useEffect(() => {
         if (shouldKeepHomeMounted || holdsHomeForFlight) {
             setIsHomeFullyHidden(false);
@@ -2698,19 +2701,25 @@ export default function App() {
                     visibility: isHomeSurfaceRevealed ? 'visible' : 'hidden',
                     transition: isHomeSurfaceRevealed
                         ? 'visibility 0s linear 0s'
-                        : 'visibility 0s linear 0.25s',
-                    display: isHomeFullyHidden && !wallHandoff.keepsHome ? 'none' : 'block',
+                        : 'visibility 0s linear 0.34s',
+                    // No `display: none` here: a transition cannot start from a display change, and
+                    // Home already renders null once it is put away (isHomeFullyHidden), so this
+                    // element stays an empty box at worst. Keeping it in the box tree is what lets
+                    // the reveal below fade instead of snapping.
                 }}
             >
-                <motion.div
-                    className="absolute inset-0"
-                    initial={false}
-                    animate={{ opacity: isHomeSurfaceRevealed ? 1 : 0 }}
+                {/* The reveal is a CSS transition, not a JS one: remounting Home (and the whole
+                    library surface under it) costs a long frame, and a main-thread opacity animation
+                    jumped across that stall instead of fading through it. Opacity transitions run on
+                    the compositor, so the fade stays smooth while the commit lands. */}
+                <div
+                    className="home-reveal-layer absolute inset-0"
+                    data-home-reveal={homeReveal}
                     // 交接期间不跑整层淡入淡出：进 Lattice 时首页墙保持完全显示，回来时下面的墙要立刻是实的。
                     // Come up from the wall (it has not left the screen yet), Home is shown at
                     // once too: the wall is over it, and is what fades. A fade of both at a time
                     // lets what is under them through.
-                    transition={{ duration: wallHandoff.active || !visualizerAroundWall.hasWallLeft ? 0 : 0.25, ease: 'easeInOut' }}
+                    data-home-reveal-instant={wallHandoff.active || !visualizerAroundWall.hasWallLeft ? '' : undefined}
                 >
                     {currentView === 'home' || currentView === 'player' || wallHandoff.keepsHome || holdsHomeForFlight ? (
                         <Home
@@ -2719,7 +2728,7 @@ export default function App() {
                             isInteractive={shouldShowHomeSurface}
                         />
                     ) : null}
-                </motion.div>
+                </div>
             </div>
 
             <AnimatePresence

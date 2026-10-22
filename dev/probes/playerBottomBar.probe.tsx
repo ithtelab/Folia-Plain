@@ -42,6 +42,7 @@ const PlayerBottomBarProbe: React.FC = () => {
     const [slotHits, setSlotHits] = useState<string[]>([]);
     const [slotPrimary, setSlotPrimary] = useState<PlayerControlSlotActionId>('loop');
     const [slotSecondary, setSlotSecondary] = useState<PlayerControlSlotActionId>('lyrics-timeline');
+    const [currentView, setCurrentView] = useState<'player' | 'lattice'>('player');
     const [offsetMirror, setOffsetMirror] = useState(PLAYER_BOTTOM_BAR_BASE_OFFSET_PX);
     // 控制条自动隐藏：字幕要平滑让位，用例靠采样这段过渡判断有没有动画
     const [chromeHidden, setChromeHidden] = useState(false);
@@ -70,6 +71,7 @@ const PlayerBottomBarProbe: React.FC = () => {
                 <button type="button" data-probe-action="slot-queue" onClick={() => setSlotSecondary('queue')}>slot2=queue</button>
                 <button type="button" data-probe-action="toggle-chrome" onClick={() => setChromeHidden(v => !v)}>toggle chrome</button>
                 <button type="button" data-probe-action="block-commands" onClick={() => setCommandsInvocable(false)}>block commands</button>
+                <button type="button" data-probe-action="view-lattice" onClick={() => setCurrentView('lattice')}>view=lattice</button>
             </div>
 
             {/* 预览里的字幕：不在 Provider 内，必须始终停在默认位置，不受底栏偏移影响 */}
@@ -109,7 +111,7 @@ const PlayerBottomBarProbe: React.FC = () => {
                 currentTime={currentTime}
                 duration={200}
                 loopMode="all"
-                currentView="player"
+                currentView={currentView}
                 audioSrc="probe://audio"
                 canTogglePlay
                 lyrics={null}

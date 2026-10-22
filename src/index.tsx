@@ -4,6 +4,18 @@ import { installConsoleLogCapture } from './utils/consoleLogBuffer';
 import { installDebugModule } from './services/debug/debugModule';
 import { installMemorySampleFeed } from './services/debug/memorySamples';
 // import { installCoverSizeAudit } from './services/debug/coverSizeSamples';
+
+// Development may have an older PWA worker from a previous session. Remove it once so ordinary
+// reloads always use the current Vite modules; production registration is unchanged.
+if (import.meta.env.DEV && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    void navigator.serviceWorker.getRegistrations()
+        .then(registrations => Promise.all(registrations.map(registration => registration.unregister())));
+    if (typeof caches !== 'undefined') {
+        void caches.keys()
+            .then(keys => Promise.all(keys.filter(key => key.startsWith('workbox-')).map(key => caches.delete(key))));
+    }
+}
+
 // @ts-ignore
 globalThis.Buffer = Buffer;
 // First, so the debug overlay's console tab has the startup lines too - they are where a failure

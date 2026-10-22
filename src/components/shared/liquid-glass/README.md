@@ -47,8 +47,13 @@ do not transform, so hit testing, progress gestures and titlebar clearance stay 
 fills settle separately while the existing shared-layout animation moves between tabs.
 
 Spring frames stop when they converge; stationary hover also settles. The separate shader uses
-`flow="ambient"` only for home navigation: slow idle reflections, faster hover/focus
-and press. The bottom player passes `interactive={false}` and `flow="static"`: the original reflection
+`flow="ambient"` only for home navigation: slow idle reflections, faster hover/focus and press.
+One shared 30 Hz audio clock reads the existing analyser MotionValues and drives reflection speed,
+direction swing, distortion, dispersion and position without React renders. Each host gets a stable
+angle from its screen position, so neighbouring surfaces do not move as one texture. Low-frequency
+attacks produce short beat envelopes; mids steer the diagonal travel and highs vary scale and
+softness. `flow="interactive"` surfaces only consume those uniforms while hovered, focused or pressed.
+The bottom player passes `interactive={false}` and `flow="static"`: the original reflection
 is rendered at a fixed shader frame with no animation or pointer/press deformation, including hover
 and dragging. `flow="none"` skips reflection canvases on the unfocused home cards; only the focused
 playlist card gets a frozen reflection. All other hosts default to `flow="interactive"` and stop their shader clock when neither
@@ -62,6 +67,14 @@ The material switch is owned by `useGlassSettingsStore`. Turning it off unmounts
 shader layers and restores classic fills/blur, including the original opaque playlist-card base.
 The choice travels through visual config export/import. GPU hardware acceleration is a separate
 desktop startup preference (`electron/hardwareAcceleration.cjs`); changing it requires a restart.
+
+Repeated cards answer a press with `GlassPressRipple`: two blurred, irregular lobes start at the
+pointer (percentages inside the host, clamped at the edge) and spread past the card's own edge before
+fading. It is DOM-only — one attribute toggle and two CSS custom properties per press, no React
+state, no re-render of the card — and it is hidden while UI micro motion is reduced or the material
+is off. Glass hosts keep every border transparent in all interaction states and draw their edge with
+the optical rim; a `theme-polaroid-card` border that falls back to `currentColor` is a dark hairline
+around the card, so the glass rules pin it to transparent rather than only recolouring it.
 
 Hidden hosts pass `active={false}`. Document visibility and system accessibility changes release
 the optical filter and flow. Observers, media listeners and timers are disposed on unmount. Browser

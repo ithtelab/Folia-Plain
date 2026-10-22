@@ -4,6 +4,7 @@ import { Check, ChevronLeft, Disc, Eye, EyeOff, ListFilter, X } from 'lucide-rea
 import GridPanelToggleIndicator from '../shared/GridPanelToggleIndicator';
 import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
 import AdaptiveGlassSurface from '../../../../components/shared/liquid-glass/AdaptiveGlassSurface';
+import GlassPressRipple from '../../../../components/shared/liquid-glass/GlassPressRipple';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../types';
 import { useFoliaHexViewport } from '../shared/useFoliaHexViewport';
@@ -119,6 +120,7 @@ const MapCard = React.memo<{
 
         return (
             <div
+                data-card-tone={isDaylight ? 'light' : 'dark'}
                 className={`liquid-glass-content-card rounded-xl p-3 flex flex-col items-center border backdrop-blur-md transition-all duration-300 shadow-lg theme-polaroid-card ${
                     isPlaylistSelectionDisabled ? 'cursor-default' : 'cursor-pointer hover:shadow-2xl'
                 } ${isBatchMode && !isBatchSelected ? 'opacity-35 grayscale' : ''}`}
@@ -132,6 +134,7 @@ const MapCard = React.memo<{
                     if (!isPlaylistSelectionDisabled) onSelect();
                 }}
             >
+                <GlassPressRipple enabled={!isPlaylistSelectionDisabled} />
                 {/* Square Polaroid Photo Area */}
                 <div className="w-full aspect-square rounded-lg overflow-hidden bg-zinc-200/60 dark:bg-zinc-800/60 relative shadow-inner flex items-center justify-center shrink-0">
                     {item.coverUrl ? (
@@ -198,7 +201,7 @@ const MapCard = React.memo<{
                 </div>
 
                 {/* Bottom Polaroid Frame Label Details */}
-                <div className="w-full flex-1 flex flex-col justify-between pt-3 text-left min-w-0">
+                <div className="relative z-10 w-full flex-1 flex flex-col justify-between pt-3 text-left min-w-0">
                     <div className="space-y-1 mb-2">
                         <div className="text-xs font-bold tracking-tight opacity-90 max-w-full line-clamp-2 whitespace-normal break-words">
                             {displayName}

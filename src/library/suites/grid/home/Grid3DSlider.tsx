@@ -8,6 +8,7 @@ import { useReducedMotionFor } from '../../../../hooks/useReducedMotionFor';
 import { hasBlockingWindow } from '../../../../utils/keyboardTargets';
 import { CARD_TITLE_ATTR, MORPH_FRAME_ATTR } from '../transitions/gridMorphContract';
 import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
+import GlassPressRipple from '../../../../components/shared/liquid-glass/GlassPressRipple';
 
 // src/library/suites/grid/home/Grid3DSlider.tsx
 // Controlled desktop Grid3D slider shared by Netease, local music, and Navidrome overview surfaces.
@@ -787,7 +788,8 @@ export const Grid3DSlider: React.FC<Grid3DSliderProps> = ({
                                     />
                                 ) : (
                                     <div
-                                        className="rounded-xl border border-white/5 p-4 flex flex-col items-center backdrop-blur-md shadow-lg"
+                                        data-card-tone={isDaylight ? 'light' : 'dark'}
+                                        className="liquid-glass-content-card rounded-xl border border-white/5 p-4 flex flex-col items-center backdrop-blur-md shadow-lg theme-polaroid-card"
                                         style={{ width: coverSize }}
                                     >
                                         <div className="w-full aspect-square rounded-lg animate-pulse bg-zinc-200/20 dark:bg-zinc-800/20 mb-4" />
@@ -853,7 +855,8 @@ export const Grid3DSlider: React.FC<Grid3DSliderProps> = ({
                                             className="liquid-glass-host liquid-glass-card relative rounded-xl border p-4 flex flex-col items-center backdrop-blur-md shadow-lg hover:shadow-2xl theme-polaroid-card"
                                             style={{ width: coverSize }}
                                         >
-                                            <LiquidGlassSurface isDaylight={isDaylight} radius={12} legacy="card" interactive={false} flow={isFocused ? 'static' : 'none'} />
+                                            <LiquidGlassSurface isDaylight={isDaylight} radius={12} legacy="card" interactive={isInteractive} flow={isFocused ? 'static' : 'none'} />
+                                            <GlassPressRipple enabled={isInteractive} />
                                             <div className="w-full aspect-square rounded-lg overflow-hidden bg-zinc-800/20 relative shadow-inner mb-4 flex items-center justify-center">
                                                 {item.coverUrl && loadedIndices.has(index) ? (
                                                     <img src={getSizedCoverUrl(item.coverUrl, coverSize)} alt={typeof displayName === 'string' ? displayName : ''} loading="lazy" decoding="async" className="w-full h-full object-cover pointer-events-none select-none" />
@@ -862,7 +865,7 @@ export const Grid3DSlider: React.FC<Grid3DSliderProps> = ({
                                                 )}
                                             </div>
 
-                                            <div className="w-full text-left pt-2 min-w-0">
+                                            <div className="relative z-10 w-full text-left pt-2 min-w-0">
                                                 <h3 {...{ [CARD_TITLE_ATTR]: '' }} className="font-bold text-sm truncate max-w-full tracking-tight">
                                                     {displayName}
                                                 </h3>

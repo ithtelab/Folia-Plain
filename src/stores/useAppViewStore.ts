@@ -138,7 +138,14 @@ export const useAppViewStore = create<AppViewState>((set, get) => ({
     commandPaletteRequest: { seq: 0, kind: 'filter' },
 
     // A page is in the home view. In the player, or with a wall up, no wall is being left for one.
-    setView: (view) => set(view === 'home' ? { view } : { view, isLatticeLeftForPage: false }),
+    // Coming back to Home also ends its hidden state in the same store write: the layer's fade
+    // starts on this render, and if the content were still `display: none` here it would be mounted
+    // one frame later, under an already running fade — the "blank, then it pops in" flash.
+    setView: (view) => set(
+        view === 'home'
+            ? { view, isHomeFullyHidden: false }
+            : { view, isLatticeLeftForPage: false },
+    ),
     setLatticeSource: (source) => set({ latticeSource: source }),
     setLatticeReturnTileId: (tileId) => set({ latticeReturnTileId: tileId }),
     setIsLatticeLeftForPage: (isLeft) => set({ isLatticeLeftForPage: isLeft }),

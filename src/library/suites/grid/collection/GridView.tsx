@@ -1803,6 +1803,7 @@ export const GridView: React.FC<GridViewProps> = ({
                             ref={standInCardRef}
                             {...{ [MORPH_FRAME_ATTR]: '' }}
                             {...(fullBleedCover ? { [MORPH_TARGET_ATTR]: '' } : {})}
+                            data-card-tone={isDaylight ? 'light' : 'dark'}
                             className={`relative rounded-xl border shadow-lg theme-polaroid-card ${fullBleedCover ? 'overflow-hidden' : 'liquid-glass-content-card p-3'}`}
                             style={{ width: layoutConfig.cardWidth, [fullBleedCover ? 'height' : 'minHeight']: layoutConfig.cardHeight }}
                         >

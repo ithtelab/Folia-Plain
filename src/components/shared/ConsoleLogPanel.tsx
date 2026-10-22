@@ -11,6 +11,7 @@ import {
 } from '../../utils/consoleLogBuffer';
 import { readConsoleLogFilters, writeConsoleLogFilters } from '../../utils/consoleLogFilters';
 import { copyText } from '../../utils/system/clipboard';
+import AdaptiveGlassSurface from './liquid-glass/AdaptiveGlassSurface';
 
 // src/components/shared/ConsoleLogPanel.tsx
 // The session log, narrowed down to the part worth reading. Shared by the player's debug overlay
@@ -296,7 +297,8 @@ export const ConsoleLogPanel: React.FC<ConsoleLogPanelProps> = ({
     // where the switch is.
     if (!capturing) {
         return (
-            <section className={className}>
+            <section data-console-log-panel className={`liquid-glass-adaptive relative ${className}`}>
+                <AdaptiveGlassSurface isDaylight={isDaylight} radius={12} />
                 <div className="px-3 py-3 text-[11px] leading-relaxed opacity-60">
                     Not recording. Nothing from this session can be read back or copied.
                 </div>
@@ -309,7 +311,8 @@ export const ConsoleLogPanel: React.FC<ConsoleLogPanelProps> = ({
     const mutedScopes = scopeCounts.filter(([scope]) => hiddenScopes.has(scope)).length;
 
     return (
-        <section className={className}>
+        <section data-console-log-panel className={`liquid-glass-adaptive relative ${className}`}>
+            <AdaptiveGlassSurface isDaylight={isDaylight} radius={12} />
             <div className="flex items-center justify-between gap-2 px-3 pt-3">
                 <div className="text-[10px] uppercase tracking-[0.16em] opacity-60">
                     Console ({visible.length}

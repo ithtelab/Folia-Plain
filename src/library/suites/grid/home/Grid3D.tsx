@@ -263,7 +263,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // Background style mappings
     const mainBg = isDaylight ? 'bg-white/40' : 'bg-black/20';
     const navPillInactiveText = isDaylight ? 'text-black/60 hover:text-black' : 'text-white/60 hover:text-white';
-    const activeTabBg = isDaylight ? 'text-black font-bold' : 'text-black';
+    const activeTabBg = isDaylight ? 'text-black font-bold' : 'text-white font-bold';
 
     const bottomPadding = currentTrack ? 'pb-28 md:pb-32' : '';
 

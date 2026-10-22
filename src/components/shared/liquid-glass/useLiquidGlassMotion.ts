@@ -8,6 +8,12 @@ export function useLiquidGlassMotion(
     displacementRef: RefObject<SVGFEDisplacementMapElement | null>,
     normalOffsetRef: RefObject<SVGFEOffsetElement | null>,
     active: boolean,
+    /**
+     * The displacement scale at rest. Light glass reads its backdrop at a larger bend than dark
+     * glass needs: the highlights it draws are white, and on a pale backdrop the bend is most of
+     * what makes the pane visible at all (LiquidGlassSurface's tone curve explains the rest).
+     */
+    restScale = 16,
 ) {
     const reduced = useReducedMotionFor('uiMicroMotion');
     useEffect(() => {
@@ -47,7 +53,7 @@ export function useLiquidGlassMotion(
             root.style.setProperty('--glass-pointer-x', `${(50 + x.value * 48).toFixed(2)}%`);
             root.style.setProperty('--glass-pointer-y', `${(50 + y.value * 48).toFixed(2)}%`);
             root.style.setProperty('--glass-energy', clamp(e * 0.85 + p * 0.25 + Math.abs(w), 0, 1).toFixed(4));
-            displacementRef.current?.setAttribute('scale', (16 + e * 9 + p * 12 + Math.abs(w) * 14).toFixed(3));
+            displacementRef.current?.setAttribute('scale', (restScale + e * 9 + p * 12 + Math.abs(w) * 14).toFixed(3));
             normalOffsetRef.current?.setAttribute('dx', (x.value * e * 1.2).toFixed(3));
             normalOffsetRef.current?.setAttribute('dy', (y.value * e * 1.2).toFixed(3));
         };
@@ -194,5 +200,5 @@ export function useLiquidGlassMotion(
             reset();
             delete root.dataset.glassMotion;
         };
-    }, [active, reduced, rootRef, displacementRef, normalOffsetRef]);
+    }, [active, reduced, rootRef, displacementRef, normalOffsetRef, restScale]);
 }

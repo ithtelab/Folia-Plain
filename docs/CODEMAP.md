@@ -44,6 +44,7 @@
 | 64+ | `src/mods/folium/contract.ts` |
 | 64+ | `src/services/db.ts` |
 | 64+ | `src/services/onlineMusic/omni.ts` |
+| 64+ | `src/stores/useAppViewStore.ts` |
 | 64+ | `src/stores/usePlaybackStore.ts` |
 | 64+ | `src/stores/useStatusMessageStore.ts` |
 | 32+ | `dev/probes/definition.ts` |
@@ -63,7 +64,6 @@
 | 32+ | `src/services/onlineMusic/providerRegistry.ts` |
 | 32+ | `src/services/onlineMusic/songMetadata.ts` |
 | 32+ | `src/stores/motionSignals.ts` |
-| 32+ | `src/stores/useAppViewStore.ts` |
 | 32+ | `src/stores/useAudioSettingsStore.ts` |
 | 32+ | `src/stores/useCollectionNavigationStore.ts` |
 | 32+ | `src/stores/useOnlineProviderAccountStore.ts` |
@@ -102,6 +102,7 @@
 - `dev/probes/gridEntrancePerf.probe.tsx`
 - `dev/probes/gridPanelToggle.probe.tsx`
 - `dev/probes/homeBehavior.probe.tsx`
+- `dev/probes/homeGlassCards.probe.tsx`
 - `dev/probes/icuFoliaCompare.probe.tsx`
 - `dev/probes/lattice.probe.tsx`
 - `dev/probes/latticeExit.probe.tsx`
@@ -109,6 +110,7 @@
 - `dev/probes/latticeTitle.probe.tsx`
 - `dev/probes/latticeTitleExpansion.probe.tsx`
 - `dev/probes/libraryBehavior.probe.tsx`
+- `dev/probes/liquidGlass.probe.tsx`
 - `dev/probes/localFolderIgnore.probe.tsx`
 - `dev/probes/loginAccountTab.probe.tsx`
 - `dev/probes/loginHome.probe.tsx`
@@ -128,6 +130,7 @@
 - `dev/probes/playerBarModButtons.probe.tsx`
 - `dev/probes/playerBottomBar.probe.tsx`
 - `dev/probes/playerLayout.probe.tsx`
+- `dev/probes/playlistCollage.probe.tsx`
 - `dev/probes/ponderBravaisSeam.probe.tsx`
 - `dev/probes/ponderHint.probe.tsx`
 - `dev/probes/ponderPageSurfaces.probe.tsx`
@@ -141,6 +144,7 @@
 - `dev/probes/wallToolsIsland.probe.tsx`
 - `dev/probes/wallpaperDisplayRow.probe.tsx`
 - `dev/probes/wallpaperEntryConfirm.probe.tsx`
+- `dev/probes/windowTitlebar.probe.tsx`
 
 ### `src/components/ponder/PonderSurfaceContents.tsx`
 

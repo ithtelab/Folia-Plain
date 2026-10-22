@@ -3234,7 +3234,7 @@ export default {
       },
       "staticGlass": {
         "title": "Kaca jernih, pemutar tetap diam",
-        "description": "Kartu daftar putar, kontrol filter, panel pemutar, pengaturan, dan dialog bersama kini memakai Liquid Glass, dengan lapisan putih lebih tipis pada mode terang serta transisi menu dan panel yang lebih halus. Pemutar mempertahankan buram, pembiasan dan pantulan beku tanpa mengalir saat disorot, ditekan atau diseret."
+        "description": "Kartu daftar putar, kontrol filter, panel pemutar, pengaturan, dan dialog bersama kini memakai Liquid Glass, dengan buram dan lapisan yang lebih tipis sehingga navigasi dan bilah pemutar memperlihatkan apa yang ada di belakangnya; mode terang mendapat warna yang lebih pekat serta tepi atas terang di atas tepi bawah yang redup. Menekan kartu memancarkan dua gelombang cair dari titik tekanan, dan meninggalkan halaman lirik kini memudarkan Beranda dengan halus. Aliran kaca mengikuti kecepatan, arah, dan pembiasan musik, dan setiap kontrol memiliki arahnya sendiri; transisi menu dan panel lebih halus. Pemutar mempertahankan buram, pembiasan dan pantulan beku tanpa mengalir saat disorot, ditekan atau diseret."
       },
       "playerDestination": {
         "title": "Langsung ke layar lirik",

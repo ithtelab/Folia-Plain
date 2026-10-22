@@ -51,6 +51,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     const isDraggingRef = useRef(false);
     const lastDisplayedSecondRef = useRef<number | null>(null);
     const lastInputSecondRef = useRef<number | null>(null);
+    // The last fraction written to the fill; `edgeStyle` changes rebuild the closure below.
+    const lastProgressRef = useRef(-1);
 
     // Keeps continuous progress on the compositor while coarse values update only when needed.
     const updateUI = useCallback((value: number, force = false, syncInput = true, bypassDrag = false) => {
@@ -68,10 +70,15 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         // honest option: the fraction is genuinely unknown until the denominator exists.
         if (progressRef.current && duration > 0) {
             const progress = Math.min(1, clampedValue / duration);
-            const hiddenPercent = ((1 - progress) * 100).toFixed(4);
-            progressRef.current.style.clipPath = edgeStyle === 'square'
-                ? `inset(0 ${hiddenPercent}% 0 0)`
-                : `inset(0 ${hiddenPercent}% 0 0 round 999px)`;
+            // A transform, not a clip-path. `clipPath` invalidates style, layout and paint for the
+            // bar on every frame — measured as the largest per-frame cost of anything on the player
+            // page while a track plays. `scaleX` is handed to the compositor and only touches the
+            // layer. The fill is anchored left and its wrapper clips the rounded silhouette
+            // (see the markup), so the motion and the shape stay what they were.
+            if (progress !== lastProgressRef.current) {
+                progressRef.current.style.transform = `scaleX(${progress.toFixed(5)})`;
+                lastProgressRef.current = progress;
+            }
             // The thumb is invisible unless a mod styles it. Its full-width carrier moves by
             // translateX (percent of its own width = the track), so this stays compositor-only.
             if (thumbRef.current) {
@@ -88,7 +95,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
             inputRef.current.value = clampedValue.toString();
             lastInputSecondRef.current = displayedSecond;
         }
-    }, [duration, edgeStyle]);
+    }, [duration]);
 
     useLayoutEffect(() => {
         updateUI(currentTime.get(), true);
@@ -169,15 +176,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
             >
                 <div
                     ref={progressRef}
-                    className={`absolute top-0 left-0 h-full pointer-events-none bg-[var(--folium-progress-fill)] ${edgeStyle === 'rounded' ? 'rounded-sm md:rounded-full' : ''}`}
+                    className={`absolute top-0 left-0 h-full w-full pointer-events-none origin-left bg-[var(--folium-progress-fill)] ${edgeStyle === 'rounded' ? 'rounded-sm md:rounded-full' : ''}`}
                     data-folium-part="progress.fill"
-                    style={{
-                        width: '100%',
-                        clipPath: edgeStyle === 'square'
-                            ? 'inset(0 100% 0 0)'
-                            : 'inset(0 100% 0 0 round 999px)',
-                        willChange: 'clip-path',
-                    }}
+                    style={{ transform: 'scaleX(0)', willChange: 'transform' }}
                 />
                 <div
                     ref={thumbRef}

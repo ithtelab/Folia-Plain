@@ -72,7 +72,6 @@ interface FloatingPlayerControlsProps {
     onTogglePlay: () => void;
     onToggleLoop: () => void;
     onNavigateToPlayer: () => void;
-    onFocusLatticeCurrentSong?: () => void;
     noTrackText?: string;
     primaryColor?: string;
     secondaryColor?: string;
@@ -107,7 +106,6 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
     onTogglePlay,
     onToggleLoop,
     onNavigateToPlayer,
-    onFocusLatticeCurrentSong,
     noTrackText = 'No Track',
     primaryColor = 'var(--text-primary)',
     secondaryColor = 'var(--text-secondary)',
@@ -314,11 +312,8 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
         if (isPositioning) {
             return;
         }
-        if (currentView !== 'lattice') {
-            onNavigateToPlayer();
-        } else {
-            onFocusLatticeCurrentSong?.();
-        }
+        // The explicit player shortcut always opens lyrics, including from a collage wall.
+        onNavigateToPlayer();
     };
 
     if (hideControlBar) {

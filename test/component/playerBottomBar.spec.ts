@@ -190,6 +190,14 @@ test.describe('capsule navigation', () => {
 
         await expect(page.locator(ROOT)).toHaveAttribute('data-probe-player-navigations', '1');
     });
+
+    test('the capsule opens the lyrics page from a collage wall too', async ({ page }) => {
+        await page.locator('[data-probe-action="view-lattice"]').click();
+        const capsule = page.locator(CAPSULE).first();
+        await capsule.click({ position: { x: 20, y: 2 } });
+
+        await expect(page.locator(ROOT)).toHaveAttribute('data-probe-player-navigations', '1');
+    });
 });
 
 test.describe('bottom subtitle', () => {

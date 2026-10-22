@@ -252,9 +252,12 @@ export default async function viteConfig(_config: ConfigEnv): Promise<UserConfig
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        // Dev keeps no worker: it otherwise serves the previous shell after normal reloads while
+        // styles are being iterated. Production builds still register the generated PWA normally.
+        injectRegister: _config.command === 'serve' ? null : 'auto',
         includeAssets: ['icon.svg', 'icon.png'],
         devOptions: {
-          enabled: true
+          enabled: false
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 5000000,

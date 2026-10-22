@@ -152,6 +152,9 @@ export function usePlaybackVisualizerBridge({
 
         if (hasAudibleSignal && analyserRef.current) {
             const bufferLength = analyserRef.current.frequencyBinCount;
+            // A new array each frame on purpose: `MotionValue.set` compares by reference, so writing
+            // into a shared buffer would notify no subscriber at all. At 1 KB a frame it costs the
+            // GC almost nothing, and the previous frame's array stays valid for anyone holding it.
             const dataArray = new Uint8Array(bufferLength);
             analyserRef.current.getByteFrequencyData(dataArray);
             audioBands.spectrum?.set(dataArray);

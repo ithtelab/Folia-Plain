@@ -1,0 +1,24 @@
+/* src/components/visualizer/classic/classicVisualizer.css */
+/* The line's slow breathing float. It used to be a framer-motion loop on a full-screen layer, which
+   wrote an inline transform every frame for as long as a song played: a main-thread style write
+   plus a repaint of a 70vh box, indefinitely. As a CSS animation the same motion runs on the
+   compositor and costs the main thread nothing between lyric events. The distance and duration
+   still come from the theme's animation intensity and the user's breathing-float multiplier. */
+
+.visualizer-line-float {
+    animation: visualizer-line-float var(--line-float-duration, 7s) ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes visualizer-line-float {
+    0%,
+    100% { transform: translateY(0) scale(1); }
+    20% { transform: translateY(calc(var(--line-float-distance, 14px) * -1)) scale(calc(1 + var(--line-float-swell, 0.01))); }
+    50% { transform: translateY(0) scale(1); }
+    70% { transform: translateY(calc(var(--line-float-distance, 14px) * 0.45)) scale(calc(1 - var(--line-float-contract, 0.005))); }
+}
+
+html[data-reduce-motion~='uiMicroMotion'] .visualizer-line-float {
+    animation: none;
+    will-change: auto;
+}

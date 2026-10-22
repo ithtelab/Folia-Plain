@@ -3234,7 +3234,7 @@ export default {
       },
       "staticGlass": {
         "title": "Clear glass, a still player",
-        "description": "Playlist cards, filter controls, the player panel, settings and shared dialogs now share Liquid Glass, with less whitening in light mode and smoother menu and panel transitions. The player retains blur, refraction and frozen reflections without flowing on hover, press or drag."
+        "description": "Playlist cards, filter controls, the player panel, settings and shared dialogs now share Liquid Glass, with thinner blur and fill so navigation and the player bar show what is behind them; light mode gains a deepened tone and a lit top edge over a shaded lower one. Pressing a card sends two liquid waves out from the pointer, and leaving the lyrics page now fades Home in smoothly. Glass flow follows the music's speed, direction and refraction, and different controls use their own directions; menu and panel transitions are smoother. The player retains blur, refraction and frozen reflections without flowing on hover, press or drag."
       },
       "playerDestination": {
         "title": "Go straight to lyrics",

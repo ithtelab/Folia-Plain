@@ -63,6 +63,21 @@ body {
   from { opacity: 0; }
 }
 
+/* Home's layer over the player. Returning from the lyrics page remounts Home and the whole
+   library surface under it in one long commit, so a main-thread opacity animation jumped across
+   that stall (0.11 → 0.87 in a single frame), which read as a flash. Opacity transitions run on
+   the compositor, so this fade keeps its pace while the commit lands. When it starts is
+   useHomeReveal's: once the remounted surface has painted. `data-home-reveal-instant` keeps the
+   cases that must not fade (a wall still over the layer) on the frame of the view change. */
+.home-reveal-layer {
+  opacity: 0;
+  transition: opacity 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+.home-reveal-layer[data-home-reveal='shown'] { opacity: 1; }
+.home-reveal-layer[data-home-reveal-instant] { transition: none; }
+html[data-reduce-motion~='lattice'] .home-reveal-layer { transition: none; }
+
 :root {
   --scrollbar-track: #18181b;
   --scrollbar-thumb: #3f3f46;

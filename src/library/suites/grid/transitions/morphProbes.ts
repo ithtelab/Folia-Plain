@@ -21,6 +21,12 @@ import {
 } from './gridMorphContract';
 import { settleStandInHandover } from './standInHandover';
 
+/** A card whose edge the Liquid Glass material draws, rather than its own border colour. */
+const isGlassCard = (element: HTMLElement): boolean => (
+    document.documentElement.dataset.liquidGlass === 'on'
+    && (element.classList.contains('theme-polaroid-card') || element.classList.contains('liquid-glass-content-card'))
+);
+
 // src/library/suites/grid/transitions/morphProbes.ts
 // The morph's measuring tape: every rectangle the transition flies is read here,
 // straight off the real DOM, and every attribute name it reads comes from
@@ -102,7 +108,14 @@ const frameOf = (element: HTMLElement | null): CollectionMorphFrame | null => {
         shadow: style.boxShadow,
         // The theme's text colour is a variable on the app's root element, which the carrier
         // (under <body>) is not inside: it is read here, off the card, as a value.
-        edge: style.getPropertyValue('--text-primary').trim() || style.color,
+        //
+        // While Liquid Glass is on, the card's own edge is drawn by its glass rim, and `--text-primary`
+        // is the ink colour: using it as the in-flight outline painted a dark hairline around the
+        // card for the whole flight on a light theme. The glass rim is white, so the carrier lights
+        // its edge with white there too.
+        edge: isGlassCard(element)
+            ? 'rgb(255 255 255 / 0.62)'
+            : (style.getPropertyValue('--text-primary').trim() || style.color),
     };
 };
 

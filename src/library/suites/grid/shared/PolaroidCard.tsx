@@ -5,6 +5,7 @@ import { getSongUnavailableLabel, isSongUnavailable } from '../../../../services
 import { canResolveSongCatalogRef } from '../../../../services/onlineMusic/catalogRefs';
 import { resolveTrackAlbumTargetId } from '../../../core/shared/trackLinks';
 import { CARD_TITLE_ATTR, MORPH_FRAME_ATTR } from '../transitions/gridMorphContract';
+import GlassPressRipple from '../../../../components/shared/liquid-glass/GlassPressRipple';
 import {
     formatCardDuration,
     PolaroidCardActions,
@@ -183,6 +184,7 @@ export const PolaroidCard = React.memo<PolaroidCardProps>(
                     style={{ width: dynamicWidth, height: dynamicHeight }}
                     onClick={handleCardClick}
                 >
+                    <GlassPressRipple />
                     <div className="absolute inset-0 bg-zinc-200/60 dark:bg-zinc-800/60">
                         <PolaroidCardCover item={item} isUnavailable={isUnavailable} spinnerSize={56} />
                     </div>
@@ -256,6 +258,7 @@ export const PolaroidCard = React.memo<PolaroidCardProps>(
         return (
             <div
                 {...{ [MORPH_FRAME_ATTR]: '' }}
+                data-card-tone={isDaylight ? 'light' : 'dark'}
                 className="liquid-glass-content-card rounded-xl p-3 flex flex-col items-center border transition-shadow duration-300 shadow-lg hover:shadow-2xl theme-polaroid-card"
                 style={{
                     width: dynamicWidth,
@@ -264,6 +267,7 @@ export const PolaroidCard = React.memo<PolaroidCardProps>(
                 }}
                 onClick={handleCardClick}
             >
+                <GlassPressRipple />
                 {/* Square Polaroid Photo Area */}
                 <div className="w-full aspect-square rounded-lg overflow-hidden bg-zinc-200/60 dark:bg-zinc-800/60 relative shadow-inner flex items-center justify-center shrink-0">
                     <PolaroidCardCover item={item} isUnavailable={isUnavailable} />
@@ -280,8 +284,10 @@ export const PolaroidCard = React.memo<PolaroidCardProps>(
                     />
                 </div>
 
-                {/* Bottom Polaroid Frame Label Details */}
-                <div className="w-full flex-1 flex flex-col justify-between pt-3 text-left min-w-0">
+                {/* Bottom Polaroid Frame Label Details. Above the press ripple (z-2): the ripple
+                    belongs to the artwork's glass, and a bright wave travelling over the label read
+                    as the text being washed out. */}
+                <div className="relative z-10 w-full flex-1 flex flex-col justify-between pt-3 text-left min-w-0">
                     <div className="space-y-1 mb-2">
                         {/* Title */}
                         <div className="group/song-title relative max-w-full">

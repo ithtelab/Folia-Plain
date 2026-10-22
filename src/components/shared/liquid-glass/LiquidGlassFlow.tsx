@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { liquidMetalFragmentShader, ShaderMount } from '@paper-design/shaders';
 import { PAPER_SHADER_CONTEXT_ATTRIBUTES } from '../../../utils/paperShaderContext';
+import { updatePaperShaderUniforms } from '../../../utils/paperShaderUniforms';
+import {
+    resolveGlassFlowSeed,
+    subscribeGlassAudioFlow,
+    type GlassAudioFrame,
+} from './glassAudioFlow';
 
 // The reference's flowing metallic reflection, confined to the glass rim instead of its content.
 // A blended WebGL sibling makes Chromium skip the backdrop filter below it. Emit translucent
@@ -15,6 +21,8 @@ void main() {
 }
 `;
 
+let flowInstance = 0;
+
 export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interactive' | 'static' }) {
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +30,9 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
         const element = elementRef.current;
         const host = element?.closest<HTMLElement>('.liquid-glass-host');
         if (!element || !host) return;
+        const seed = resolveGlassFlowSeed(host.getBoundingClientRect(), flowInstance++);
+        element.dataset.glassFlowAngle = seed.angle.toFixed(2);
+        element.dataset.glassFlowDirection = seed.direction < 0 ? 'reverse' : 'forward';
         let mount: ShaderMount;
         try {
             // Reuse the installed shader/runtime; no copied WebGL renderer or remote image.
@@ -54,8 +65,36 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
         let focused = host.contains(document.activeElement);
         let pressed = false;
         let windowActive = document.hasFocus();
-        const idleSpeed = mode === 'ambient' ? 0.32 : 0;
-        const update = () => mount.setSpeed(!windowActive ? 0 : pressed ? 2.4 : hovered || focused ? 1 : idleSpeed);
+        let latestAudio: GlassAudioFrame = { time: 0, power: 0, bass: 0, mid: 0, treble: 0, beat: 0 };
+        const moving = () => windowActive && (mode === 'ambient' || pressed || hovered || focused);
+        const speedFor = () => {
+            if (!windowActive) return 0;
+            const musicalLift = latestAudio.power * 0.5 + latestAudio.beat * 0.85;
+            if (pressed) return 2.3 + musicalLift;
+            if (hovered) return 0.9 + musicalLift;
+            if (focused) return 0.62 + musicalLift * 0.6;
+            return mode === 'ambient' ? 0.32 + latestAudio.power * 0.55 + latestAudio.beat * 0.8 : 0;
+        };
+        const update = () => mount.setSpeed(speedFor());
+        const paintAudio = (frame: GlassAudioFrame) => {
+            latestAudio = frame;
+            update();
+            if (!moving()) return;
+            const orbit = frame.time * (0.65 + frame.power * 1.15 + frame.beat * 0.75) + seed.phase;
+            const angleTravel = 5 + frame.power * 13 + frame.beat * 24;
+            const distortion = 0.035 + frame.bass * 0.16 + frame.beat * 0.38 + frame.treble * 0.05;
+            updatePaperShaderUniforms(mount, {
+                u_angle: seed.angle + seed.direction * Math.sin(orbit) * angleTravel + frame.treble * 9,
+                u_distortion: distortion,
+                u_offsetX: seed.offsetX + Math.sin(orbit * 1.17 + seed.phase) * (0.025 + frame.power * 0.045),
+                u_offsetY: seed.offsetY + Math.cos(orbit * 0.91 + seed.phase) * (0.02 + frame.mid * 0.04),
+                u_rotation: seed.rotation + seed.direction * Math.cos(orbit * 0.73) * (1.8 + frame.mid * 5),
+                u_scale: 8 - frame.beat * 0.45 + frame.treble * 0.22,
+                u_shiftRed: 0.3 + frame.beat * 0.16,
+                u_shiftBlue: 0.3 - frame.beat * 0.08,
+                u_softness: 0.5 + frame.treble * 0.035,
+            }, true);
+        };
         const enter = () => { hovered = true; update(); };
         const leave = () => { hovered = false; pressed = false; update(); };
         const down = (event: PointerEvent) => {
@@ -86,8 +125,12 @@ export default function LiquidGlassFlow({ mode }: { mode: 'ambient' | 'interacti
         window.addEventListener('pointerup', up, options);
         window.addEventListener('blur', blurWindow, options);
         window.addEventListener('focus', focusWindow, options);
+        const unsubscribeAudio = subscribeGlassAudioFlow(paintAudio);
         update();
-        return dispose;
+        return () => {
+            unsubscribeAudio();
+            dispose();
+        };
     }, [mode]);
 
     return <div ref={elementRef} className="liquid-glass-flow" data-glass-flow={mode} aria-hidden="true" />;
