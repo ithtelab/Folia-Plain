@@ -3127,6 +3127,25 @@ export default {
     "noDescription": "No description available",
   },
   "releaseNotes": {
+    "v0_8_0": {
+      "intro": "Folia Plain 0.8.0 adds Qishui Music, the Hanabi lyric style and a listening report, and puts your own recent listening first on the explore wall.",
+      "sodaPlatform": {
+        "title": "Qishui Music plays here now",
+        "description": "The desktop app gains Qishui Music: scan to sign in, then search, play and read lyrics, browse the songs and playlists you liked, and open its recommendations and scene radio. Audio comes through the app's own decryption path, not the browser."
+      },
+      "hanabi": {
+        "title": "Hanabi: fireworks that follow the lyrics",
+        "description": "A new lyric style: lines land on bright colour blocks while fireworks and collage stickers bloom along the words, and the whole frame rises shot after shot. The settings offer a render quality tier - drop to balanced or low on an integrated GPU, and lyrics and glow stay full resolution."
+      },
+      "listeningReport": {
+        "title": "Listening report",
+        "description": "Search the command palette for the listening report: how many songs, how many listenings and how long over the last thirty days, a listening calendar, and your most played songs. It reads only what the app already recorded - nothing is sent anywhere."
+      },
+      "exploreOwn": {
+        "title": "Your own listening comes first on explore",
+        "description": "The Bravais wall's explore page now puts Recent plays and Play again ahead of the platform's recommendations, built from what you listened to on this machine, the same on every platform. Those two sections are a snapshot taken when you open the page, so they do not reshuffle while you listen."
+      }
+    },
     "v0_7_0": {
       "intro": "Here are the new features and improvements in version 0.7.0.",
       "temperaVisualExpansion": {

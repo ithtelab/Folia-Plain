@@ -1,4 +1,4 @@
-import { Cpu, Headphones, Layers, Monitor } from 'lucide-react';
+import { BarChart3, Clapperboard, Mic2, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -17,16 +17,16 @@ type NewFeaturesRelease = {
 
 // Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_7_25',
-    // Only what this release actually changed. v0.7.25 shipped five commits after v0.7.24 - the
-    // Windows GPU choice, background throttling, the sign-in persistence fix and the still home
-    // navigation - and an earlier draft of this list repeated four cards from v0.7.24 and named a
-    // macOS download feature that landed after the tag. `test/unit/newFeaturesRelease.test.ts`
-    // now refuses a card id that another release already used.
+    i18nKey: 'releaseNotes.v0_8_0',
+    // What v0.8.0 changed. The cards are the things a listener can notice without being told where
+    // to look; the release notes carry the rest (playback races, lyric clocks, the macOS wallpaper
+    // guard, the remote window's text backing). `test/unit/newFeaturesRelease.test.ts` refuses a
+    // card id another release already used, and requires this list to match the v0_8_0 block in
+    // every locale exactly.
     features: [
-        { id: 'gpuPreference', icon: Cpu },
-        { id: 'backgroundThrottling', icon: Monitor },
-        { id: 'loginKept', icon: Headphones },
-        { id: 'navStill', icon: Layers },
+        { id: 'sodaPlatform', icon: Mic2 },
+        { id: 'hanabi', icon: Clapperboard },
+        { id: 'listeningReport', icon: BarChart3 },
+        { id: 'exploreOwn', icon: Sparkles },
     ],
 };

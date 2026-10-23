@@ -52,13 +52,36 @@ describe('new features release', () => {
             | undefined;
         const currentKey = `v${currentVersion.replace(/\./g, '_')}`;
 
-        /** Card ids of the release one patch version before the current one, when its notes are kept. */
+        /**
+         * Card ids of the newest release before the current one, whatever the bump was: 0.8.0
+         * follows 0.7.25, so counting one patch number down would look for `v0_7_-1` and find
+         * nothing. The previous release is whichever kept block sorts highest below the current
+         * version.
+         */
         const previousIds = (): string[] => {
-            const [major, minor, patch] = currentVersion.split('.').map(Number);
-            if (![major, minor, patch].every(Number.isFinite)) return [];
-            const block = releaseNotes?.[`v${major}_${minor}_${patch - 1}`];
-            if (!block || typeof block !== 'object') return [];
-            return Object.keys(block).filter(key => key !== 'intro');
+            const parse = (key: string) => {
+                const match = /^v(\d+)_(\d+)_(\d+)$/.exec(key);
+                return match ? match.slice(1).map(Number) : null;
+            };
+            const current = parse(currentKey);
+            if (!current) return [];
+            const older = Object.entries(releaseNotes ?? {})
+                .map(([key, block]) => ({ key, version: parse(key), block }))
+                .filter((entry): entry is { key: string; version: number[]; block: Record<string, unknown> } => (
+                    entry.version !== null
+                    && entry.block !== null
+                    && typeof entry.block === 'object'
+                    && (entry.version[0] - current[0]
+                        || entry.version[1] - current[1]
+                        || entry.version[2] - current[2]) < 0
+                ))
+                .sort((one, other) => (
+                    other.version[0] - one.version[0]
+                    || other.version[1] - one.version[1]
+                    || other.version[2] - one.version[2]
+                ));
+            if (older.length === 0) return [];
+            return Object.keys(older[0].block).filter(key => key !== 'intro');
         };
 
         it('reuses no card id from the previous release', () => {

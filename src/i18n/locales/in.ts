@@ -3127,6 +3127,25 @@ export default {
     "noDescription": "Tidak ada deskripsi tersedia"
   },
   "releaseNotes": {
+    "v0_8_0": {
+      "intro": "Folia Plain 0.8.0 menambahkan Qishui Music, gaya lirik Hanabi dan laporan mendengarkan, serta menaruh riwayat Anda sendiri di depan pada dinding jelajah.",
+      "sodaPlatform": {
+        "title": "Qishui Music kini bisa diputar",
+        "description": "Aplikasi desktop mendapat Qishui Music: pindai untuk masuk, lalu cari, putar dan baca lirik, jelajahi lagu dan daftar putar yang Anda sukai, serta buka rekomendasi dan radio suasananya. Audio lewat jalur dekripsi aplikasi sendiri, bukan peramban."
+      },
+      "hanabi": {
+        "title": "Hanabi: kembang api yang mengikuti lirik",
+        "description": "Gaya lirik baru: baris mendarat di blok warna cerah sementara kembang api dan stiker kolase mekar mengikuti kata, dan seluruh bingkai naik dari satu bidikan ke bidikan berikutnya. Pengaturan menyediakan tingkat kualitas render - turunkan ke seimbang atau hemat pada GPU terintegrasi, dan lirik serta cahayanya tetap resolusi penuh."
+      },
+      "listeningReport": {
+        "title": "Laporan mendengarkan",
+        "description": "Cari laporan mendengarkan di palet perintah: berapa lagu, berapa kali diputar dan berapa lama selama tiga puluh hari terakhir, kalender mendengarkan, dan lagu yang paling sering Anda putar. Hanya membaca data yang sudah dicatat aplikasi - tidak ada yang dikirim ke mana pun."
+      },
+      "exploreOwn": {
+        "title": "Riwayat Anda sendiri didahulukan di jelajah",
+        "description": "Halaman jelajah dinding Bravais kini menaruh Baru diputar dan Putar lagi di depan rekomendasi platform, disusun dari apa yang Anda dengarkan di mesin ini, sama di setiap platform. Kedua bagian itu adalah cuplikan saat halaman dibuka, jadi tidak tersusun ulang saat Anda mendengarkan."
+      }
+    },
     "v0_7_0": {
       "intro": "Berikut fitur baru dan peningkatan di versi 0.7.0.",
       "temperaVisualExpansion": {
