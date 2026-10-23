@@ -133,4 +133,12 @@ jobs:
           RELEASE_VERSION: ${{ needs.build.outputs.version }}
         run: |
           (cd release && sha256sum --check SHA256SUMS.txt)
-          gh release create "v$RELEASE_VERSION" release/* --target "$GITHUB_SHA" --title "Folia Plain v$RELEASE_VERSION" --notes-file "docs/releases/v$RELEASE_VERSION.md"
+          # A version can be rebuilt (a fix in the same release): replace that release's assets
+          # instead of failing on the existing tag. Notes and title come from the checked-in file.
+          tag="v$RELEASE_VERSION"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" release/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$tag" --title "Folia Plain $tag" --notes-file "docs/releases/$tag.md" --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" release/* --target "$GITHUB_SHA" --title "Folia Plain $tag" --notes-file "docs/releases/$tag.md" --repo "$GITHUB_REPOSITORY"
+          fi
