@@ -658,6 +658,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         await window.electron?.quitAndInstallUpdate?.();
     };
 
+    // macOS cannot install its own update (unsigned build), so these two stand in for the pair above.
+    const handleDownloadMacInstaller = async () => {
+        if (!window.electron?.downloadMacInstaller) {
+            return;
+        }
+        const status = await window.electron.downloadMacInstaller();
+        setUpdateStatus(status);
+    };
+
+    const handleOpenMacInstaller = async () => {
+        await window.electron?.openMacInstaller?.();
+    };
+
 
     // Navidrome Settings State
     // One truth: this used to be a second copy kept in step with App.tsx's by hand.
@@ -1100,6 +1113,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     onCheckForUpdates: handleCheckForUpdates,
                     onClearAiApiKey: handleClearAiApiKey,
                     onDownloadUpdate: handleDownloadUpdate,
+                    onDownloadMacInstaller: handleDownloadMacInstaller,
+                    onOpenMacInstaller: handleOpenMacInstaller,
                     onInstallUpdate: handleInstallUpdate,
                     onUpdateChannelChange: handleUpdateChannelChange,
                     onSaveElectronSettings: saveElectronSettings,

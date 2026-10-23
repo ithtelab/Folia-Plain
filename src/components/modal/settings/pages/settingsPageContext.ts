@@ -149,6 +149,10 @@ export type SettingsPageContextValue = {
                 /** Removes a saved key from the main process at once. */
                 onClearAiApiKey: (key: AiApiKeyName) => Promise<void> | void;
                 onDownloadUpdate: () => Promise<void> | void;
+                /** macOS: fetch the dmg into Downloads (the app cannot install it itself). */
+                onDownloadMacInstaller: () => Promise<void> | void;
+                /** macOS: open the downloaded dmg so the listener can drag the app over. */
+                onOpenMacInstaller: () => Promise<void> | void;
                 onInstallUpdate: () => Promise<void> | void;
                 onUpdateChannelChange: (channel: 'realeco' | 'limo' | 'cielo') => Promise<void> | void;
                 onSaveElectronSettings: () => Promise<void> | void;

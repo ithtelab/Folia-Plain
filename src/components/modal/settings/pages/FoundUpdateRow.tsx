@@ -33,14 +33,21 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
     const autoUpdateSupported = Boolean(updateStatus?.autoUpdateSupported);
     const isDownloading = updateStatus?.status === 'downloading';
     const isDownloaded = updateStatus?.status === 'downloaded';
+    // macOS: the app fetches the dmg and opens it; dragging the app over is the listener's step.
+    const assistedUpdateSupported = Boolean(updateStatus?.assistedUpdateSupported);
+    const hasMacInstaller = Boolean(updateStatus?.manualInstallerPath);
     const isLinuxBuild = updateStatus?.platform === 'linux';
     const offersMirror = updateStatus?.platform === 'win32';
+    const macInProgress = assistedUpdateSupported && isDownloading && !hasMacInstaller;
+    const macFinished = assistedUpdateSupported && hasMacInstaller;
     // What a found version needs from the listener where the app cannot update itself.
-    const manualNotice = updateStatus?.platform === 'darwin'
-        ? t('options.macManualUpdateNotice')
-        : isLinuxBuild
-            ? t('options.linuxManualUpdateNotice')
-            : autoUpdateSupported ? null : t('options.manualUpdateNotice');
+    const manualNotice = assistedUpdateSupported
+        ? t('options.macAssistedUpdateNotice')
+        : updateStatus?.platform === 'darwin'
+            ? t('options.macManualUpdateNotice')
+            : isLinuxBuild
+                ? t('options.linuxManualUpdateNotice')
+                : autoUpdateSupported ? null : t('options.manualUpdateNotice');
 
     const sources = [
         ...(offersMirror ? [
@@ -104,6 +111,21 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
                 )}
                 {autoUpdateSupported && isDownloaded && (
                     <Button variant="primary" onClick={() => void update.onInstallUpdate()}>{t('options.restartToInstallUpdate')}</Button>
+                )}
+                {macInProgress && (
+                    <Progress value={percent / 100}>
+                        {t('options.downloadingProgress', { percent: Math.round(percent) })}
+                    </Progress>
+                )}
+                {assistedUpdateSupported && !hasMacInstaller && !isDownloading && (
+                    <Button variant="primary" onClick={() => void update.onDownloadMacInstaller()}>
+                        {t('options.downloadToDownloads')}
+                    </Button>
+                )}
+                {macFinished && (
+                    <Button variant="primary" onClick={() => void update.onOpenMacInstaller()}>
+                        {t('options.openDownloadedInstaller')}
+                    </Button>
                 )}
             </Row>
         </Reveal>

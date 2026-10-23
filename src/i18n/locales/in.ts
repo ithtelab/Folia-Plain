@@ -3044,6 +3044,9 @@ export default {
     "goToGithubRelease": "Buka halaman rilis GitHub",
     "chinaDownloadHint": "Akselerasi Tiongkok memakai relay pihak ketiga GH-Proxy untuk pemasang GitHub proyek ini. Unduhan langsung GitHub tetap tersedia.",
     "macManualUpdateNotice": "Catatan: macOS memerlukan pengunduhan installer lengkap secara manual untuk memperbarui.",
+    "macAssistedUpdateNotice": "Catatan: installer diunduh ke folder Unduhan; buka lalu seret aplikasi ke Applications untuk menyelesaikan.",
+    "downloadToDownloads": "Simpan ke Unduhan",
+    "openDownloadedInstaller": "Buka installer yang diunduh",
     "linuxManualUpdateNotice": "Di Linux, unduh paket lengkap deb, rpm, atau tar.gz proyek ini dan perbarui secara manual.",
     "manualUpdateNotice": "Catatan: Pembaruan otomatis tidak didukung di platform ini. Silakan unduh paket secara manual.",
     "unofficialBuildNotice": "Build lokal atau pihak ketiga: versi ini tidak dirilis oleh CI repositori Folia Plain. Hubungi penyedianya terlebih dahulu; gunakan repositori GitHub fork ini untuk masalah dan rilis.",
@@ -3298,6 +3301,10 @@ export default {
       "playerDestination": {
         "title": "Bilah pemutar langsung ke lirik",
         "description": "Menekan bilah pemutar bawah langsung membuka halaman lirik, sementara tombol antrean dan preferensi pemutaran tetap seperti semula. Esc keluar dari layar penuh jendela; penunjuk disembunyikan setelah sekitar 3 detik diam dan kembali saat digerakkan."
+      },
+      "macUpdate": {
+        "title": "macOS mengunduh pembaruan dengan sekali klik",
+        "description": "Versi macOS tidak ditandatangani, jadi tidak bisa memasang pembaruan sendiri, tetapi bisa menyimpan installer langsung ke folder Unduhan: tekan “Simpan ke Unduhan”, lalu “Buka installer yang diunduh”, dan seret aplikasi ke Applications. Unduhan diverifikasi dengan checksum rilis."
       },
       "musicAccount": {
         "title": "Tingkat keanggotaan dan masa berlaku",

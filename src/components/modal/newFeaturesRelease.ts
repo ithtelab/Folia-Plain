@@ -22,6 +22,7 @@ export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
         { id: 'gpuPreference', icon: Cpu },
         { id: 'backgroundThrottling', icon: Monitor },
         { id: 'loginKept', icon: Headphones },
+        { id: 'macUpdate', icon: Monitor },
         { id: 'glassChoice', icon: Layers },
         { id: 'staticGlass', icon: Sparkles },
         { id: 'playerDestination', icon: ArrowUpRight },

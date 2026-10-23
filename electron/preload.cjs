@@ -126,6 +126,8 @@ contextBridge.exposeInMainWorld('electron', {
     openUpdateReleasePage: (version) => ipcRenderer.invoke('updates-open-release-page', version),
     openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),
     downloadUpdate: () => ipcRenderer.invoke('updates-download'),
+    downloadMacInstaller: () => ipcRenderer.invoke('updates-download-mac-installer'),
+    openMacInstaller: () => ipcRenderer.invoke('updates-open-mac-installer'),
     quitAndInstallUpdate: () => ipcRenderer.invoke('updates-quit-and-install'),
     onUpdateStatusChanged: (callback) => {
         const listener = (_event, status) => callback(status);

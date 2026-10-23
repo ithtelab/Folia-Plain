@@ -3044,6 +3044,9 @@ export default {
     "goToGithubRelease": "Go to GitHub release page",
     "chinaDownloadHint": "China acceleration uses the third-party GH-Proxy relay for this project’s GitHub installer. Direct GitHub downloads remain available.",
     "macManualUpdateNotice": "Note: macOS requires downloading the full installer manually to update.",
+    "macAssistedUpdateNotice": "Note: the installer downloads to your Downloads folder; open it and drag the app into Applications to finish.",
+    "downloadToDownloads": "Save to Downloads",
+    "openDownloadedInstaller": "Open downloaded installer",
     "linuxManualUpdateNotice": "On Linux, download this project’s complete deb, rpm or tar.gz package and upgrade manually.",
     "manualUpdateNotice": "Note: Automatic update is not supported on this platform. Please download the package manually.",
     "unofficialBuildNotice": "Local or third-party build: this version was not released by the Folia Plain repository's CI. Contact its provider first; use this fork's GitHub repository for issues and releases.",
@@ -3298,6 +3301,10 @@ export default {
       "playerDestination": {
         "title": "The player bar goes straight to lyrics",
         "description": "Pressing the bottom player bar opens the lyrics page directly, while the queue button and your playback preference stay as they were. Esc leaves window fullscreen; the pointer hides after about 3 seconds still and returns as soon as you move."
+      },
+      "macUpdate": {
+        "title": "macOS downloads its update in one click",
+        "description": "The macOS build is unsigned, so it cannot install an update itself, but it can save the installer straight to your Downloads folder: press “Save to Downloads”, then “Open downloaded installer”, and drag the app into Applications. The download is checked against the release checksums."
       },
       "musicAccount": {
         "title": "Membership level and expiry",

@@ -3045,6 +3045,9 @@ export default {
     "goToGithubRelease": "前往Github下载页",
     "chinaDownloadHint": "国内加速由第三方 GH-Proxy 提供，只转发本项目的 GitHub 安装包；也可以选择 GitHub 直连。",
     "macManualUpdateNotice": "提示：macOS 版本需要下载完整安装包手动覆盖更新。",
+    "macAssistedUpdateNotice": "提示：点击后安装包会下载到「下载」文件夹，打开后把应用拖进「应用程序」完成升级。",
+    "downloadToDownloads": "下载到「下载」",
+    "openDownloadedInstaller": "打开已下载的安装包",
     "linuxManualUpdateNotice": "Linux 请从本项目下载完整的 deb、rpm 或 tar.gz 包手动升级。",
     "manualUpdateNotice": "提示：当前平台暂不支持自动更新，请下载安装包手动覆盖更新。",
     "unofficialBuildNotice": "本地或第三方构建：此版本并非由 Folia Plain 仓库的 CI 发布。请先联系构建提供者，问题反馈与发行版请使用本分支的 GitHub 仓库。",
@@ -3298,6 +3301,10 @@ export default {
       "playerDestination": {
         "title": "播放条直达歌词海报",
         "description": "点击底部播放条直接进入歌词页，队列按钮与歌单偏好各自保留。Esc 可退出窗口全屏；全屏中鼠标静止约 3 秒后隐藏，操作后立即恢复。"
+      },
+      "macUpdate": {
+        "title": "macOS 一键下载更新包",
+        "description": "macOS 版本没有开发者签名，装不了自动更新，但可以直接把安装包下到「下载」文件夹：检测到新版本后点“下载到「下载」”，再点“打开已下载的安装包”，把应用拖进「应用程序」即可。下载会对照发布页的校验和验证。"
       },
       "musicAccount": {
         "title": "会员等级与到期日期",

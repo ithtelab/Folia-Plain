@@ -16,6 +16,7 @@ const { createModSystem } = require('./modSystem/modSystem.cjs');
 const { MOD_PROTOCOL_PRIVILEGED_SCHEME } = require('./modSystem/modProtocol.cjs');
 const { createWindowPlaybackHandoffStore } = require('./windowPlaybackHandoff.cjs');
 const { applyTileMemoryBudget } = require('./tileMemoryBudget.cjs');
+const { downloadMacUpdate } = require('./macUpdateDownload.cjs');
 const { BACKGROUND_THROTTLING_SETTING_KEY, createBackgroundThrottling } = require('./backgroundThrottling.cjs');
 const {
   GPU_PREFERENCE_SETTING_KEY,
@@ -3723,6 +3724,12 @@ const updateState = {
   downloadProgress: null,
   repository: productIdentity.repository,
   downloadSource: null,
+  /**
+   * macOS only: the installer this build fetched into Downloads for the listener to open by hand
+   * (macUpdateDownload.cjs). null until one has been downloaded; cleared when another version is
+   * found, because that installer is no longer the update on offer.
+   */
+  manualInstallerPath: null,
 };
 let updateDownloadSource = 'mirror';
 let plainUpdateProvider = null;
@@ -3750,6 +3757,8 @@ function getUpdateStatus() {
     autoUpdateEnabled: getAutoUpdateEnabled(),
     autoUpdateSupported: isDevPreview || isAutoUpdaterSupported(),
     autoUpdateSupportReason: isDevPreview ? null : getAutoUpdateSupportReason(),
+    /** macOS without a signing identity: the app can fetch the installer, the listener installs it. */
+    assistedUpdateSupported: process.platform === 'darwin' && isPackagedUpdateRuntime() && getUpdateCheckEnabled(),
     lastSeenVersion: store.get(LAST_SEEN_UPDATE_VERSION_SETTING_KEY) || null,
     updateSeen: Boolean(
       availableVersion &&
@@ -3917,6 +3926,87 @@ async function downloadAvailableUpdate() {
   }
 
   return getUpdateStatus();
+}
+
+/** The downloads folder macOS offers in the Finder sidebar; created by the OS on first use. */
+function getMacDownloadsDirectory() {
+  try {
+    return app.getPath('downloads');
+  } catch {
+    return path.join(app.getPath('home'), 'Downloads');
+  }
+}
+
+/**
+ * macOS: fetch the release's dmg into Downloads so the listener can open it (macUpdateDownload.cjs).
+ *
+ * This is not an installation path — Squirrel.Mac needs a signed app, and an unsigned build cannot
+ * replace itself. The download is still checked against the release's SHA256SUMS.txt, so what lands
+ * in Downloads is the file the release published.
+ */
+async function downloadMacInstaller() {
+  if (process.platform !== 'darwin') {
+    return getUpdateStatus();
+  }
+  if (!updateState.availableVersion) {
+    await checkForUpdates({ manual: true });
+  }
+  const target = updateState.availableVersion;
+  if (!target) return getUpdateStatus();
+  if (updateState.status === 'downloading') return getUpdateStatus();
+
+  setUpdateState({
+    status: 'downloading',
+    error: null,
+    downloadProgress: { percent: 0 },
+    manualInstallerPath: null,
+  });
+  try {
+    // A partition of its own, like the check: refreshing the proxy must not touch playback.
+    const ses = session.fromPartition('folia-update-check');
+    await ses.setProxy({ mode: 'system' });
+    await ses.forceReloadProxyConfig();
+    const result = await downloadMacUpdate({
+      version: target,
+      arch: process.arch,
+      downloadsDirectory: getMacDownloadsDirectory(),
+      releaseBaseUrl: `https://github.com/${productIdentity.repository}/releases`,
+      fetchBytes: (url, options) => ses.fetch(url, { ...options, redirect: 'follow' }),
+      onProgress: (fraction) => {
+        setUpdateState({ downloadProgress: fraction === null ? null : { percent: Math.round(fraction * 100) } });
+      },
+    });
+    setUpdateState({
+      status: 'downloaded',
+      error: null,
+      downloadProgress: { percent: 100 },
+      manualInstallerPath: result.path,
+    });
+    console.log(`[Updater] Saved the macOS installer to ${result.path}`);
+  } catch (error) {
+    console.warn('[Updater] The macOS installer could not be downloaded', error);
+    setUpdateState({
+      status: 'error',
+      error: error instanceof Error ? error.message : String(error),
+      downloadProgress: null,
+    });
+  }
+  return getUpdateStatus();
+}
+
+/** Opens the installer saved for manual installation. */
+async function openMacInstaller() {
+  const installerPath = updateState.manualInstallerPath;
+  if (!installerPath) return false;
+  // Someone who moved or deleted it lands in Downloads rather than on a silent no-op.
+  try {
+    await fs.promises.stat(installerPath);
+  } catch {
+    setUpdateState({ manualInstallerPath: null });
+    await shell.openPath(getMacDownloadsDirectory());
+    return false;
+  }
+  return (await shell.openPath(installerPath)) === '';
 }
 
 async function checkForUpdates({ manual = false } = {}) {
@@ -6542,6 +6632,15 @@ ipcMain.handle('open-external-url', (event, url) => {
 
 ipcMain.handle('updates-download', () => {
   return downloadAvailableUpdate();
+});
+
+// macOS: fetch the dmg into Downloads, and open it when the listener asks.
+ipcMain.handle('updates-download-mac-installer', () => {
+  return downloadMacInstaller();
+});
+
+ipcMain.handle('updates-open-mac-installer', () => {
+  return openMacInstaller();
 });
 
 ipcMain.handle('updates-quit-and-install', () => {

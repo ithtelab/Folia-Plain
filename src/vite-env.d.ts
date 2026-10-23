@@ -411,6 +411,14 @@ declare global {
     autoUpdateEnabled: boolean;
     autoUpdateSupported: boolean;
     autoUpdateSupportReason?: 'system' | 'channel' | null;
+    /**
+     * macOS only: this build cannot replace itself (Squirrel.Mac needs a signed app), but it can
+     * fetch the release's dmg into Downloads for the listener to open. The update UI offers that
+     * instead of the download/restart buttons.
+     */
+    assistedUpdateSupported?: boolean;
+    /** The installer saved for manual installation, once one has been downloaded. */
+    manualInstallerPath?: string | null;
     currentVersion: string;
     availableVersion: string | null;
     updateUrl: string | null;
@@ -875,6 +883,10 @@ declare global {
       openUpdateReleasePage: (version?: string | null) => Promise<boolean>;
       openExternalUrl: (url: string) => Promise<boolean>;
       downloadUpdate: () => Promise<ElectronUpdateStatus>;
+      /** macOS: fetches the release dmg into Downloads and answers the new status. */
+      downloadMacInstaller: () => Promise<ElectronUpdateStatus>;
+      /** macOS: opens the downloaded dmg (or Downloads when it is gone). */
+      openMacInstaller: () => Promise<boolean>;
       quitAndInstallUpdate: () => Promise<boolean>;
       onUpdateStatusChanged: (callback: (status: ElectronUpdateStatus) => void) => () => void;
       getAudioCache: (cacheKey: string) => Promise<ElectronAudioCacheEntry>;
