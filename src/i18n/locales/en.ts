@@ -245,6 +245,7 @@ export default {
     "wallpaperModeOn": "Wallpaper mode enabled",
     "wallpaperModeOff": "Wallpaper mode disabled",
     "macWallpaperInputMonitoringNeeded": "Wallpaper mode needs Input Monitoring: allow Folia in System Settings → Privacy & Security → Input Monitoring, then toggle wallpaper mode again",
+    "macWallpaperAccessibilitySuggested": "With Stage Manager on, a click on the wallpaper also counts as a desktop click and moves your windows aside. Allow Folia in System Settings → Privacy & Security → Accessibility, then restart Folia, to stop that; desktop icons stay clickable",
     "macWallpaperAutohideDockOn": "Auto-hide Dock enabled",
     "macWallpaperAutohideDockOff": "Auto-hide Dock disabled",
     "voiceInputPauseOn": "Pause on voice input enabled",

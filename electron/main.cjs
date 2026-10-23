@@ -48,6 +48,14 @@ const { createWindowsWallpaperTargetResolver } = require('./wallpaper/windowsWal
 const { createWindowsWallpaperMouseInjector } = require('./wallpaper/windowsWallpaperMouse.cjs');
 const macWallpaperModule = require('./wallpaper/macWallpaperController.cjs');
 const {
+  MAX_HIT_PANELS,
+  coversWholeWallpaper,
+  createMacWallpaperHitPanels,
+  readStageManagerDesktop,
+  toScreenHitRects,
+} = require('./wallpaper/macWallpaperHitPanels.cjs');
+const { createMacDesktopClickGuard, isAccessibilityTrusted } = require('./wallpaper/macDesktopClickGuard.cjs');
+const {
   WALLPAPER_DISPLAY_SETTING_KEY,
   normalizeWallpaperDisplayChoice,
   resolveWallpaperDisplay,
@@ -339,6 +347,9 @@ const WALLPAPER_ZGUARD_SETTING_KEY = 'wallpaper_zguard';
 // disables even a bottom Dock. Exiting wallpaper mode or quitting restores the user's original Dock
 // state either way.
 const WALLPAPER_MAC_AUTOHIDE_DOCK_SETTING_KEY = 'wallpaper_mac_autohide_dock';
+// Set once Folia has asked macOS for the Accessibility grant (issue #698), so a user who declined
+// is not asked again on every launch.
+const WALLPAPER_MAC_ACCESSIBILITY_ASKED_KEY = 'wallpaper_mac_accessibility_asked';
 
 // Thin wrappers over electron/wallpaper/wallpaperWatchdog.cjs so the call sites across the file keep their
 // existing signatures while the predicates stay a single source of truth in the module.
@@ -987,6 +998,21 @@ let macWallpaperEnterPollElapsed = 0;
 let macWallpaperEnterPollTimer = null;
 let macWallpaperSettleTimer = null;
 let macWallpaperSettleAttempts = 0;
+// Click catchers over the wallpaper's controls, so a click on them never reaches Finder's desktop
+// and Stage Manager does not react to it (issue #698; macWallpaperHitPanels.cjs). The renderer
+// reports the controls' rects (viewport CSS px).
+let macWallpaperHitPanelsInstance = null;
+let macWallpaperHitRects = [];
+// Stage Manager (issue #698). With the desktop items hidden while it is on: one catcher over the
+// whole wallpaper (macWallpaperHitPanels.cjs), no grant needed. With the icons shown: the click
+// guard library (macDesktopClickGuard.cjs) once Folia holds the Accessibility grant, else the
+// catchers over the controls only and a one-time hint. Stage Manager's settings and the grant are
+// re-read on a slow timer while the wallpaper takes input, so changes apply without a restart.
+let macWallpaperStageState = { enabled: false, hidesDesktopItems: false, trusted: false };
+let macWallpaperStageManagerTimer = null;
+let macWallpaperClickGuardInstance = null;
+let macWallpaperAccessibilityHinted = false;
+const MAC_WALLPAPER_STAGE_MANAGER_POLL_MS = 3000;
 const MAC_WALLPAPER_TAP_RETRY_DELAY_MS = 2000;
 const MAC_WALLPAPER_TAP_FAILURE_THRESHOLD = 3;
 const MAC_WALLPAPER_DRAG_FLUSH_MS = 16;
@@ -1145,6 +1171,9 @@ function scheduleMacWallpaperFrameSettleVerify() {
     } catch (error) {
       // ignore
     }
+    // The window may have moved to another display at the same size: the renderer reports no new
+    // rects then, so the catchers follow the frame here.
+    syncMacWallpaperHitPanels();
   }, MAC_WALLPAPER_FRAME_SETTLE_DELAY_MS);
 }
 
@@ -1483,6 +1512,8 @@ function exitMacWallpaperMode() {
   }
   const wasActive = isMacWallpaperActive;
   isMacWallpaperActive = false;
+  macWallpaperHitRects = [];
+  syncMacWallpaperHitPanels(); // takes the click catchers down
   if (!mainWindow || mainWindow.isDestroyed()) {
     macWallpaperSavedState = null;
     if (wasActive) {
@@ -1722,6 +1753,9 @@ function startMacWallpaperInteraction() {
       // ignore
     }
     isMacWallpaperInteractionEnabled = false;
+    // The grant may have been revoked mid-session: catchers without a tap would leave the
+    // controls dead to every click.
+    syncMacWallpaperHitPanels();
     notifyMacWallpaperInputMonitoringNeeded();
     return false;
   }
@@ -1733,6 +1767,7 @@ function startMacWallpaperInteraction() {
       console.warn('[WallpaperMac] event tap keeps failing, wallpaper is now non-interactive');
       isMacWallpaperInteractionEnabled = false;
       controller.stop();
+      syncMacWallpaperHitPanels();
       notifyMacWallpaperInputMonitoringNeeded();
       return false;
     }
@@ -1750,6 +1785,7 @@ function startMacWallpaperInteraction() {
     return false;
   }
   macWallpaperTapFailures = 0;
+  syncMacWallpaperHitPanels();
   return true;
 }
 
@@ -1762,6 +1798,134 @@ function stopMacWallpaperInteraction() {
     } catch (error) {
       // ignore
     }
+  }
+  syncMacWallpaperHitPanels();
+}
+
+function getMacWallpaperHitPanels(controller) {
+  if (!macWallpaperHitPanelsInstance) {
+    macWallpaperHitPanelsInstance = createMacWallpaperHitPanels({
+      // One above the Finder icons (the wallpaper sits one below them): above the desktop,
+      // below every normal window, the Dock and the menu bar.
+      level: controller.desktopLevel() + 2,
+      primaryHeight: () => screen.getPrimaryDisplay().bounds.height,
+    });
+  }
+  return macWallpaperHitPanelsInstance;
+}
+
+// Puts the click catchers over the controls the renderer last reported (or one over the whole
+// wallpaper while Stage Manager hides the desktop items), or takes them all down.
+// They are only up while the tap runs: a catcher takes the click away from Finder, and only the
+// tap hands it on to the wallpaper, so without it the controls would go dead.
+function syncMacWallpaperHitPanels() {
+  if (process.platform !== 'darwin') {
+    return;
+  }
+  const controller = getMacWallpaperController();
+  const live = isMacWallpaperActive
+    && isMacWallpaperInteractionEnabled
+    && !macWallpaperPendingEnter
+    && controller
+    && controller.isRunning()
+    && mainWindow
+    && !mainWindow.isDestroyed();
+  if (!live) {
+    if (macWallpaperStageManagerTimer) {
+      clearInterval(macWallpaperStageManagerTimer);
+      macWallpaperStageManagerTimer = null;
+    }
+    if (macWallpaperClickGuardInstance) {
+      macWallpaperClickGuardInstance.stop();
+    }
+    if (macWallpaperHitPanelsInstance) {
+      macWallpaperHitPanelsInstance.clear();
+    }
+    return;
+  }
+  if (!macWallpaperStageManagerTimer) {
+    macWallpaperStageState = readMacWallpaperStageState();
+    macWallpaperStageManagerTimer = setInterval(() => {
+      const next = readMacWallpaperStageState();
+      const prev = macWallpaperStageState;
+      if (next.enabled !== prev.enabled || next.hidesDesktopItems !== prev.hidesDesktopItems || next.trusted !== prev.trusted) {
+        macWallpaperStageState = next;
+        syncMacWallpaperHitPanels();
+      }
+    }, MAC_WALLPAPER_STAGE_MANAGER_POLL_MS);
+    if (typeof macWallpaperStageManagerTimer.unref === 'function') {
+      macWallpaperStageManagerTimer.unref();
+    }
+  }
+  try {
+    const bounds = mainWindow.getBounds();
+    const frame = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+    const stage = macWallpaperStageState;
+    const coversWhole = coversWholeWallpaper(stage);
+    const wantsGuard = stage.enabled && !stage.hidesDesktopItems;
+    let guardRunning = false;
+    if (wantsGuard && stage.trusted) {
+      guardRunning = getMacWallpaperClickGuard().start(frame);
+    } else if (macWallpaperClickGuardInstance) {
+      macWallpaperClickGuardInstance.stop();
+    }
+    // Granted while Folia was running: macOS can report the grant but refuse the tap until Folia
+    // restarts. Same one-time hint, which says to restart Folia.
+    const staleGrant = wantsGuard && stage.trusted && !guardRunning
+      && macWallpaperClickGuardInstance?.lastFailure() === 'tap-failed';
+    if (staleGrant && !macWallpaperAccessibilityHinted) {
+      macWallpaperAccessibilityHinted = true;
+      notifyMacWallpaperAccessibilitySuggested();
+    }
+    if (wantsGuard && !stage.trusted && !macWallpaperAccessibilityHinted
+      && store.get(WALLPAPER_MAC_ACCESSIBILITY_ASKED_KEY) !== true) {
+      macWallpaperAccessibilityHinted = true;
+      store.set(WALLPAPER_MAC_ACCESSIBILITY_ASKED_KEY, true);
+      getMacWallpaperClickGuard().requestAccess();
+      notifyMacWallpaperAccessibilitySuggested();
+    }
+    const rects = coversWhole
+      ? [frame]
+      : toScreenHitRects(macWallpaperHitRects, bounds, mainWindow.webContents.getZoomFactor());
+    getMacWallpaperHitPanels(controller).apply(rects);
+  } catch (error) {
+    console.warn('[WallpaperMac] hit panel sync failed:', error && error.message);
+  }
+}
+
+// Stage Manager's switch and "hide desktop items", plus whether Folia holds the Accessibility
+// grant the click guard needs. Both cheap: CFPreferences and AXIsProcessTrusted, no child process.
+function readMacWallpaperStageState() {
+  const stage = readStageManagerDesktop() || { enabled: false, hidesDesktopItems: false };
+  return {
+    enabled: stage.enabled === true,
+    hidesDesktopItems: stage.hidesDesktopItems === true,
+    trusted: stage.enabled === true && stage.hidesDesktopItems !== true && isAccessibilityTrusted(),
+  };
+}
+
+// Packaged: Resources/libfolia_click_guard.dylib (built by packaging/macos/build-desktop-click-guard.mjs).
+// FOLIA_DESKTOP_CLICK_GUARD_PATH overrides it for local runs.
+function resolveMacDesktopClickGuardPath() {
+  if (process.env.FOLIA_DESKTOP_CLICK_GUARD_PATH) {
+    return process.env.FOLIA_DESKTOP_CLICK_GUARD_PATH;
+  }
+  return path.join(process.resourcesPath, 'libfolia_click_guard.dylib');
+}
+
+function getMacWallpaperClickGuard() {
+  if (!macWallpaperClickGuardInstance) {
+    macWallpaperClickGuardInstance = createMacDesktopClickGuard({ libraryPath: resolveMacDesktopClickGuardPath });
+  }
+  return macWallpaperClickGuardInstance;
+}
+
+// Stage Manager is on with the desktop icons shown and Folia lacks the Accessibility grant: clicks
+// on the bare wallpaper still send the stage aside. Asked once per session; never turns the
+// wallpaper off.
+function notifyMacWallpaperAccessibilitySuggested() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('wallpaper-accessibility-suggested', null);
   }
 }
 
@@ -6159,6 +6323,16 @@ app.on('before-quit', (event) => {
     isMacWallpaperInteractionEnabled = false;
     macWallpaperSavedState = null;
     const macController = getMacWallpaperController();
+    if (macWallpaperStageManagerTimer) {
+      clearInterval(macWallpaperStageManagerTimer);
+      macWallpaperStageManagerTimer = null;
+    }
+    if (macWallpaperClickGuardInstance) {
+      macWallpaperClickGuardInstance.stop();
+    }
+    if (macWallpaperHitPanelsInstance) {
+      macWallpaperHitPanelsInstance.destroy();
+    }
     if (macController) {
       try {
         macController.stop();
@@ -6227,6 +6401,16 @@ ipcMain.handle('wallpaper-display-set', (event, displayId) => {
     return null;
   }
   return setWallpaperDisplayChoice(displayId);
+});
+
+// macOS wallpaper mode: the rects (viewport CSS px) of the controls on screen, for the click
+// catchers that keep those clicks away from Finder and so from Stage Manager (issue #698).
+ipcMain.on('wallpaper-hit-regions', (event, rects) => {
+  if (process.platform !== 'darwin' || !isTrustedMainWindowContents(event.sender)) {
+    return;
+  }
+  macWallpaperHitRects = Array.isArray(rects) ? rects.slice(0, MAX_HIT_PANELS) : [];
+  syncMacWallpaperHitPanels();
 });
 
 // The 后台节流 switch as the main window sees it: in force (on, not standing down), and the window

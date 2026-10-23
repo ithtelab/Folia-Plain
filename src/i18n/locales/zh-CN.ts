@@ -245,6 +245,7 @@ export default {
     "wallpaperModeOn": "已开启壁纸模式",
     "wallpaperModeOff": "已关闭壁纸模式",
     "macWallpaperInputMonitoringNeeded": "壁纸模式需要“输入监控”权限：请在 系统设置 → 隐私与安全性 → 输入监控 中勾选 Folia，然后重新开启壁纸模式",
+    "macWallpaperAccessibilitySuggested": "开着台前调度时，点壁纸也会被当成点桌面，把窗口收到一边。在 系统设置 → 隐私与安全性 → 辅助功能 中允许 Folia 并重启 Folia 后就不会了，桌面图标照常能点",
     "macWallpaperAutohideDockOn": "已开启：自动隐藏 Dock 栏",
     "macWallpaperAutohideDockOff": "已关闭：不再自动隐藏 Dock 栏",
     "voiceInputPauseOn": "语音输入时暂停已开启",

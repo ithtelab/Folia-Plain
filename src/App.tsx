@@ -97,6 +97,7 @@ import { useElectronVideoExportController } from './hooks/useElectronVideoExport
 import { useElectronWindowPlaybackHandoff } from './components/app/playback/restore/useElectronWindowPlaybackHandoff';
 import { useMediaSessionBridge } from './hooks/useMediaSessionBridge';
 import { usePlayerChromeAutoHide } from './hooks/usePlayerChromeAutoHide';
+import { useMacWallpaperHitRegions } from './hooks/useMacWallpaperHitRegions';
 import { useIdleCursorHide } from './hooks/useIdleCursorHide';
 import { usePlaybackAudioBridge } from './components/app/playback/bridges/usePlaybackAudioBridge';
 import { useTranscodeFallback } from './hooks/useTranscodeFallback';
@@ -423,6 +424,8 @@ export default function App() {
         preventDisplaySleepDuringPlayback,
         wallpaperMode,
     } = useDesktopSettingsStore(useShallow(selectDesktopSettingsSnapshot));
+    // macOS wallpaper mode: click catchers over the controls, so Stage Manager ignores those clicks.
+    useMacWallpaperHitRegions(wallpaperMode);
     const {
         stageTrackPillMode,
         stageTrackPillOnHome,

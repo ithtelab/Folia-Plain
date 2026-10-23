@@ -245,6 +245,7 @@ export default {
     "wallpaperModeOn": "Mode wallpaper diaktifkan",
     "wallpaperModeOff": "Mode wallpaper dimatikan",
     "macWallpaperInputMonitoringNeeded": "Mode wallpaper memerlukan izin Input Monitoring: izinkan Folia di Pengaturan Sistem → Privasi & Keamanan → Input Monitoring, lalu aktifkan ulang mode wallpaper",
+    "macWallpaperAccessibilitySuggested": "Saat Stage Manager aktif, klik pada wallpaper juga dihitung sebagai klik desktop dan menyingkirkan jendela Anda. Izinkan Folia di Pengaturan Sistem → Privasi & Keamanan → Aksesibilitas lalu mulai ulang Folia untuk mencegahnya; ikon desktop tetap bisa diklik",
     "macWallpaperAutohideDockOn": "Sembunyikan Dock otomatis diaktifkan",
     "macWallpaperAutohideDockOff": "Sembunyikan Dock otomatis dimatikan",
     "voiceInputPauseOn": "Fitur jeda saat input suara diaktifkan",

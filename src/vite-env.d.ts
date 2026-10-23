@@ -864,6 +864,10 @@ declare global {
       setWallpaperDisplay?: (displayId: number | null) => Promise<ElectronWallpaperDisplaysState | null>;
       /** A display was connected, removed or changed, or the choice changed. */
       onWallpaperDisplaysChanged?: (callback: (state: ElectronWallpaperDisplaysState) => void) => () => void;
+      /** macOS wallpaper mode with Stage Manager on and the desktop icons shown, without the Accessibility grant the click guard needs (issue #698). */
+      onWallpaperAccessibilitySuggested?: (callback: () => void) => () => void;
+      /** macOS wallpaper mode: the on-screen controls' rects (viewport CSS px), covered by click catchers so Finder and Stage Manager never see those clicks. */
+      setWallpaperHitRegions?: (rects: Array<{ left: number; top: number; width: number; height: number }>) => void;
       setPlaybackDisplaySleepBlockingActive: (active: boolean) => Promise<boolean>;
       /**
        * The 后台节流 switch for the main window: `active` while it is on and not standing down

@@ -153,6 +153,10 @@
         {
           "from": "build/koffi/darwin_${arch}",
           "to": "koffi/darwin_${arch}"
+        },
+        {
+          "from": "build/mac-helper/darwin-${arch}",
+          "to": "."
         }
       ],
       "target": [
