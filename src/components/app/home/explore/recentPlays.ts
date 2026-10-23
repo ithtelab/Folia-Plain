@@ -119,6 +119,7 @@ let kept: Kept | null = null;
 const recall = (): Kept => (kept ??= read());
 const watchers = new Set<() => void>();
 const NONE: SongResult[] = [];
+const EMPTY_RECORDS: PlayRecordSnapshot[] = [];
 // What is read from a list of plays: the same lists for as long as the plays are the same ones.
 // (The songs played lately are fewer as time goes by: `recentCount` tells that they are. The
 // listenings that count are fewer from one day to the next: `replayedOn` is the day they were read on.)
@@ -138,7 +139,44 @@ const keptOf = (scope: string, now: number): Play[] | null => {
 // that were playing.
 const catalogued = ({ onlineLyricsState: _lyrics, playbackSourceRevision: _revision, ...song }: SongResult): SongResult => song;
 
-/** Forgets what was read from storage, so that the next call reads it again. */
+/** One song's record as the listening report aggregates it: what it is, and how often it was heard each day. */
+export interface PlayRecordSnapshot {
+    song: SongResult;
+    /** Listenings by the listener's day, as `days` here counts them. */
+    days: ReadonlyArray<readonly [day: number, listenings: number]>;
+}
+
+/**
+ * Every song this account of this platform has on record, as a plain snapshot.
+ *
+ * The report wants the raw (song, day, count) triples, which the lists this module hands out are
+ * not: those are already filtered to the last seven days or to more than one listening, and sorted
+ * for another purpose. Reading the record once here means the report does not re-derive the
+ * storage format, and a change to that format stays inside this file.
+ *
+ * A new array each call - the caller aggregates over it and never keeps it - and the same empty
+ * array when nothing is on record.
+ */
+export const playRecordsOf = (providerId: OnlineProviderId, accountId: string): PlayRecordSnapshot[] => {
+    const now = Date.now();
+    const plays = keptOf(scopeOf(providerId, accountId), now);
+    if (!plays) return EMPTY_RECORDS;
+    return plays.map(play => ({ song: play.song, days: countedOn(play.days, dayOf(now)) }));
+};
+
+/** The scopes on record, so a report can cover every account without knowing which were used. */
+export const recordedScopes = (): Array<{ providerId: string; accountId: string }> => (
+    Object.keys(recall()).map(scope => {
+        const at = scope.indexOf(':');
+        return at < 0
+            ? { providerId: scope, accountId: '' }
+            : { providerId: scope.slice(0, at), accountId: scope.slice(at + 1) };
+    })
+);
+
+/**
+ * Forgets what was read from storage, so that the next call reads it again.
+ */
 export const resetRecentPlays = (): void => { kept = null; };
 
 /** Calls `watcher` whenever a play changes the list of an account. */

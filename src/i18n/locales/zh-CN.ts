@@ -1,6 +1,19 @@
 
 
 export default {
+  "listeningReport": {
+    "empty": "还没有足够的收听记录。听上几首歌，这里就会有内容。",
+    "emptyNote": "一首歌听到一半才会计入，跳过的不算。",
+    "songs": "歌曲",
+    "lastDays": "近 {{days}} 天",
+    "listenings": "收听次数",
+    "busiest": "最多 {{date}} · {{count}} 次",
+    "time": "时长",
+    "timeFloor": "至少（按每次半首计）",
+    "calendar": "收听日历",
+    "topSongs": "最常听",
+    "times": "{{count}} 次"
+  },
   "libraryBravais": {
     "suiteName": "Bravais 墙面",
     "homeTitle": "书库",
@@ -670,6 +683,7 @@ export default {
       "desktop-toggle-remote-control-expand-cover": { "title": "遥控窗口：展开封面", "description": "切换遥控窗口闲置时是否把封面展开成大图" },
       "desktop-unlock-remote-control": { "title": "解锁远程控制", "description": "关闭遥控窗口的点击穿透，恢复窗口的操作与拖动" },
       "sleep-timer": { "title": "睡眠定时", "description": "指定时长后暂停播放，桌面端将关闭应用" },
+      "listening-report": { "title": "听歌报告", "description": "看最近三十天听了什么：总量、日历和最常听的歌" },
       "navigate-home": { "title": "回到首页", "description": "返回首页视图" },
       "navigate-player": { "title": "回到播放器", "description": "返回播放器视图" },
       "lattice-focus-current": { "title": "Lattice 定位正在播放的歌", "description": "在拼贴里把正在播放的歌的海报移到中央" },

@@ -1,6 +1,19 @@
 
 
 export default {
+  "listeningReport": {
+    "empty": "Riwayat mendengarkan belum cukup. Putar beberapa lagu dan bagian ini akan terisi.",
+    "emptyNote": "Lagu dihitung setelah setengahnya diputar; yang dilewati tidak dihitung.",
+    "songs": "Lagu",
+    "lastDays": "{{days}} hari terakhir",
+    "listenings": "Pemutaran",
+    "busiest": "terbanyak {{date}} · {{count}}",
+    "time": "Durasi",
+    "timeFloor": "setidaknya (setengah lagu per pemutaran)",
+    "calendar": "Kalender mendengarkan",
+    "topSongs": "Paling sering diputar",
+    "times": "{{count}}×"
+  },
   "libraryBravais": {
     "suiteName": "Dinding Bravais",
     "homeTitle": "Pustaka",
@@ -670,6 +683,7 @@ export default {
       "desktop-toggle-remote-control-expand-cover": { "title": "Remote: perluas sampul", "description": "Alihkan apakah jendela remote control memperbesar sampul menjadi gambar besar saat tidak dipakai" },
       "desktop-unlock-remote-control": { "title": "Buka kunci jendela remote control", "description": "Matikan click-through remote control agar jendela dapat dipakai dan dipindahkan lagi" },
       "sleep-timer": { "title": "Timer Tidur", "description": "Jeda pemutaran setelah durasi tertentu, atau tutup aplikasi desktop" },
+      "listening-report": { "title": "Laporan mendengarkan", "description": "Apa yang Anda dengarkan selama tiga puluh hari terakhir: total, kalender, dan lagu yang paling sering diputar" },
       "navigate-home": { "title": "Ke beranda", "description": "Kembali ke tampilan beranda" },
       "navigate-player": { "title": "Ke pemutar", "description": "Kembali ke tampilan pemutar" },
       "lattice-focus-current": { "title": "Lattice temukan lagu yang diputar", "description": "Pusatkan poster lagu yang diputar di kolase" },

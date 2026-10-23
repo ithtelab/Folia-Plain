@@ -1,6 +1,19 @@
 
 
 export default {
+  "listeningReport": {
+    "empty": "Not enough listening history yet. Play a few songs and this fills in.",
+    "emptyNote": "A song counts once half of it has played; skipped ones do not.",
+    "songs": "Songs",
+    "lastDays": "last {{days}} days",
+    "listenings": "Listenings",
+    "busiest": "most on {{date}} · {{count}}",
+    "time": "Time",
+    "timeFloor": "at least (half a song each)",
+    "calendar": "Listening calendar",
+    "topSongs": "Most played",
+    "times": "{{count}}×"
+  },
   "libraryBravais": {
     "suiteName": "Bravais wall",
     "homeTitle": "Library",
@@ -670,6 +683,7 @@ export default {
       "desktop-toggle-remote-control-expand-cover": { "title": "Remote control: expand cover", "description": "Toggle whether the remote control window expands the cover into a large image when idle" },
       "desktop-unlock-remote-control": { "title": "Unlock remote control window", "description": "Turn off remote control click-through so the window can be used and moved again" },
       "sleep-timer": { "title": "Sleep timer", "description": "Pause playback after a chosen duration, or close the desktop app" },
+      "listening-report": { "title": "Listening report", "description": "What you listened to over the last thirty days: totals, a calendar and your most played songs" },
       "navigate-home": { "title": "Go home", "description": "Return to home view" },
       "navigate-player": { "title": "Go player", "description": "Return to player view" },
       "lattice-focus-current": { "title": "Lattice locate playing song", "description": "Centre the poster of the playing song on the collage" },
