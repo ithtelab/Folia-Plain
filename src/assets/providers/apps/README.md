@@ -10,5 +10,6 @@
 | bodian.jpg | [波点音乐](https://apps.apple.com/cn/app/id1541981555) |
 | spotify.jpg | [Spotify](https://apps.apple.com/us/app/id324684580) |
 | ytm.jpg | [YouTube Music](https://apps.apple.com/us/app/id1017492454) |
+| qishui.jpg | [汽水音乐](https://apps.apple.com/cn/app/id1605585211) |
 
 下载日期、发布者、原图地址及 SHA-256 记录在 `sources.json`。这些平台的图标与商标归各自权利人所有，保留原有权利；本分支新增素材的 AGPL-3.0 声明不改变这些第三方标识的权利归属。

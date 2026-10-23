@@ -1,3 +1,4 @@
+import appIcon from '../../../assets/providers/apps/qishui.jpg';
 import type { OnlineMusicProvider, ProviderPage, LoginState } from '../../../types/onlineMusic';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
@@ -17,7 +18,7 @@ import { describeQishuiFailure } from './qishuiFailure';
 // Dropped together whenever the account changes: confirmed, signed out, or the sign-in ran out.
 function clearAccountState() { clearQishuiExplore(); clearQishuiRecommendations(); clearQishuiPlayback(); }
 export const qishuiProvider: OnlineMusicProvider = {
-    id: 'qishui', displayName: '汽水音乐', shortName: '汽水', mark: { letter: '汽', color: '#19a58c' },
+    id: 'qishui', displayName: '汽水音乐', shortName: '汽水', mark: { letter: '汽', color: '#19a58c', iconUrl: appIcon },
     getAvailability: getQishuiAvailability,
     capabilities: { search: true, playback: true, lyrics: true, wordByWordLyrics: true, auth: true,
         userLibrary: true, playlists: true, albums: false, artists: true, recommendations: true,

@@ -531,8 +531,13 @@ export function usePlaybackQueueController({
         const keptFmMode = fmModeBeforePendingPlayRef.current;
         const fmModeToRestore = keptFmMode && keptFmMode.queueWrites === wholeQueueWritesSoFar() ? keptFmMode.isFm : wasFmMode;
         fmModeBeforePendingPlayRef.current = { isFm: fmModeToRestore, queueWrites: wholeQueueWritesSoFar() };
-        setIsFmMode(isFmCall);
-        if (isFmCall && !wasFmMode) {
+        // A whole-queue write during the hook's wait has set Personal FM for the store's queue (a replacement
+        // ends it): a play from that queue keeps it so, instead of the FM state it was called with.
+        const playsAsFm = queueRewritten() ? wasFmMode : isFmCall;
+        setIsFmMode(playsAsFm);
+        // The whole-queue writes when this play wrote FM: one after it ended FM again (see restoreFmModeIfNotLanded).
+        const queueWritesAtFmWrite = wholeQueueWritesSoFar();
+        if (playsAsFm && !wasFmMode) {
             setPanelTab('queue');
             setIsPanelOpen(true);
             if (usePlaybackEntryViewStore.getState().playbackEntryView === 'lattice') {
@@ -551,7 +556,9 @@ export function usePlaybackQueueController({
             fmModeBeforePendingPlayRef.current = null;
             // A whole-queue write while this play waited has ended Personal FM already: put back, the radio's
             // songs would be added after that queue. This holds whatever queue the play was given.
-            if (wholeQueueWritesSoFar() !== queueWritesAtStart) return;
+            // Counted from this play's own FM write: one during the hook's wait came before it, and
+            // `fmModeToRestore` was read after it, so putting that back is right.
+            if (wholeQueueWritesSoFar() !== queueWritesAtFmWrite) return;
             if (usePlaybackStore.getState().isFmMode !== fmModeToRestore) setIsFmMode(fmModeToRestore);
         };
         const isLocal = isLocalPlaybackSong(song);

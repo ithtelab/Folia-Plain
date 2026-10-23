@@ -64,5 +64,16 @@
     "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/70/a5/45/70a54567-d6d2-8f53-67bd-fcb175327044/logo_youtube_music_2024_q4_color-0-0-1x_U007emarketing-0-0-0-7-0-0-0-85-220.png/512x512bb.jpg",
     "appName": "YouTube Music",
     "file": "ytm.jpg"
+  },
+  {
+    "retrieved": "2026-10-23",
+    "provider": "qishui",
+    "sha256": "87568a99484f5b1b0e1e29298f36ec13af4fe2decdab19373a908880fe40ca09",
+    "page": "https://apps.apple.com/cn/app/%E6%B1%BD%E6%B0%B4%E9%9F%B3%E4%B9%90-%E9%9A%8F%E6%97%B6%E5%90%AC%E5%A5%BD%E6%AD%8C/id1605585211?uo=4",
+    "publisher": "Beijing Douyin Technology Co., Ltd.",
+    "appStoreId": 1605585211,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/a2/84/63/a2846363-ddca-6173-a90d-0b95bb422f63/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "appName": "汽水音乐 - 随时听好歌",
+    "file": "qishui.jpg"
   }
 ]
