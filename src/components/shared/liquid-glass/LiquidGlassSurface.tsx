@@ -8,7 +8,6 @@ import {
     GLASS_BLUR_STD_DEVIATION,
     GLASS_DISPLACEMENT_SCALE,
     GLASS_TONE_CURVE,
-    glassChromaticFringe,
 } from './glassBaseline';
 
 // Decorative material only: the host keeps its own layout, controls, hit area and semantics.
@@ -123,12 +122,6 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     }, [active, enabled, radius]);
 
     const enhanced = enabled && active && lens !== null;
-    // How far apart the rim's three channels sit: from the frozen baseline, because the separation
-    // is sized for the displacement scale above it (glassBaseline.ts says what changing it breaks).
-    // A pane too thin to have a rim gets none - the split would land in a single pixel column.
-    const chromatic = {
-        fringe: glassChromaticFringe(isDaylight, lens ? Math.min(lens.width, lens.height) : 0),
-    };
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
     //
@@ -164,35 +157,15 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
                         <feDisplacementMap ref={displacementRef} in="SourceGraphic" in2="movingNormals"
                             scale={isDaylight ? GLASS_DISPLACEMENT_SCALE.light : GLASS_DISPLACEMENT_SCALE.dark}
                             xChannelSelector="R" yChannelSelector="G" result="bent" />
-                        {/* A real pane splits colour at its bend: the rim refracts long wavelengths
-                            less than short ones, so a bright edge on one side and a cool one on the
-                            other sit a fraction of a pixel apart. Only the rim carries it - the
-                            centre is flat glass, and splitting it would read as a blurry fringe
-                            instead of a refracting edge.
-
-                            Done by offsetting the one displaced result per channel rather than
-                            displacing three times: measured on the surfaces this app actually
-                            shows at once (one to three), three separate displacements cost 28%
-                            more than this for the same edge, because each one re-runs the whole
-                            Gaussian and image lookup. The chromatic split is what the eye reads;
-                            how it was produced is not.
-
-                            `fringe` scales the separation, so the strength stays one number. */}
-                        <feOffset in="bent" dx={chromatic.fringe} dy={0} result="bentWarm" />
-                        <feOffset in="bent" dx={-chromatic.fringe} dy={0} result="bentCool" />
-                        <feColorMatrix in="bentWarm" type="matrix"
-                            values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 1" result="chromeR" />
-                        <feColorMatrix in="bent" type="matrix"
-                            values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 0 1" result="chromeG" />
-                        <feColorMatrix in="bentCool" type="matrix"
-                            values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 0 1" result="chromeB" />
-                        <feComposite in="chromeR" in2="chromeG" operator="arithmetic"
-                            k1="0" k2="1" k3="1" k4="0" result="chromeRG" />
-                        <feComposite in="chromeRG" in2="chromeB" operator="arithmetic"
-                            k1="0" k2="1" k3="1" k4="0" result="chrome" />
+                        {/* One displacement, one rim, nothing between them. A three-channel
+                            chromatic split was tried here and taken back out: on the surfaces this
+                            app actually shows, the split read as a coloured border rather than as
+                            refraction, which is the opposite of what the material is for. The rim's
+                            own bend and tone curve carry the glass read; they do not need a colour
+                            fringe on top. */}
                         <feColorMatrix in="normals" type="matrix"
                             values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 0 0" result="rim" />
-                        <feComposite in="chrome" in2="rim" operator="in" result="edge" />
+                        <feComposite in="bent" in2="rim" operator="in" result="edge" />
                         <feComposite in="frost" in2="rim" operator="out" result="centre" />
                         <feComposite in="centre" in2="edge" operator="arithmetic"
                             k1="0" k2="1" k3="1" k4="0" result="glass" />

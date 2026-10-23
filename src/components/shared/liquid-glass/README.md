@@ -127,17 +127,12 @@ both a pale and a dark backdrop.
 | `GLASS_BLUR_STD_DEVIATION` | 3.5 px | 3.5 px | Softness of the pane behind the bent rim. | Larger turns the centre into frosted glass and the backdrop stops being recognisable; larger also makes the bend read as a smear, because the displaced edge no longer has a crisp shape to cut. |
 | `GLASS_DISPLACEMENT_SCALE` | 22 | 16 | How far the rim pulls the backdrop inwards. Light gets more because over a bright page the bend is what makes the pane read as glass at all. | Lower on light glass and the pane goes flat — it becomes a tinted rectangle. Higher and the rim separates from the host's edge, showing a gap. |
 | `GLASS_TONE_CURVE` | `0 0.2 0.44 0.72 1` | `0 0.24 0.43 0.49 0.5` | Local compression of the backdrop, per channel, as `tableValues`. | Both start at 0 on purpose: lifting pure black put a bright floor under the displaced rim, which showed as a pale halo around glass on dark artwork. The dark curve stops at 0.5 so a bright backdrop cannot out-shout the material's own white highlights; raising it makes dark glass wash out. |
-| `GLASS_CHROMATIC_FRINGE` | 0.85 px | 1.15 px | How far apart the rim's red, green and blue sit — the chromatic separation that makes a bent edge read as refracting rather than painted. | Removal makes the rim read as a drawn line. Raising it turns a pale edge into a colour cast, and on dark glass the rim starts to look like a rainbow border. |
-| `GLASS_THIN_PANE_PX` | 56 px | 56 px | Panes whose shorter side is under this get no chromatic separation. | Lower it and the 40 px navigation strip draws a 7%-yellow line along its edge (measured: 18/255 with the fringe, 1/255 without) — that reads as a border, not refraction. |
 
-Two invariants the levels depend on, and that are easy to break while "just tuning a colour":
-
-- The rim's separation is produced by offsetting **one** displaced result per channel, not by
-  displacing three times. Measured at this app's real surface count (one to three visible), three
-  separate displacements cost 28% more for the same edge, because each re-runs the whole Gaussian
-  and image lookup. The eye reads the split, not how it was made.
-- Chromatic separation is applied to the rim only. The centre is flat glass; splitting it reads as
-  a blurry colour fringe rather than as a refracting edge.
+**Chromatic separation was tried and taken back out.** Splitting the rim into red, green and blue
+and offsetting each channel is the one thing from upstream's glass that looked plausible on paper
+and wrong in place: on every surface this app actually shows, the split reads as a coloured border
+around the pane rather than as refraction, and on a pale page it reads as dirt. Do not re-add it as
+a "tuning" change. The rim's bend and the tone curve carry the glass read on their own.
 
 The tint table is a separate axis and is **not** frozen here: it is a set of per-role values (window,
 navigation/search/control/provider, player bar, cards) that exist so a text-heavy window keeps a
