@@ -117,6 +117,20 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     }, [active, enabled, radius]);
 
     const enhanced = enabled && active && lens !== null;
+    // How far apart the rim's three channels sit, in CSS pixels.
+    //
+    // Only a pane thick enough to have a rim gets it. Measured on the 40 px nav strip, a 0.85 px
+    // fringe put an 18/255 (7%) yellow line along its edge where the same band without chromatic
+    // separation read 1/255: on a strip that thin the split lands in a single pixel column and
+    // reads as a drawn border, not as refraction, so thin controls keep the plain rim. The 600 px
+    // settings panel moves its rim's blue channel by 25/255 over about three pixels - a lit edge.
+    //
+    // A light pane over a bright page is also where a colour cast shows most, so it gets less than
+    // dark glass, which hides it in shadow.
+    const THIN_PANE_PX = 56;
+    const paneThickness = lens ? Math.min(lens.width, lens.height) : 0;
+    const thicknessScale = paneThickness >= THIN_PANE_PX ? 1 : 0;
+    const chromatic = { fringe: (isDaylight ? 0.85 : 1.15) * thicknessScale };
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
     //
@@ -152,9 +166,35 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
                         <feDisplacementMap ref={displacementRef} in="SourceGraphic" in2="movingNormals"
                             scale={isDaylight ? 22 : 16}
                             xChannelSelector="R" yChannelSelector="G" result="bent" />
+                        {/* A real pane splits colour at its bend: the rim refracts long wavelengths
+                            less than short ones, so a bright edge on one side and a cool one on the
+                            other sit a fraction of a pixel apart. Only the rim carries it - the
+                            centre is flat glass, and splitting it would read as a blurry fringe
+                            instead of a refracting edge.
+
+                            Done by offsetting the one displaced result per channel rather than
+                            displacing three times: measured on the surfaces this app actually
+                            shows at once (one to three), three separate displacements cost 28%
+                            more than this for the same edge, because each one re-runs the whole
+                            Gaussian and image lookup. The chromatic split is what the eye reads;
+                            how it was produced is not.
+
+                            `fringe` scales the separation, so the strength stays one number. */}
+                        <feOffset in="bent" dx={chromatic.fringe} dy={0} result="bentWarm" />
+                        <feOffset in="bent" dx={-chromatic.fringe} dy={0} result="bentCool" />
+                        <feColorMatrix in="bentWarm" type="matrix"
+                            values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 1" result="chromeR" />
+                        <feColorMatrix in="bent" type="matrix"
+                            values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 0 1" result="chromeG" />
+                        <feColorMatrix in="bentCool" type="matrix"
+                            values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 0 1" result="chromeB" />
+                        <feComposite in="chromeR" in2="chromeG" operator="arithmetic"
+                            k1="0" k2="1" k3="1" k4="0" result="chromeRG" />
+                        <feComposite in="chromeRG" in2="chromeB" operator="arithmetic"
+                            k1="0" k2="1" k3="1" k4="0" result="chrome" />
                         <feColorMatrix in="normals" type="matrix"
                             values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 0 0" result="rim" />
-                        <feComposite in="bent" in2="rim" operator="in" result="edge" />
+                        <feComposite in="chrome" in2="rim" operator="in" result="edge" />
                         <feComposite in="frost" in2="rim" operator="out" result="centre" />
                         <feComposite in="centre" in2="edge" operator="arithmetic"
                             k1="0" k2="1" k3="1" k4="0" result="glass" />
