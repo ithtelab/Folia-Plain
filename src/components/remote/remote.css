@@ -160,14 +160,35 @@
 }
 
 /* Transparent: no card. A page in a transparent window cannot blur what is behind the window,
-   so the sleeve's type sits on a soft dark shade, and a dark base comes up for the card in use. */
+   so the sleeve's type sits on a soft dark shade, and a dark base comes up for the card in use.
+   The shade is a blurred gradient, not a flat slab (#804): densest behind the first of the type,
+   given up over the hook's own room on the right and the last 16 px below the type, so a light
+   page reads as dimmed behind the words instead of covered by a grey rectangle. The blur runs on
+   the box while the gradient and its mask sit inside, because a mask on the blurred box itself
+   would cut the soft rim flat again. */
 .remote-cloud {
   position: absolute;
-  border-radius: 26px;
-  background: rgba(0, 0, 0, 0.6);
-  filter: blur(12px);
+  border-radius: 28px;
+  filter: blur(18px);
   pointer-events: none;
   transition: opacity 320ms ease, left 200ms ease, top 200ms ease, width 200ms ease, height 200ms ease;
+}
+
+.remote-cloud::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(96deg,
+    rgba(6, 6, 10, 0) 0%,
+    rgba(6, 6, 10, 0.42) 8%,
+    rgba(6, 6, 10, 0.58) 24%,
+    rgba(6, 6, 10, 0.54) 56%,
+    rgba(6, 6, 10, 0.36) 82%,
+    rgba(6, 6, 10, 0.12) 96%,
+    rgba(6, 6, 10, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 12px), transparent 100%);
 }
 
 .remote-glass {
