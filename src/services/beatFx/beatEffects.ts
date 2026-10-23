@@ -39,6 +39,8 @@ export const BEAT_EFFECT_IDS = {
     pendoloDrumhead: 'pendolo.drumhead',
     pendoloGearBeats: 'pendolo.gearBeats',
     latentPulse: 'latent.pulse',
+    hanabiBeatBursts: 'hanabi.beatBursts',
+    hanabiBeatPulse: 'hanabi.beatPulse',
 } as const;
 
 /**

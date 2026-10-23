@@ -90,6 +90,8 @@ beforeEach(() => {
     currentTime.set(0); lyricCurrentTime.set(0); handoffLyricCurrentTime.set(0);
     vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { env.frame = fn; return 1; });
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    // The loop's background-throttling hold schedules on window timers (and always clears one on cleanup).
+    vi.stubGlobal('window', { setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout });
 });
 afterEach(() => { env.cleanup.forEach(fn => fn()); vi.unstubAllGlobals(); });
 

@@ -6,7 +6,8 @@ import { locatePlayingSongOnWall } from '../lattice/wallLocate';
 import type { CommandPaletteContext } from '../../command-palette/types';
 import { setStatusMessage } from '../../../stores/useStatusMessageStore';
 import { useAudioSettingsStore } from '../../../stores/useAudioSettingsStore';
-import { usePersonalFmModeStore } from '../../../stores/usePersonalFmModeStore';
+import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
+import { getPersonalFmSelection, usePersonalFmModeStore } from '../../../stores/usePersonalFmModeStore';
 import { useDesktopSettingsStore } from '../../../stores/useDesktopSettingsStore';
 import { openAddToPlaylist, useAddToPlaylistStore } from '../../../stores/useAddToPlaylistStore';
 import { useInteractionSettingsStore } from '../../../stores/useInteractionSettingsStore';
@@ -86,7 +87,8 @@ export const buildPlaybackCommandContext = (
         openAddToPlaylist,
         canAddCurrentSongToPlaylist: useAddToPlaylistStore.getState().availability.canAdd,
         canToggleCurrentSongPureMusicMark: isLocalPlaybackSong(usePlaybackStore.getState().currentSong),
-        personalFmSelection: usePersonalFmModeStore.getState().selection,
+        personalFmSelection: getPersonalFmSelection(useOnlineProviderAccountStore.getState().activeProviderId),
+        personalFmCatalog: usePersonalFmModeStore.getState().catalogs[useOnlineProviderAccountStore.getState().activeProviderId],
         openAudioEqualizer: audio.openAudioEqualizer,
         applyAudioSoundPreset: audio.handleApplyAudioSoundPreset,
     };

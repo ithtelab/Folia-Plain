@@ -1,3 +1,4 @@
+import type { PersonalFmCatalog, PersonalFmSelection } from './personalFm';
 import type { LyricData, ReplayGainInfo, SongResult, UnifiedSong } from '../types';
 
 // src/types/onlineMusic.ts
@@ -190,6 +191,8 @@ export interface ProviderHistoryEntry {
 }
 
 export interface ProviderCollection {
+    /** A provider's named radio stream: selecting the card starts FM with this mode. */
+    personalFm?: PersonalFmSelection;
     providerId: OnlineProviderId;
     id: MediaId;
     name: string;
@@ -630,6 +633,7 @@ export interface PersonalFmRequestOptions {
 }
 
 export interface OnlineRecommendationProvider {
+    getPersonalFmCatalog?(): Promise<PersonalFmCatalog>;
     getDailySongs?(refresh?: boolean): Promise<UnifiedSong[]>;
     getPersonalFm?(options?: PersonalFmRequestOptions): Promise<UnifiedSong[]>;
     getRecommendedCollections?(limit: number): Promise<ProviderCollection[]>;

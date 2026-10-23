@@ -120,11 +120,17 @@ export function usePlaybackVisualizerBridge({
     }, [incomingLyricTimelineOffsetMs]);
 
     // A preview clip may start somewhere inside its song: the read-head is the deck's own clock plus
-    // that start. Looked up once per URL, since the frame loop asks every frame.
+    // that start. Cached per URL until the registry changes, since the frame loop asks every frame.
     const clipStartSecRef = useRef(new Map<string, number>());
+    const clipStartVersionRef = useRef(-1);
     const lyricClipStartSec = useCallback((element: HTMLAudioElement | null | undefined): number => {
         const src = element?.currentSrc;
         if (!src) return 0;
+        const version = omni.audioSourceMetadataVersion();
+        if (clipStartVersionRef.current !== version) {
+            clipStartSecRef.current.clear();
+            clipStartVersionRef.current = version;
+        }
         const known = clipStartSecRef.current.get(src);
         if (known !== undefined) return known;
         const seconds = omni.previewClipStartMsOfAudioSource(src) / 1000;

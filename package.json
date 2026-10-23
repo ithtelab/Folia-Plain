@@ -241,6 +241,7 @@
     "koffi": "^3.3.1",
     "kugoumusicapi": "https://github.com/MakcRe/KuGouMusicApi/archive/refs/tags/v1.6.0.tar.gz",
     "music-metadata": "^11.16.1",
+    "qishui-music-api": "0.2.2",
     "ws": "^8.21.3",
     "youtubei.js": "18.1.0"
   },

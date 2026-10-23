@@ -454,10 +454,45 @@ describe('where a preview clip starts in its song', () => {
 
     it('is remembered with the URL it was handed out under', async () => {
         registerOnlineMusicProvider(clipProvider(208320));
+        const version = omni.audioSourceMetadataVersion();
 
         await omni.getAudioSource(song(providerId, 'clip'), 'standard');
+        expect(omni.audioSourceMetadataVersion()).toBe(version + 1);
 
         expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/clip`)).toBe(208320);
+    });
+
+    it.each([NaN, Infinity, -Infinity, -1])('ignores an invalid clip start: %s', async clipStartMs => {
+        registerOnlineMusicProvider(clipProvider(clipStartMs));
+        await omni.getAudioSource(song(providerId, 'invalid-start'), 'standard');
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/invalid-start`)).toBe(0);
+    });
+
+    it('forgets a preview start if the same URL is handed out as a whole song', async () => {
+        registerOnlineMusicProvider(clipProvider(30000));
+        await omni.getAudioSource(song(providerId, 'same-url'), 'standard');
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/same-url`)).toBe(30000);
+        registerOnlineMusicProvider({
+            ...clipProvider(30000),
+            playback: {
+                getSongDetail: async mediaId => song(providerId, String(mediaId)),
+                getAudioSource: async () => ({
+                    url: `https://${providerId}/same-url`, fetchedAt: 1, quality: 'standard',
+                    preview: false, clipStartMs: 30000,
+                }),
+            },
+        });
+        await omni.getAudioSource(song(providerId, 'same-url'), 'standard');
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/same-url`)).toBe(0);
+    });
+
+    it('expires old preview entries with the bounded audio-source registry', async () => {
+        registerOnlineMusicProvider(clipProvider(30000));
+        for (let index = 0; index <= 200; index++) {
+            await omni.getAudioSource(song(providerId, `preview-${index}`), 'standard');
+        }
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/preview-0`)).toBe(0);
+        expect(omni.previewClipStartMsOfAudioSource(`https://${providerId}/preview-1`)).toBe(30000);
     });
 
     it('is zero for a clip that starts at the beginning and for a URL no provider handed out', async () => {

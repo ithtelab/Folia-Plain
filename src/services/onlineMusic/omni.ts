@@ -1,3 +1,4 @@
+import { DEFAULT_PERSONAL_FM_CATALOG } from './fmModes';
 import type { SongResult, UnifiedSong } from '../../types';
 import type {
     AudioQualityPreference,
@@ -102,6 +103,7 @@ const audioQualityFor = (providerId: OmniProviderId, preference: AudioQualityPre
 const AUDIO_SOURCE_LEVEL_LIMIT = 200;
 type HandedOutAudioSource = { level: AudioQualityPreference; preview: boolean; clipStartMs?: number };
 const audioSourceLevels = new Map<string, HandedOutAudioSource>();
+let audioSourceMetadataVersion = 0;
 // One spelling per URL: the form playback holds (`toSafePlaybackUrl`), written as the URL parser
 // writes it - a deck that has played out reports its element's `currentSrc`, which is that form.
 const audioSourceLevelKey = (url: string): string => {
@@ -120,6 +122,7 @@ const noteAudioSourceLevel = (url: string, handedOut: HandedOutAudioSource): voi
         const oldestKey = audioSourceLevels.keys().next().value;
         if (oldestKey !== undefined) audioSourceLevels.delete(oldestKey);
     }
+    audioSourceMetadataVersion++;
 };
 
 const activeProviderId = (): OmniProviderId => {
@@ -756,6 +759,10 @@ export const omni = {
         });
     },
 
+    async getPersonalFmCatalog(providerId: OmniProviderId) {
+        return requireOnlineMusicProvider(providerId).recommendations?.getPersonalFmCatalog?.() ?? DEFAULT_PERSONAL_FM_CATALOG;
+    },
+
     async getPersonalFm(options?: PersonalFmRequestOptions): Promise<UnifiedSong[]> {
         return withActiveProvider(async provider => provider.recommendations?.getPersonalFm?.(options) ?? []);
     },
@@ -842,7 +849,8 @@ export const omni = {
             noteAudioSourceLevel(source.url, {
                 level: listed?.includes(source.quality) ? source.quality : level,
                 preview: Boolean(source.preview),
-                ...(source.preview && source.clipStartMs ? { clipStartMs: source.clipStartMs } : {}),
+                ...(source.preview && Number.isFinite(source.clipStartMs) && source.clipStartMs! > 0
+                    ? { clipStartMs: source.clipStartMs } : {}),
             });
         }
         // Extension layers (Folium omni hooks) may swap the URL; the ReplayGain above stays the provider's.
@@ -859,6 +867,12 @@ export const omni = {
     // said. False for any other URL, as for one handed out too long ago to be remembered.
     isPreviewAudioSource(url: string): boolean {
         return audioSourceLevels.get(audioSourceLevelKey(url))?.preview === true;
+    },
+
+    // Cheap invalidation for playback's small per-URL cache: a provider may reuse a URL with
+    // different metadata, and the bounded registry may evict a previously remembered URL.
+    audioSourceMetadataVersion(): number {
+        return audioSourceMetadataVersion;
     },
 
     // Where a URL handed out by `getAudioSource` starts inside its song, for a preview clip; 0 for a

@@ -4,6 +4,7 @@ import type { MotionValue } from 'framer-motion';
 import { applyOnlineAudioSourceMetadata, loadOnlineSongLyrics } from '../../../../services/onlinePlayback';
 import { isSongUnavailable } from '../../../../services/onlineMusic/songAvailability';
 import { getSongResourceCacheKey } from '../../../../services/onlineMusic/resourceKeys';
+import { getPersonalFmSelection } from '../../../../stores/usePersonalFmModeStore';
 import { omni } from '../../../../services/onlineMusic/omni';
 import { getCachedSongCoverUrl, hasCachedSongAudio } from '../../../../services/onlineMusic/resourceCache';
 import { getPrefetchedData, invalidateAndRefetch, prefetchNearbySongs, refreshPrefetchAfterQueueEdit } from '../../../../services/prefetchService';
@@ -51,7 +52,6 @@ import { playbackFade } from '../../../../services/playbackFade';
 import { getProviderSongMetadata } from '../../../../services/onlineMusic/songMetadata';
 import { setStatusMessage as setStatusMsg } from '../../../../stores/useStatusMessageStore';
 import { setAudioSrc, setCachedCoverUrl, setCurrentLineIndex, setCurrentSong, setDuration, setIsFmMode, setPlayQueue, setPlayerState, startLoadingToPlay, usePlaybackStore } from '../../../../stores/usePlaybackStore';
-import { getPersonalFmSelection } from '../../../../stores/usePersonalFmModeStore';
 import { askedSongKeyRef, askForSong, playsDroppedSoFar, showSong, startOfAskedSong, startPlay, withdrawAsk } from '../currentSong';
 import { loadOnlineSongAudio } from '../source/songAudioSource';
 import { onlineFailureToast } from '../source/onlineFailureToast';
@@ -66,6 +66,7 @@ import { showLatticeFmNotice, usePlaybackEntryViewStore } from '../../../../stor
 import { useStableActionSurface } from '../../../../hooks/useStableCallbacks';
 import { hasBeforePlayHook, notifyPlaybackFailed, runBeforePlayHook } from '../../../../services/hostExtensionHooks';
 import { wholeQueueWritesSoFar } from '../../../../services/wholeQueueWrites';
+import { noteQueueStart } from './queueStarts';
 import { errorMessage } from '../../../../utils/errorText';
 
 // src/components/app/playback/start/usePlaybackQueueController.ts
@@ -487,6 +488,13 @@ export function usePlaybackQueueController({
         // library's display (playerDisplayQueue, a new array each time), so it is kept too. Read before the
         // hook's wait, as the caller saw it.
         const queueFollowsStore = queue.length === 0 || queue === usePlaybackStore.getState().playQueue;
+        // A play of a queue of its own, or one that turns Personal FM on or off, starts something new: the FM
+        // batches still on their way (a mode switch, a home card) are dropped for it. See queueStarts.ts.
+        const storeAtCall = usePlaybackStore.getState();
+        if (isFmCall !== storeAtCall.isFmMode
+            || !(queueFollowsStore || samePlaybackKeySequence(queue, storeAtCall.playQueue))) {
+            noteQueueStart();
+        }
         // Read before the hook's wait too: the whole-queue writes this play must not write over.
         const queueWritesAtStart = wholeQueueWritesSoFar();
         const storeQueueAtStart = usePlaybackStore.getState().playQueue;

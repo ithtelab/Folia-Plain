@@ -58,6 +58,8 @@ const {
 const { createKugouApiBridge } = require('./kugou/kugouApiBridge.cjs');
 const { createExternalUrlOpener } = require('./externalUrlPolicy.cjs');
 const { createSenderGuardedHandler } = require('./ipcAccessGuard.cjs');
+const { createQishuiApiBridge } = require('./qishui/qishuiApiBridge.cjs');
+const { createQishuiMediaPolicy } = require('./qishui/mediaCors.cjs');
 const { createBodianApiBridge } = require('./bodian/bodianApiBridge.cjs');
 const { createBodianMediaPolicy } = require('./bodian/mediaCors.cjs');
 const { createYtmApiBridge } = require('./ytm/ytmApiBridge.cjs');
@@ -266,6 +268,10 @@ const transcodeService = createTranscodeService({
 // KuGou credentials stay inside the main process and are encrypted lazily after Electron is ready.
 // The bridge refuses Linux's plaintext `basic_text` fallback and degrades to an in-memory session.
 const kugouApiBridge = createKugouApiBridge({ store, safeStorage });
+const qishuiMediaPolicy = createQishuiMediaPolicy();
+const qishuiApiBridge = createQishuiApiBridge({ store, safeStorage, fetch: (url, options) => electronNet.fetch(url, options),
+  onAudioSource: url => qishuiMediaPolicy.register(url),
+});
 const bodianMediaPolicy = createBodianMediaPolicy();
 const bodianApiBridge = createBodianApiBridge({ store, safeStorage,
   onAudioSource: url => bodianMediaPolicy.register(url),
@@ -3428,7 +3434,7 @@ function setupCorsBypassHandlers() {
         hostname === 'kugou.com' ||
         hostname.endsWith('.kugou.com') ||
         // Bodian audio and cover CDNs may omit CORS headers needed by Web Audio and canvas/WebGL.
-        bodianMediaPolicy.allows(details);
+        bodianMediaPolicy.allows(details) || qishuiMediaPolicy.allows(details);
     } catch (error) {
       isTargetDomain = false;
     }
@@ -3443,7 +3449,7 @@ function setupCorsBypassHandlers() {
     callback({ cancel: false, responseHeaders });
   });
 
-  ses.webRequest.onBeforeRedirect(details => bodianMediaPolicy.followRedirect(details));
+  ses.webRequest.onBeforeRedirect(details => { bodianMediaPolicy.followRedirect(details); qishuiMediaPolicy.followRedirect(details); });
 
   ses.webRequest.onErrorOccurred({ urls: ['*://*.kugou.com/*'] }, details => {
     const requestInfo = getKugouMediaRequestInfo(details);
@@ -6764,6 +6770,10 @@ ipcMain.handle('kugou-api-request', createSenderGuardedHandler({
   isTrusted: isFirstPartyWindowContents,
   handler: (_event, operation, params) => kugouApiBridge.request(operation, params),
 }));
+ipcMain.handle('qishui-api-request', (event, operation, params) => {
+  if (!isTrustedMainWindowContents(event.sender)) return { ok: false, error: { code: 'unavailable', message: 'Untrusted Qishui request' } };
+  return qishuiApiBridge.request(operation, params);
+});
 ipcMain.handle('bodian-api-request', (event, operation, params) => {
   if (!isTrustedMainWindowContents(event.sender)) {
     return { ok: false, error: { code: 'unavailable', message: 'Untrusted Bodian request' } };

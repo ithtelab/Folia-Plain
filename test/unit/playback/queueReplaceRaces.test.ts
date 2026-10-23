@@ -13,6 +13,8 @@ import { PlayerState, type SongResult } from '@/types';
 // The top-up is also pinned against the writes that are not a new queue (an add, an edit in place, a
 // copy the store took before this render): it still adds its batch to the queue as it is and steps on,
 // and drops only for a play, a mode or a scene that came while it waited.
+// Last, which plays count as starting a queue of their own (queueStarts.ts), which the FM mode switch and
+// the home scene card wait on: not a step through the queue there is, nor a copy of it.
 // Written like currentSongPlaySong.test.ts: the hook runs without a renderer, the store is the real one,
 // and the services that wait are stubs held by gates. Unlike there the hook keeps its refs, its state and
 // its effects across calls, as React keeps them across renders, so calling it again after a write is the
@@ -136,6 +138,7 @@ const { resetPlaybackStore } = await import('./currentSongWatch');
 const { onlineFailureOf } = await import('@/services/onlineMusic/failure/onlineFailureCase');
 const { usePersonalFmModeStore } = await import('@/stores/usePersonalFmModeStore');
 const { useAudioSettingsStore } = await import('@/stores/useAudioSettingsStore');
+const { queueStartsSoFar } = await import('@/components/app/playback/start/queueStarts');
 
 const online = (id: string): SongResult => ({
     id, name: id.toUpperCase(), artists: [], album: { id: '', name: '' }, durationMs: 1000,
@@ -722,6 +725,35 @@ describe('the Personal FM top-up, with writes that are not a new queue', () => {
 
         expect(keys(store().playQueue)).toEqual(keys([p1, p2]));
         expect(store().currentSong).toMatchObject({ id: 'p1' });
+    });
+});
+
+describe('a play that starts a queue of its own', () => {
+    /** How many starts `play` counted. */
+    const startsOf = async (play: () => Promise<unknown> | void) => {
+        const before = queueStartsSoFar();
+        await play();
+        await settle();
+        return queueStartsSoFar() - before;
+    };
+
+    it('is counted for a queue the store does not hold, and for Personal FM turned on or off', async () => {
+        playerWith([f1, f2, f3], f1, true);
+        const { render } = mount();
+        expect(await startsOf(() => render().playSong(p1, [p1, p2], true))).toBe(1);
+        expect(await startsOf(() => render().playSong(p1, store().playQueue, false))).toBe(1);
+    });
+
+    it('is not counted for a step through the queue there is, a copy of it, or the FM top-up', async () => {
+        playerWith([f1, f2, f3, x], f1, true);
+        const { render } = mount();
+        expect(await startsOf(() => render().handleNextTrack())).toBe(0);
+        expect(await startsOf(() => render().playSong(f3, store().playQueue.map(song => ({ ...song })), true))).toBe(0);
+        expect(await startsOf(() => render().handleNextTrack())).toBe(0);
+        expect(store().currentSong).toMatchObject({ id: 'x' });
+        env.self.fmBatch = Promise.resolve([y]);
+        expect(await startsOf(() => render().handleNextTrack())).toBe(0);
+        expect(store().currentSong).toMatchObject({ id: 'y' });
     });
 });
 

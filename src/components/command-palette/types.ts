@@ -17,6 +17,7 @@ import type { LyricStaffAbsorbMode, LyricStaffPolicy } from '../../utils/lyrics/
 import type { AudioEqualizerModeId } from '../../utils/audioEqualizer';
 import type { ThemeGenerationSource } from '../../services/themePreferences';
 import type { TransitionMode } from '../../services/automix/transitionStrategy';
+import type { PersonalFmCatalog } from '../../types/personalFm';
 import type { PersonalFmSelection } from '../../services/onlineMusic/fmModes';
 import type { QueueBatchAction, QueueFacetKind } from './queueQuery';
 import type { CommandPlatform } from './availability';
@@ -168,6 +169,7 @@ export type CommandPalettePlaybackContext = {
     /** Personal FM owns the queue while it is on air; queue commands stand down. */
     isFmMode: boolean;
     personalFmSelection: PersonalFmSelection;
+    personalFmCatalog?: PersonalFmCatalog;
     /** Only the providers that actually implement FM modes offer the picker. */
     isPersonalFmModeSupported: boolean;
     setPersonalFmSelection: (selection: PersonalFmSelection) => Promise<void> | void;
