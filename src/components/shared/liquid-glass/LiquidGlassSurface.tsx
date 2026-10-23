@@ -4,6 +4,12 @@ import './liquidGlass.css';
 import { useLiquidGlassMotion } from './useLiquidGlassMotion';
 import { useReducedMotionFor } from '../../../hooks/useReducedMotionFor';
 import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
+import {
+    GLASS_BLUR_STD_DEVIATION,
+    GLASS_DISPLACEMENT_SCALE,
+    GLASS_TONE_CURVE,
+    glassChromaticFringe,
+} from './glassBaseline';
 
 // Decorative material only: the host keeps its own layout, controls, hit area and semantics.
 const LiquidGlassFlow = lazy(() => import('./LiquidGlassFlow'));
@@ -117,20 +123,12 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     }, [active, enabled, radius]);
 
     const enhanced = enabled && active && lens !== null;
-    // How far apart the rim's three channels sit, in CSS pixels.
-    //
-    // Only a pane thick enough to have a rim gets it. Measured on the 40 px nav strip, a 0.85 px
-    // fringe put an 18/255 (7%) yellow line along its edge where the same band without chromatic
-    // separation read 1/255: on a strip that thin the split lands in a single pixel column and
-    // reads as a drawn border, not as refraction, so thin controls keep the plain rim. The 600 px
-    // settings panel moves its rim's blue channel by 25/255 over about three pixels - a lit edge.
-    //
-    // A light pane over a bright page is also where a colour cast shows most, so it gets less than
-    // dark glass, which hides it in shadow.
-    const THIN_PANE_PX = 56;
-    const paneThickness = lens ? Math.min(lens.width, lens.height) : 0;
-    const thicknessScale = paneThickness >= THIN_PANE_PX ? 1 : 0;
-    const chromatic = { fringe: (isDaylight ? 0.85 : 1.15) * thicknessScale };
+    // How far apart the rim's three channels sit: from the frozen baseline, because the separation
+    // is sized for the displacement scale above it (glassBaseline.ts says what changing it breaks).
+    // A pane too thin to have a rim gets none - the split would land in a single pixel column.
+    const chromatic = {
+        fringe: glassChromaticFringe(isDaylight, lens ? Math.min(lens.width, lens.height) : 0),
+    };
     // Compress extreme backdrops locally so a white cover cannot wash out dark-mode labels,
     // and a black cover cannot erase light-mode labels. Artwork elsewhere stays untouched.
     //
@@ -141,7 +139,7 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     // one. That is what gives it the same presence dark glass gets for free.
     // The output 0 at pure black is deliberate: lifting it put a bright floor under the displaced
     // rim, which showed as a pale halo around glass sitting on dark artwork.
-    const toneCurve = isDaylight ? '0 0.2 0.44 0.72 1' : '0 0.24 0.43 0.49 0.5';
+    const toneCurve = isDaylight ? GLASS_TONE_CURVE.light : GLASS_TONE_CURVE.dark;
     if (!enabled && legacy === 'surface') return null;
     if (!enabled) return <span aria-hidden="true" className="liquid-glass-surface" data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-optics="classic" data-glass-legacy={legacy}><span className="liquid-glass-classic" /></span>;
     return (
@@ -159,12 +157,12 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
                         {/* A thin pane: 3.5px, so shapes behind it stay recognisable.
                             The rim's own bend supplies the "glass" read; the centre does not need to
                             erase the backdrop to do its job. */}
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="frost" />
+                        <feGaussianBlur in="SourceGraphic" stdDeviation={GLASS_BLUR_STD_DEVIATION} result="frost" />
                         <feImage ref={imageRef} href={lens.image} x="0" y="0" width={lens.width} height={lens.height}
                             preserveAspectRatio="none" result="normals" />
                         <feOffset ref={normalOffsetRef} in="normals" dx="0" dy="0" result="movingNormals" />
                         <feDisplacementMap ref={displacementRef} in="SourceGraphic" in2="movingNormals"
-                            scale={isDaylight ? 22 : 16}
+                            scale={isDaylight ? GLASS_DISPLACEMENT_SCALE.light : GLASS_DISPLACEMENT_SCALE.dark}
                             xChannelSelector="R" yChannelSelector="G" result="bent" />
                         {/* A real pane splits colour at its bend: the rim refracts long wavelengths
                             less than short ones, so a bright edge on one side and a cool one on the
