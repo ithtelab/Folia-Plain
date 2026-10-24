@@ -53,25 +53,30 @@ export default function WindowControls({
 
     const remoteControlVisible = revealed && !isMainWindowClickThroughEnabled;
     const standardControlsVisible = revealed && !isMainWindowClickThroughEnabled;
+    // The glyphs are only as visible as what is behind them: in the dark appearance they are near
+    // white, and the page under the bar can be pale enough to erase them. A drop shadow costs
+    // nothing and keeps them legible over any content without putting a panel behind the strip.
+    // Only in the dark appearance - over a light page the dark glyphs already read.
+    const glyphShadow = isDaylight ? undefined : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55))';
     const remoteBtnClass = `flex items-center justify-center w-11 h-full transition-all duration-200 ${
         remoteControlVisible
             ? isDaylight
                 ? 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-black/[0.05]'
-                : 'pointer-events-auto opacity-75 translate-y-0 hover:opacity-100 hover:bg-white/10'
+                : 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-white/10'
             : 'pointer-events-none opacity-0 -translate-y-1'
     }`;
     const btnClass = `flex items-center justify-center w-11 h-full transition-all duration-200 ${
         standardControlsVisible
             ? isDaylight
                 ? 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-black/[0.05]'
-                : 'pointer-events-auto opacity-75 translate-y-0 hover:opacity-100 hover:bg-white/10'
+                : 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-white/10'
             : 'pointer-events-none opacity-0 -translate-y-1'
     }`;
     const closeBtnClass = `flex items-center justify-center w-11 h-full transition-all duration-200 ${
         standardControlsVisible
             ? isDaylight
                 ? 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-red-500 hover:text-white'
-                : 'pointer-events-auto opacity-75 translate-y-0 hover:opacity-100 hover:bg-red-500 hover:text-white'
+                : 'pointer-events-auto opacity-85 translate-y-0 hover:opacity-100 hover:bg-red-500 hover:text-white'
             : 'pointer-events-none opacity-0 -translate-y-1'
     }`;
 
@@ -82,6 +87,7 @@ export default function WindowControls({
             style={{
                 WebkitAppRegion: standardControlsVisible ? 'no-drag' : undefined,
                 pointerEvents: 'none',
+                filter: glyphShadow,
             } as React.CSSProperties}
         >
             <button

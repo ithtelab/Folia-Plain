@@ -148,6 +148,12 @@ const AppShell: React.FC<AppShellProps> = ({
     const shouldApplyWindowRadius = useCustomWindowRadius && !isWindowMaximized && !isWindowFullscreen;
     const areTitlebarControlsVisible = isTitlebarRevealed || alwaysShowMainWindowTitlebar;
     const shouldRenderTitlebarBackdrop = !isPlayerView || (useCustomWindowRadius && !isMainWindowClickThroughEnabled);
+    // A revealed bar carries its own ground. In the dark appearance the controls are white glyphs,
+    // and the page behind them can be as pale as a sheet of paper (a light wallpaper, the pale
+    // lattice pattern), where they simply disappear - which is the one moment the reveal exists
+    // for. The strip is still a scrim rather than a panel: it darkens the top edge and fades out
+    // by the bottom of the bar, so what is behind it reads as dimmed for the height of the strip
+    // and untouched below.
     const titlebarBackdropClassName = `absolute inset-0 backdrop-blur-sm ${
         isDaylight
             ? isPlayerView
@@ -155,7 +161,7 @@ const AppShell: React.FC<AppShellProps> = ({
                 : 'bg-white/[0.12] border-b border-white/15'
             : isPlayerView
                 ? 'bg-black/[0.18] border-b border-white/10 shadow-[0_8px_28px_rgba(0,0,0,0.20)]'
-                : ''
+                : 'bg-gradient-to-b from-black/45 to-black/10'
     }`;
 
     return (
@@ -215,7 +221,10 @@ const AppShell: React.FC<AppShellProps> = ({
                                             : 'border-amber-300/35 bg-black/55 text-amber-100 hover:bg-black/70'
                                         : isDaylight
                                             ? 'border-black/[0.06] bg-white/40 text-zinc-700 hover:bg-white/80 hover:text-zinc-900 shadow-[0_4px_12px_rgba(0,0,0,0.04)]'
-                                            : 'border-white/15 bg-transparent text-white/75 hover:bg-black/20 hover:text-white'
+                                            // Not `bg-transparent`: a bare white glyph over a pale page
+                                            // disappeared, which is the same failure the bar's own
+                                            // scrim above fixes. The pill carries its own depth.
+                                            : 'border-white/20 bg-black/45 text-white/90 hover:bg-black/65 hover:text-white'
                                 }`}
                             >
                                 {isMainWindowClickThroughEnabled ? <Lock size={14} /> : <LockOpen size={14} />}
