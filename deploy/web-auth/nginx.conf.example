@@ -1,0 +1,145 @@
+# Folia Plain Web 访问密钥门 —— nginx 站点配置示例
+#
+# 替换这几处后放入 sites-available 并启用：
+#   music.example.com       站点域名
+#   /var/www/folia/dist     前端构建产物
+#   /www/folia-acme         ACME 验证目录（certbot webroot）
+#   /etc/letsencrypt/...    证书路径
+#
+# 认证服务需先按 README 安装，监听 127.0.0.1:8790。
+
+# 80 端口只做证书验证与跳转，不提供内容，避免密钥以明文传输
+server {
+    listen 80;
+    listen [::]:80;
+    server_name music.example.com;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /www/folia-acme;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name music.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/music.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/music.example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    root /var/www/folia/dist;
+    index index.html;
+    client_max_body_size 100m;
+
+    # 每个请求先问认证服务，未登录则跳登录页
+    auth_request /_auth/verify;
+    error_page 401 = @auth_login;
+
+    location = /_auth/verify {
+        internal;
+        proxy_pass http://127.0.0.1:8790/verify;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Original-URI $request_uri;
+    }
+
+    # 登录页与登出自身不校验会话
+    location = /login {
+        auth_request off;
+        proxy_pass http://127.0.0.1:8790/login;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 30s;
+    }
+
+    location = /logout {
+        auth_request off;
+        proxy_pass http://127.0.0.1:8790/logout;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 30s;
+    }
+
+    location @auth_login {
+        return 302 https://$host/login?next=$request_uri;
+    }
+
+    # 证书续签必须放行；启用 CDN 强制 HTTPS 时挑战会走 443，两个端口都要放
+    location ^~ /.well-known/acme-challenge/ {
+        root /www/folia-acme;
+        default_type text/plain;
+        auth_request off;
+        try_files $uri =404;
+    }
+
+    # PWA 的 Service Worker 会预缓存 index.html 并拦截导航请求，从缓存直接进应用，
+    # 绕过上面的会话校验。这里返回自注销脚本：卸载 SW、清空缓存、刷新页面。
+    location = /sw.js {
+        auth_request off;
+        default_type application/javascript;
+        add_header Cache-Control "no-store, must-revalidate";
+        return 200 'self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>{e.waitUntil((async()=>{await self.registration.unregister();const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)));const cs=await self.clients.matchAll({type:"window"});cs.forEach(c=>{try{c.navigate(c.url)}catch(_){}});})())});';
+    }
+
+    location = /registerSW.js {
+        auth_request off;
+        default_type application/javascript;
+        add_header Cache-Control "no-store, must-revalidate";
+        return 200 '/* access control enabled: PWA offline cache disabled */';
+    }
+
+    # 在线音乐同源反向代理，未登录时返回 JSON 便于前端识别会话过期
+    location /netease/ {
+        error_page 401 = @auth_json;
+        proxy_pass http://127.0.0.1:3000/;
+        proxy_http_version 1.1;
+        proxy_buffer_size 32k;
+        proxy_buffers 8 32k;
+        proxy_busy_buffers_size 64k;
+        proxy_hide_header Set-Cookie;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 60s;
+    }
+
+    location @auth_json {
+        default_type application/json;
+        add_header Cache-Control "no-store" always;
+        return 401 "{\"code\":401,\"message\":\"login required\"}";
+    }
+
+    location / {
+        # 页面不进浏览器缓存，避免旧副本绕过会话校验
+        add_header Cache-Control "no-store, must-revalidate" always;
+        # 移除 PWA 注册标签，并主动注销已存在的 Service Worker、清空缓存后重载
+        sub_filter '<script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>' '';
+        sub_filter '</body>' '<script>(function(){if(!("serviceWorker"in navigator))return;navigator.serviceWorker.getRegistrations().then(function(rs){if(!rs.length)return;Promise.all(rs.map(function(r){return r.unregister()})).then(function(){return caches.keys()}).then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).then(function(){location.reload()})})})();</script></body>';
+        sub_filter_once on;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|ttf|eot|webp|avif|mp3|flac|ogg|m4a)$ {
+        expires 30d;
+        add_header Cache-Control "public";
+        access_log off;
+    }
+
+    access_log /var/log/nginx/folia.access.log;
+    error_log  /var/log/nginx/folia.error.log;
+}

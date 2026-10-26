@@ -1,0 +1,25 @@
+[Unit]
+Description=Folia Web access gate (login page and signed session cookie)
+After=network.target
+
+[Service]
+Type=simple
+User=folia-auth
+Group=folia-auth
+EnvironmentFile=/etc/folia-auth/env
+ExecStart=__NODE_BIN__ /opt/folia-auth/server.mjs
+Restart=always
+RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target
