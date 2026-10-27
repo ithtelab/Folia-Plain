@@ -1637,6 +1637,7 @@ export default {
     "exploreAgain": "Putar lagi",
     "exploreSimilar": "Mirip dengan {{name}}",
     "neteaseDailyPlaylists": "Playlist harian untuk Anda",
+    "neteaseGuestPlaylists": "Pilihan populer",
     "neteaseCharts": "Tangga lagu",
     "neteaseNewSongs": "Lagu baru",
     "neteaseNewAlbums": "Album baru",

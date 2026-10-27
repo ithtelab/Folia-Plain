@@ -101,6 +101,10 @@ const PAGED = 'paged ';
 
 const DAILY_SONGS_ID = 'netease-daily-songs';
 const DAILY_PLAYLISTS_ID = 'netease-daily-playlists';
+// 没有账号时这一格换成网易云的热门歌单：/personalized 与 /top/playlist 都不需要登录，
+// 而每日推荐只有账号才有，游客的首页本来会是空的。
+const GUEST_PLAYLISTS_ID = 'netease-guest-playlists';
+const GUEST_PLAYLISTS_BATCH = 30;
 const CHARTS_ID = 'netease-charts';
 const NEW_SONGS_ID = 'netease-new-songs';
 // The lists read a batch at a time; a chart's songs are `CHART` and the chart's id.
@@ -473,11 +477,19 @@ export const createNeteaseExplore = (normalize: NeteaseExploreNormalizers): Onli
         }
         hadAccount = signedIn;
         const read = newRead(++reads, memory);
-        const [home, charts, daily, lists] = await arrivedOf<any>('the first page', [
-            neteaseApi.getHomeBlocks(),
-            chartsOf(read),
-            ...(signedIn ? [neteaseApi.getDailyRecommendedSongs(), neteaseApi.getDailyRecommendedPlaylists()] : []),
-        ]);
+        // 同一个位置按有没有账号问不同的东西：有账号问每日推荐，没有账号问热门歌单。
+        // 只把真要发的请求放进 `asked`，`arrivedOf` 的「全都失败才抛」才仍然说得准。
+        const asked: Array<Promise<any>> = [neteaseApi.getHomeBlocks(), chartsOf(read)];
+        if (signedIn) {
+            asked.push(neteaseApi.getDailyRecommendedSongs(), neteaseApi.getDailyRecommendedPlaylists());
+        } else {
+            asked.push(neteaseApi.getHotPlaylists(GUEST_PLAYLISTS_BATCH, 0));
+        }
+        const answers = await arrivedOf<any>('the first page', asked);
+        const [home, charts] = answers;
+        const daily = signedIn ? answers[2] : null;
+        const lists = signedIn ? answers[3] : null;
+        const hot = signedIn ? null : answers[2];
         const { shelves, leftOut } = shelvesOf(blocksIn(home), read);
         // A shelf of this page hands out one batch of its block, as a list read whole does.
         const blocks = shelves.map(shelf => ({ ...shelf, ...handOut(read, shelf.id, shelf.items) }));
@@ -486,7 +498,9 @@ export const createNeteaseExplore = (normalize: NeteaseExploreNormalizers): Onli
         const sections = [
             listShelf(read, DAILY_SONGS_ID, i18n.t('home.dailyRecommendations'), dailySongs),
             ...blocks,
-            listShelf(read, DAILY_PLAYLISTS_ID, i18n.t('home.neteaseDailyPlaylists'), rowsOf(lists?.recommend).map(playlistItem)),
+            signedIn
+                ? listShelf(read, DAILY_PLAYLISTS_ID, i18n.t('home.neteaseDailyPlaylists'), rowsOf(lists?.recommend).map(playlistItem))
+                : listShelf(read, GUEST_PLAYLISTS_ID, i18n.t('home.neteaseGuestPlaylists'), rowsOf(hot?.playlists).map(playlistItem)),
             listShelf(read, CHARTS_ID, i18n.t('home.neteaseCharts'), (charts ?? []).map(chartItem)),
         ].filter(present);
         // (A song of the account's cloud drive is none NetEase lists songs like.)

@@ -1637,6 +1637,7 @@ export default {
     "exploreAgain": "Play again",
     "exploreSimilar": "Similar to {{name}}",
     "neteaseDailyPlaylists": "Daily playlists for you",
+    "neteaseGuestPlaylists": "Popular picks",
     "neteaseCharts": "Charts",
     "neteaseNewSongs": "New songs",
     "neteaseNewAlbums": "New albums",

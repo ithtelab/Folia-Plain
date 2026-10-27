@@ -1637,6 +1637,7 @@ export default {
     "exploreAgain": "再听一次",
     "exploreSimilar": "与《{{name}}》相似",
     "neteaseDailyPlaylists": "每日推荐歌单",
+    "neteaseGuestPlaylists": "热门推荐",
     "neteaseCharts": "排行榜",
     "neteaseNewSongs": "新歌速递",
     "neteaseNewAlbums": "新碟上架",

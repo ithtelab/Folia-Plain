@@ -122,18 +122,23 @@ beforeEach(() => {
 });
 
 describe('NetEase explore page', () => {
-    it("gives a guest NetEase's blocks under its headings and the charts, and asks for nothing of an account", async () => {
+    it("gives a guest NetEase's blocks under its headings, the popular playlists in place of the daily ones, and the charts; it asks for nothing of an account", async () => {
         api.getHomeBlocks.mockResolvedValue(homeOf([...guestBlocks(), ...otherBlocks()]));
+        // A guest's first page has NetEase's popular playlists where an account's has its daily ones.
+        api.getHotPlaylists.mockResolvedValue({ code: 200, more: true, playlists: [{ id: 51, name: 'Hot pick', coverImgUrl: 'https://p3.music.126.net/hot.jpg', playcount: 1200, trackCount: 6, creator: { userId: 8, nickname: 'Hot Maker' } }] });
         const page = await newExplore().getFeed();
 
         // (The block of charts, the record of the account's listening and the podcasts are left out.)
-        expect(idsOf(page.sections)).toEqual([`netease-block-${LISTS}`, `netease-block-${SONGS}`, `netease-block-${FRESH}`, 'netease-charts']);
+        expect(idsOf(page.sections)).toEqual([`netease-block-${LISTS}`, `netease-block-${SONGS}`, `netease-block-${FRESH}`, 'netease-guest-playlists', 'netease-charts']);
         expect(page.sections.slice(0, 3).map(section => section.title)).toEqual(['推荐歌单', '猜你喜欢的「欧美」好歌', '新歌新碟']);
+        expect(page.sections[3].title).toBe(i18n.t('home.neteaseGuestPlaylists'));
+        expect(page.sections[3].items[0]).toMatchObject({ kind: 'collection', collection: { type: 'playlist', id: 51, name: 'Hot pick', playCount: 1200, trackCount: 6 } });
+        expect(api.getHotPlaylists).toHaveBeenCalledWith(30, 0);
         expect(api.getDailyRecommendedSongs).not.toHaveBeenCalled();
         expect(api.getDailyRecommendedPlaylists).not.toHaveBeenCalled();
         expect(page.nextCursor).toBeTruthy();
 
-        const [lists, songs, fresh, charts] = page.sections;
+        const [lists, songs, fresh, , charts] = page.sections;
         expect(lists.items[0]).toMatchObject({ kind: 'collection', collection: { providerId: 'netease', type: 'playlist', id: 17744833377, name: '2026火遍全网的歌曲精选', playCount: 27004044 } });
         expect(songs.items).toHaveLength(4);
         expect(songs.items[0]).toMatchObject({
@@ -158,6 +163,7 @@ describe('NetEase explore page', () => {
         // (`type` is a number in this list.)
         api.getDailyRecommendedPlaylists.mockResolvedValue({ code: 200, recommend: [{ id: 31, type: 1, name: 'For the account', picUrl: 'https://p3.music.126.net/l.jpg', playcount: 9, trackCount: 3, creator: { userId: 7, nickname: 'Maker' } }] });
         const page = await newExplore().getFeed();
+        expect(api.getHotPlaylists).not.toHaveBeenCalled();
         expect(idsOf(page.sections)).toEqual(['netease-daily-songs', `netease-block-${LISTS}`, `netease-block-${SONGS}`, `netease-block-${FRESH}`, 'netease-daily-playlists', 'netease-charts']);
         expect(page.sections[4].items[0]).toMatchObject({ kind: 'collection', collection: { type: 'playlist', id: 31, playCount: 9, creator: { nickname: 'Maker' } } });
 
@@ -172,6 +178,8 @@ describe('NetEase explore page', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => undefined);
         expect(idsOf((await newExplore().getFeed()).sections)).toEqual(['netease-charts']);
         api.getToplists.mockRejectedValue(new TypeError('Failed to fetch'));
+        // 游客这一页问三样东西（首页块、榜单、热门歌单）：三样都读不到才算这一页读不到。
+        api.getHotPlaylists.mockRejectedValue(new TypeError('Failed to fetch'));
         await expect(newExplore().getFeed()).rejects.toThrow('Failed to fetch');
     });
 
