@@ -33,7 +33,13 @@ describe('the sign-in window names no platform', () => {
 
 describe('what each platform declares for the sign-in window', () => {
     it('its mark: one letter and one colour', () => {
-        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => [provider.id, omni.getProviderMark(provider.id)]));
+        // Only the letter and the colour are the platform's own declaration. `iconUrl` comes from a
+        // bundled app icon and is resolved to a hashed asset URL by the bundler, so pinning it here
+        // would pin the build's file names rather than what a platform says about itself.
+        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => {
+            const { letter, color } = omni.getProviderMark(provider.id);
+            return [provider.id, { letter, color }];
+        }));
         expect(marks).toEqual({
             netease: { letter: '云', color: '#dc2626' },
             kugou: { letter: 'K', color: '#2563eb' },

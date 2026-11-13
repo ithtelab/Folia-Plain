@@ -33,14 +33,14 @@ const runtimeSpecifiersOf = (file: string, dynamic: boolean) => {
     ];
 };
 
-/** 仓库内说明符解析成带扩展名的源文件（含 shared/ 下的 .mjs、导入的 .json 与样式表）；裸包名返回 null，找不到文件返回 undefined。 */
+/** 仓库内说明符解析成带扩展名的源文件（含 shared/ 下的 .mjs、.json、样式表与导入的图片资源）；裸包名返回 null，找不到文件返回 undefined。 */
 const resolveSource = (file: string, specifier: string): string | null | undefined => {
     let base: string;
     if (specifier.startsWith('@/')) base = `src/${specifier.slice(2)}`;
     else if (specifier.startsWith('.')) base = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
     else return null;
     return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`]
-        .find(candidate => /\.(?:tsx?|m?js|json|css)$/.test(candidate) && existsSync(path.join(ROOT, candidate)));
+        .find(candidate => /\.(?:tsx?|m?js|json|css|jpe?g|png|svg|webp)$/.test(candidate) && existsSync(path.join(ROOT, candidate)));
 };
 
 /** 从入口走仓库内的运行时导入，回传闭包里的源文件、各自引用的包名，以及解析不到的说明符。 */

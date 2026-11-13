@@ -47,8 +47,10 @@ describe('settings that only one library UI reads', () => {
         // What every UI reads stays: the home entries, and the S key on a filtering surface.
         expect(underBravais.has('homeTabsVisibility')).toBe(true);
         expect(underBravais.has('gridPaletteHotkey')).toBe(true);
-        // The search module loads the whole command registry the first time.
-    }, 30000);
+        // The search module loads the whole command registry the first time. Its 10 s on a quiet
+        // machine becomes 30 s+ when every worker runs at once, so the budget is sized for that load
+        // rather than for the work itself.
+    }, 90_000);
 
     it('offer their commands only while the grid is the effective suite', async () => {
         const { settingsCommands } = await import('@/components/command-palette/commands/settingsCommands');
