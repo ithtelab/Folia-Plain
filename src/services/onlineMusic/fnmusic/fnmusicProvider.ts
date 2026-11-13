@@ -1,4 +1,5 @@
 import type { Artist, SongResult, UnifiedSong } from '../../../types';
+import appIcon from '../../../assets/providers/apps/fnmusic.jpg';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import type {
     AudioQualityPreference,
@@ -320,7 +321,7 @@ export const fnmusicProvider: OnlineMusicProvider = {
     displayName: '飞牛音乐',
     shortName: '飞牛',
     shortNameKey: 'onlineProviderName.fnmusic',
-    mark: { letter: '飞', color: '#0891b2' },
+    mark: { letter: '飞', color: '#0891b2', iconUrl: appIcon },
     // 仅桌面端（Electron 主进程桥）可用：网页/Docker 下浏览器丢 Cookie 受限头且受 CORS 限制。
     getAvailability: () => {
         if (typeof window !== 'undefined' && !(window as any).electron?.fnmusicRequest) {

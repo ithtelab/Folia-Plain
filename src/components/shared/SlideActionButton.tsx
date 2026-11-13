@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
+import LiquidGlassSurface from './liquid-glass/LiquidGlassSurface';
 
 // src/components/shared/SlideActionButton.tsx
 // The player-style round action button with a second action on a leftward slide: tap the button for
@@ -221,12 +222,13 @@ export const SlideActionButton: React.FC<SlideActionButtonProps> = ({
                     onActivate();
                 }}
                 style={{ touchAction: docked ? undefined : 'none' }}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform border-none absolute right-0 top-0 z-10 disabled:opacity-40 disabled:cursor-default ${docked
+                className={`${docked ? '' : 'liquid-glass-host liquid-glass-button '}w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform border-none absolute right-0 top-0 z-10 disabled:opacity-40 disabled:cursor-default ${docked
                     ? `bg-transparent ${isDaylight ? 'text-zinc-900 hover:bg-black/5' : 'text-white hover:bg-white/10'}`
                     : `shadow-lg backdrop-blur-md ${isDaylight ? 'bg-white/70 text-zinc-900' : 'bg-black/40 text-white'}`}`}
                 title={title}
                 aria-label={title}
             >
+                {!docked && <LiquidGlassSurface isDaylight={isDaylight} />}
                 <Icon size={20} />
             </button>
         </div>

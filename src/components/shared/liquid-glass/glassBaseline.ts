@@ -30,3 +30,14 @@ export const GLASS_TONE_CURVE = {
     light: '0 0.2 0.44 0.72 1',
     dark: '0 0.24 0.43 0.49 0.5',
 } as const;
+
+/**
+ * How far the filter region reaches outside the pane, in CSS pixels.
+ *
+ * Not an optical value: it is what stops the bent rim from stair-stepping. `feDisplacementMap`
+ * samples the normal map past the element's rounded edge, and a filter region that ends on that
+ * edge clips the samples away, leaving a hard staircase along the curve. Room outside the pane
+ * lets the bend finish, and the pane's own mask trims it back to the antialiased boundary. Twice
+ * the blur is enough for the widest bend the scale above asks for.
+ */
+export const GLASS_FILTER_BLEED = GLASS_BLUR_STD_DEVIATION * 2;

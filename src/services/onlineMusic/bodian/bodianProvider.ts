@@ -1,3 +1,4 @@
+import appIcon from '../../../assets/providers/apps/bodian.jpg';
 import type { OnlineMusicProvider, ProviderAudioSource, ProviderCollection, LoginState } from '../../../types/onlineMusic';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
@@ -49,7 +50,7 @@ async function getBodianDiscoverCollections(): Promise<ProviderCollection[]> {
 
 export const bodianProvider: OnlineMusicProvider = {
     id: 'bodian', displayName: '波点音乐', shortName: '波点', shortNameKey: 'onlineProviderName.bodian',
-    mark: { letter: '波', color: '#0d9488' },
+    mark: { letter: '波', color: '#0d9488', iconUrl: appIcon },
     getAvailability: getBodianTransportAvailability,
     describeFailure: describeBodianFailure,
     capabilities: {

@@ -8,6 +8,7 @@ import { kitMotionTokens, useKitReducedMotion } from '../modal/settings/kit/moti
 import { openLoginWindow } from './loginWindowStore';
 import { PlatformMark } from './PlatformMark';
 import { orderRows, rowStatus } from './platformRows';
+import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
 import './login.css';
 
 // src/components/login/HomeLoginPanel.tsx
@@ -47,13 +48,19 @@ const HomeLoginPanel: React.FC<HomeLoginPanelProps> = ({ account }) => {
                 type="button"
                 data-ponder="sign-in"
                 onClick={event => openLoginWindow(ranOut ? activeProviderId : null, event.currentTarget)}
-                className="login-rise st-t-fast mt-7 inline-flex h-12 max-w-full items-center gap-2.5 rounded-xl bg-[var(--st-accent)] pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-on-accent)] transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
+                className="liquid-glass-host liquid-glass-button login-rise st-t-fast relative mt-7 inline-flex h-12 max-w-full items-center gap-2.5 overflow-hidden rounded-xl bg-[var(--st-accent)] pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-on-accent)] transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
                 style={{ animationDelay: '80ms', '--login-edge': 'var(--st-accent)' } as React.CSSProperties}
             >
-                <span className="flex shrink-0">
+                <LiquidGlassSurface isDaylight={isDaylight} radius={12} legacy="login" />
+                <span className="relative flex shrink-0 items-center">
                     {marks.map((row, index) => (
-                        <span key={row.providerId} className={`inline-flex rounded-full shadow-[0_0_0_2px_var(--st-accent)] ${index > 0 ? '-ml-2' : ''}`}>
-                            <PlatformMark providerId={row.providerId} label={providerDisplayName(t, row)} size={28} />
+                        // 图标之间留一道细缝，而不是用负边距叠压：小尺寸下叠压会把圆角吃掉，
+                        // 看起来像一团彩色。ring 用按钮自己的底色，压住图标自带的透明边。
+                        <span
+                            key={row.providerId}
+                            className={`inline-flex items-center justify-center rounded-full ring-2 ring-[var(--st-accent)] ${index > 0 ? 'ml-1' : ''}`}
+                        >
+                            <PlatformMark providerId={row.providerId} label={providerDisplayName(t, row)} size={26} />
                         </span>
                     ))}
                 </span>

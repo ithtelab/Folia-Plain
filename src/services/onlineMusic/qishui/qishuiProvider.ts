@@ -11,13 +11,14 @@ import { qishuiRecommendations, clearQishuiRecommendations } from './qishuiRecom
 import { qishuiMutations, qishuiSongId as songId } from './qishuiMutations';
 import { qishuiPlayback, clearQishuiPlayback, readQishuiSongs } from './qishuiPlayback';
 import { describeQishuiFailure } from './qishuiFailure';
+import appIcon from '../../../assets/providers/apps/qishui.jpg';
 
 // Car platform adapter; account and catalogue operations share the existing Omni entry points.
 // What belongs to one sign-in: the explore stream's memory, the scene catalogue and the playability checks.
 // Dropped together whenever the account changes: confirmed, signed out, or the sign-in ran out.
 function clearAccountState() { clearQishuiExplore(); clearQishuiRecommendations(); clearQishuiPlayback(); }
 export const qishuiProvider: OnlineMusicProvider = {
-    id: 'qishui', displayName: '汽水音乐', shortName: '汽水', shortNameKey: 'onlineProviderName.qishui', mark: { letter: '汽', color: '#19a58c' },
+    id: 'qishui', displayName: '汽水音乐', shortName: '汽水', shortNameKey: 'onlineProviderName.qishui', mark: { letter: '汽', color: '#19a58c', iconUrl: appIcon },
     getAvailability: getQishuiAvailability,
     capabilities: { search: true, playback: true, lyrics: true, wordByWordLyrics: true, auth: true,
         userLibrary: true, playlists: true, albums: false, artists: true, recommendations: true,

@@ -138,7 +138,7 @@ const {
 } = require('./aiTextClient.cjs');
 const { createAiCredentialStore, isAiCredentialKey, isReservedAiCredentialKey } = require('./aiCredentialStore.cjs');
 const {
-  SEGMENTATION_GEMINI_GENERATION_CONFIG,
+  SEGMENTATION_GEMINI_SCHEMA,
   SEGMENTATION_JSON_SCHEMA,
   SEGMENTATION_MAX_OUTPUT_TOKENS,
   SEGMENTATION_SCHEMA_NAME,
@@ -8383,17 +8383,15 @@ ipcMain.handle('generate-theme', firstParty('generate-theme', async (event, lyri
     if (provider === 'openai') {
       const systemPrompt = buildThemeSystemPrompt(true);
       const sourcePrompt = buildThemeSourcePrompt(snippet, isPureMusic, songTitle);
-      const apiUrl = normalizeOpenAIChatCompletionsUrl(store.get('OPENAI_API_URL'));
       const content = await runAiJsonCompletion({
         store: aiCredentials.settingsView,
+        task: 'theme',
         systemPrompt,
         sourcePrompt,
         schema: THEME_JSON_SCHEMA,
         schemaName: THEME_JSON_SCHEMA_NAME,
         customFetch,
-        maxTokens: detectOpenAICompatibleProvider(apiUrl) === 'openai'
-          ? THEME_MAX_OUTPUT_TOKENS
-          : 8192,
+        answerTokens: THEME_MAX_OUTPUT_TOKENS,
       });
 
       let jsonStr = content.trim();
@@ -8482,19 +8480,20 @@ ipcMain.handle('segment-lyrics', firstParty('segment-lyrics', async (event, line
 
     rawResponse = await runAiJsonCompletion({
       store: aiCredentials.settingsView,
+      // Splitting text at word boundaries has nothing to reason about, and a reasoning model left
+      // to its own devices spends the whole budget thinking and returns nothing. The segmentation
+      // task is what tells each provider's adapter to switch reasoning off (on Gemini, the zero
+      // thinking budget of SEGMENTATION_GEMINI_GENERATION_CONFIG).
+      task: 'segmentation',
       systemPrompt: buildSegmentationSystemPrompt(),
       sourcePrompt: buildSegmentationSourcePrompt(sourceLines),
       schema: SEGMENTATION_JSON_SCHEMA,
       schemaName: SEGMENTATION_SCHEMA_NAME,
-      // Gemini takes its own dialect plus a zero thinking budget; see the config's comment for
-      // the measurements. Sending neither is what made this take 40s.
-      geminiGenerationConfig: SEGMENTATION_GEMINI_GENERATION_CONFIG,
+      // Gemini takes its own dialect; see the generation config's comment for the measurements.
+      // Sending neither the schema nor the zero thinking budget is what made this take 40s.
+      geminiSchema: SEGMENTATION_GEMINI_SCHEMA,
       customFetch,
-      maxTokens: SEGMENTATION_MAX_OUTPUT_TOKENS,
-      // Splitting text at word boundaries has nothing to reason about, and a reasoning model left
-      // to its own devices spends the whole budget thinking and returns nothing. Same reason the
-      // Gemini config sets thinkingBudget to 0.
-      disableReasoning: true,
+      answerTokens: SEGMENTATION_MAX_OUTPUT_TOKENS,
     });
 
     const { boundaries, rejections } = parseSegmentationResponse(rawResponse, sourceLines);

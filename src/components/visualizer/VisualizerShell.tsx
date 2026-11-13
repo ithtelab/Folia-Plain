@@ -3,6 +3,7 @@ import { motion, MotionValue } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useWindowButtonsAtTopLeft } from '../../hooks/useWindowButtonsAtTopLeft';
 import { ChevronLeft } from 'lucide-react';
+import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
 import { AudioBands, Theme } from '../../types';
 import { resolveThemeFontStack, resolveThemeFontWeight } from '../../utils/fontStacks';
 import { type VisualizerSharedProps } from './definition';
@@ -241,10 +242,11 @@ const VisualizerShell = forwardRef<HTMLDivElement, VisualizerShellProps>(({
                         event.stopPropagation();
                         resolvedOnBack();
                     }}
-                    className={`absolute ${lowerBackButton ? 'top-12' : 'top-6'} left-6 z-30 h-10 w-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md bg-black/20 hover:bg-white/10 text-white/60 pointer-events-auto`}
+                    className={`liquid-glass-host liquid-glass-button absolute ${lowerBackButton ? 'top-12' : 'top-6'} left-6 z-30 h-10 w-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md bg-black/20 hover:bg-white/10 text-white/60 pointer-events-auto`}
                     style={{ pointerEvents: isBackButtonVisible ? 'auto' : 'none' }}
                 >
-                    <ChevronLeft size={20} />
+                    <LiquidGlassSurface isDaylight={resolvedIsDaylight} active={isBackButtonVisible} />
+                    <ChevronLeft size={20} className="relative" />
                 </motion.button>
             )}
 

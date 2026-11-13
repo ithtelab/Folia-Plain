@@ -7,6 +7,7 @@ import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
 import {
     GLASS_BLUR_STD_DEVIATION,
     GLASS_DISPLACEMENT_SCALE,
+    GLASS_FILTER_BLEED,
     GLASS_TONE_CURVE,
 } from './glassBaseline';
 
@@ -138,6 +139,11 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
     return (
         <span ref={rootRef} aria-hidden="true" className="liquid-glass-surface"
             data-glass-tone={isDaylight ? 'light' : 'dark'} data-glass-active={active}
+            // The hairline in the styles rounds itself up to a whole device pixel: at 125% Windows
+            // scaling a 1px CSS line covers 1.25 device pixels, so a pill's flat runs get one lit
+            // row and one half-lit one, which reads as a dashed edge. The ratio has to be handed in,
+            // since CSS cannot read it.
+            style={{ '--glass-dpr': (typeof window !== 'undefined' ? window.devicePixelRatio : 1) } as React.CSSProperties}
             // The kind of control this surface belongs to, present in both materials: the styles
             // tell a text-heavy window (needs a real ground) from a control over a live backdrop
             // (needs its tint thin enough to keep that backdrop visible).
@@ -145,7 +151,13 @@ export default function LiquidGlassSurface({ isDaylight = false, radius = 999, a
             data-glass-optics={enhanced ? 'lens' : 'frost'}>
             {enhanced && <svg className="liquid-glass-definitions" width="0" height="0" focusable="false">
                 <defs>
-                    <filter ref={filterRef} id={id} x="0" y="0" width={lens.width} height={lens.height}
+                    {/* The filter region is grown past the pane on every side. A `feDisplacementMap`
+                        pulls samples from outside the element at the rounded boundary, and a region
+                        that ends exactly on the edge clips those samples to nothing: the curve then
+                        ends in a hard, stair-stepped line. The extra room lets the bent edge finish
+                        inside the region, where the pane's own antialiased mask trims it. */}
+                    <filter ref={filterRef} id={id} x={-GLASS_FILTER_BLEED} y={-GLASS_FILTER_BLEED}
+                        width={lens.width + GLASS_FILTER_BLEED * 2} height={lens.height + GLASS_FILTER_BLEED * 2}
                         filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
                         {/* A thin pane: 3.5px, so shapes behind it stay recognisable.
                             The rim's own bend supplies the "glass" read; the centre does not need to

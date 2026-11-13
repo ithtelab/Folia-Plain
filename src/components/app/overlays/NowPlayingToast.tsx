@@ -12,6 +12,7 @@ import { NowPlayingCardPositioner } from './now-playing-toast/NowPlayingCardPosi
 import type { NowPlayingCardPosition } from '../../../utils/nowPlayingCardPosition';
 import { useBottomDockStore } from '../../../stores/useBottomDockStore';
 import { useNowPlayingCardVisibility } from './now-playing-toast/useNowPlayingCardVisibility';
+import LiquidGlassSurface from '../../shared/liquid-glass/LiquidGlassSurface';
 
 // src/components/app/overlays/NowPlayingToast.tsx
 // 播放器与 Lattice 上的 now playing 卡片（playing-toast 样式：圆角 2xl、44px 封面、底部滑入），默认在左下角，
@@ -237,12 +238,19 @@ const NowPlayingToast: React.FC<NowPlayingToastProps> = ({
                         animate={{ opacity: 1, x: 0 }}
                         whileTap={onActivate && !isPositioning ? { opacity: 0.85 } : undefined}
                         transition={{ duration: 0.35, ease: 'easeOut' }}
-                        className={`relative flex min-w-[min(240px,calc(100vw-48px))] max-w-[calc(100vw-48px)] items-center gap-3 overflow-hidden rounded-full border p-2 pr-5 text-left backdrop-blur-xl shadow-lg transition-colors ${
+                        className={`liquid-glass-host relative flex min-w-[min(240px,calc(100vw-48px))] max-w-[calc(100vw-48px)] items-center gap-3 overflow-hidden rounded-full border p-2 pr-5 text-left backdrop-blur-xl shadow-lg transition-colors ${
                             isDaylight ? 'border-black/10 bg-white/35 text-zinc-900' : 'border-white/10 bg-black/35 text-white'
                         } ${isPositioning ? 'pointer-events-auto cursor-grab select-none active:cursor-grabbing' : onActivate
                             ? `pointer-events-auto cursor-pointer ${isDaylight ? 'hover:bg-white/55' : 'hover:bg-black/55'}`
                             : ''}`}
                     >
+                        <LiquidGlassSurface
+                            isDaylight={isDaylight}
+                            radius={999}
+                            active={!isPositioning}
+                            interactive={Boolean(onActivate) && !isPositioning}
+                            legacy="toast"
+                        />
                         {/* 原来顶上有一条进场扫光；卡片改成圆头长条（和胶囊同一种形状，progress-bar v3）后去掉了。 */}
                         {/* 封面和文字块也带 layout：卡片的尺寸补间是靠 transform 做的，途中
                             没有自己 layout 的子节点会被一起拉扁。带上它俩，framer 会逐层把缩放

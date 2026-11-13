@@ -1,4 +1,5 @@
 import type { SongResult } from '../../../types';
+import appIcon from '../../../assets/providers/apps/appleMusic.jpg';
 import type {
     OnlineMusicProvider, ProviderArtistSummary, ProviderAvailability, ProviderCollection, ProviderExternalPlaybackStatus, ProviderLyricsResult, ProviderUser,
 } from '../../../types/onlineMusic';
@@ -140,7 +141,7 @@ export function createAppleMusicProvider(getAvailability: () => ProviderAvailabi
 
     return {
         id: 'appleMusic', displayName: 'Apple Music', shortName: 'Apple Music',
-        mark: { letter: 'A', color: '#fa243c' },
+        mark: { letter: 'A', color: '#fa243c', iconUrl: appIcon },
         getAvailability,
         // A build without the companion runtime cannot play or read anything from Apple: say that,
         // instead of dressing it up as a network failure the listener could retry.

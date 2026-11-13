@@ -28,13 +28,19 @@ type PlatformMarkProps = {
 
 export const PlatformMark: React.FC<PlatformMarkProps> = ({ providerId, label, size, ranOut, className }) => {
     const mark = platformMarkOf(providerId, label);
+    // Real app icons carry their own rounded-squircle shape and, on some (汽水), a transparent margin.
+    // Drawing them at the full box crops nothing and leaves the margin showing as a thin ring of the
+    // surface behind; `object-cover` fills the box and the rounded mask cuts the corners to the same
+    // radius the letters use, so a row of marks reads as one set of chips at any size.
     return (
         <span
             aria-hidden
-            className={`relative inline-grid shrink-0 place-items-center font-bold leading-none ${mark.iconUrl ? 'rounded-[24%]' : 'rounded-full'} ${className ?? ''}`}
+            className={`relative inline-grid shrink-0 place-items-center overflow-hidden font-bold leading-none rounded-[24%] ${className ?? ''}`}
             style={{ width: size, height: size, background: mark.iconUrl ? undefined : mark.color, color: mark.onColor, fontSize: Math.round(size * 0.42) }}
         >
-            {mark.iconUrl ? <img src={mark.iconUrl} alt="" draggable={false} className="h-full w-full rounded-[inherit] object-contain" /> : mark.letter}
+            {mark.iconUrl
+                ? <img src={mark.iconUrl} alt="" draggable={false} className="h-full w-full rounded-[inherit] object-cover" />
+                : mark.letter}
             {ranOut && (
                 <i className="absolute -right-px -top-px h-2.5 w-2.5 rounded-full bg-[var(--st-warn)]" style={{ boxShadow: EDGE }} />
             )}

@@ -1,3 +1,4 @@
+import appIcon from '../../../assets/providers/apps/spotify.jpg';
 import type { UnifiedSong } from '../../../types';
 import type { LoginMethod, OnlineMusicProvider, ProviderUser, LoginState } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
@@ -80,7 +81,7 @@ const SPOTIFY_LOGIN_METHODS: LoginMethod[] = [
 
 export const spotifyProvider: OnlineMusicProvider = {
     id: 'spotify', displayName: 'Spotify', shortName: 'Spotify', shortNameKey: 'onlineProviderName.spotify',
-    mark: { letter: 'S', color: '#22c55e' },
+    mark: { letter: 'S', color: '#22c55e', iconUrl: appIcon },
     getAvailability: getSpotifyTransportAvailability,
     describeFailure: describeSpotifyFailure,
     // `recommendations` is the radio tab: a personal FM, daily songs and playlists, each made of

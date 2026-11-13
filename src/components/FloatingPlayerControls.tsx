@@ -827,13 +827,20 @@ const FloatingPlayerControls: React.FC<FloatingPlayerControlsProps> = ({
                             // 多出快捷行那一截的高度（grow 从这里往上展开）：手指 44 一格，鼠标 32，加分隔线和间距。
                             '--compact-quick-h': showTouchQuickActions ? '65px' : '53px',
                         } as React.CSSProperties}
-                        className={`backdrop-blur-xl shadow-2xl overflow-hidden relative transition-colors duration-300
+                        className={`liquid-glass-host backdrop-blur-xl shadow-2xl overflow-hidden relative transition-colors duration-300
                             ${isPositioning ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
                             ${isCompact
                                 // 紧凑档收起和展开同一个宽度、同一个圆角（展开是圆角卡片，不是更高的胶囊），内边距交给里面的排布。
                                 ? `compact-capsule w-full ${glassBgExpanded}`
                                 : `rounded-full ${showExpanded ? `p-3 ${glassBgExpanded} w-full` : `px-4 py-2 ${glassBgCollapsed} ${COLLAPSED_WIDTH_CLASS}`}`}`}
                     >
+                        <LiquidGlassSurface
+                            isDaylight={isDaylight}
+                            active={!isHidden}
+                            interactive={false}
+                            flow="static"
+                            legacy={isCompact || showExpanded ? 'player-expanded' : 'player-collapsed'}
+                        />
                         <motion.div
                             layout
                             transition={{ layout: isCompact ? INSTANT_LAYOUT : CONTROL_LAYOUT_SPRING }}

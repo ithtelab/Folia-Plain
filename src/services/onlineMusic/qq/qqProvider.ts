@@ -1,3 +1,4 @@
+import appIcon from '../../../assets/providers/apps/qq.jpg';
 import type { SongResult, UnifiedSong } from '../../../types';
 import type {
     AudioQualityPreference,
@@ -1051,7 +1052,7 @@ export const qqProvider: OnlineMusicProvider = {
     displayName: 'QQ Music',
     shortName: 'QQ音乐',
     shortNameKey: 'onlineProviderName.qq',
-    mark: { letter: 'Q', color: '#16a34a' },
+    mark: { letter: 'Q', color: '#16a34a', iconUrl: appIcon },
     getAvailability,
     describeFailure: describeQqFailure,
     capabilities: {

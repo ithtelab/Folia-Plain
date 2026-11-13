@@ -2,6 +2,7 @@ import React from 'react';
 import { PANEL_SLIDE_CLAMP_PX, PANEL_SLIDE_TRACK_BASE_PX, PANEL_SLIDE_TRACK_FULL_PX, PANEL_SLIDE_TRIGGER_PX } from '../../../utils/panelSlideGesture';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings2, X, Command } from 'lucide-react';
+import LiquidGlassSurface from '../../shared/liquid-glass/LiquidGlassSurface';
 import type { Theme } from '../../../types';
 import { usePlayerBottomBarBottomPx } from '../../../hooks/usePlayerBottomBarBottomPx';
 import { usePlayerOverlayObstacle } from '../../../hooks/usePlayerOverlayLayout';
@@ -433,7 +434,7 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
                             onPointerCancel={clearToggleButtonGesture}
                             onClick={handleToggleButtonClick}
                             style={{ touchAction: canSlideOpenCommandPalette ? 'none' : undefined }}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform
+                            className={`${isOpen || isDocked ? '' : 'liquid-glass-host liquid-glass-button '}w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform
                                 border-none absolute right-0 top-0 z-10 ${isOpen
                     ? 'bg-white text-black shadow-lg'
                     : isDocked
@@ -441,6 +442,7 @@ const PanelHandle: React.FC<PanelHandleProps> = ({
                         ? `bg-transparent ${isDaylight ? 'text-zinc-900 hover:bg-black/5' : 'text-white hover:bg-white/10'}`
                         : `shadow-lg backdrop-blur-md ${isDaylight ? 'bg-white/70 text-zinc-900' : 'bg-black/40 text-white'}`}`}
                         >
+                            {!isOpen && !isDocked && <LiquidGlassSurface isDaylight={isDaylight} />}
                             {isOpen ? <X size={20} /> : <Settings2 size={20} />}
                         </button>
                     </div>

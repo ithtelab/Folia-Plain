@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { BookOpen, Check, Copy, MessageCircle } from 'lucide-react';
+import { BookOpen, Check, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { openDiscordInvite } from '../shared/discordCommunity';
+import { openOutsideLink } from '../../utils/system/outsideLink';
 import { Sheet, SheetButton } from '../shared/Sheet';
 import { Group, Row, Value, type SettingsGroupDef } from './settings/kit';
 import { copyText } from '../../utils/system/clipboard';
-import { openOutsideLink } from '../../utils/system/outsideLink';
 import { iconLabel } from './settings/pages/iconLabel';
 
 // src/components/modal/AiHelpPromptModal.tsx
@@ -14,7 +13,7 @@ import { iconLabel } from './settings/pages/iconLabel';
 
 const FOLIA_GUIDE_URL = 'https://folia-site.cielaniska.top/guide/llm-routing';
 const FOLIA_DOCS_URL = 'https://folia-site.cielaniska.top/guide/';
-const FOLIA_REPOSITORY_URL = 'https://github.com/chthollyphile/folia-major';
+const FOLIA_REPOSITORY_URL = 'https://github.com/ithtelab/Folia-Plain';
 
 const LINKS: SettingsGroupDef = { id: 'aiHelpLinks', titleKey: 'aiHelp.title' };
 const ASK_AI: SettingsGroupDef = { id: 'aiHelpPrompt', titleKey: 'aiHelp.askAiTitle' };
@@ -88,9 +87,6 @@ export const AiHelpPromptModal: React.FC<AiHelpPromptModalProps> = ({
                 <Group def={LINKS} bare>
                     <Row label={iconLabel(BookOpen, t('aiHelp.docsTitle'))} onClick={() => openOutsideLink(FOLIA_DOCS_URL)}>
                         <Value>{t('aiHelp.openDocs')}</Value>
-                    </Row>
-                    <Row label={iconLabel(MessageCircle, t('aiHelp.discordTitle'))} onClick={openDiscordInvite}>
-                        <Value>{t('aiHelp.openDiscord')}</Value>
                     </Row>
                 </Group>
                 <Group def={ASK_AI} foot={t('aiHelp.usageHint')}>

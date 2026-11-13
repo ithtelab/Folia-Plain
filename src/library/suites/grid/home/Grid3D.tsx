@@ -33,6 +33,7 @@ import { useLibraryHomeDirectory } from '../../../core/home/useLibraryHomeDirect
 import { useLibraryHomeListRegistration, useLibraryHomeTabsRegistration } from '../../../core/home/useLibraryHomeSurfaceRegistration';
 import { cycleIndex } from '../../../core/home/homeSources';
 import { useUpdateIndicator } from '../../../../hooks/useUpdateIndicator';
+import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
 
 // src/library/suites/grid/home/Grid3D.tsx
 // Glassmorphic interactive desktop home view replacing the legacy 3D carousel.
@@ -384,7 +385,10 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
                     {/* Center Tab Switcher */}
                     <div className="flex justify-center order-3 md:order-none col-span-2 md:col-span-1">
-                        <div className={`relative ${navPillBg} backdrop-blur-md p-1 rounded-full scale-90 md:scale-100 origin-center`}>
+                        <div className={`liquid-glass-host relative ${navPillBg} backdrop-blur-md p-1 rounded-full scale-90 md:scale-100 origin-center`}>
+                            {/* The tab pill is read at a glance to know where you are: its glass body and lit top edge
+                                stay, the flowing reflection does not (0.7.25, "首页导航条不再流动"). */}
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="none" legacy="navigation" />
                             <div className="inline-flex items-center gap-0">
                                 {homeTabs.map((tab) => {
                                     const isActive = homeViewTab === tab.key;
@@ -459,7 +463,10 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
                     {/* Right Search Bar */}
                     <div className="flex justify-end order-2 md:order-none">
-                        <form onSubmit={handleSearch} className="relative w-full md:w-56 transition-all focus-within:md:w-72">
+                        <form onSubmit={handleSearch} className="liquid-glass-host relative rounded-full w-full md:w-56 transition-all focus-within:md:w-72">
+                            {/* A search field is read while it is being typed in: the width change already says
+                                it woke up, and a flowing reflection across it competes with the caret. */}
+                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="static" legacy="search" />
                             {isSearchingActive ? (
                                 <Loader2 className="absolute left-3 top-1/2 w-4 h-4 animate-spin opacity-40 -mt-2" />
                             ) : (

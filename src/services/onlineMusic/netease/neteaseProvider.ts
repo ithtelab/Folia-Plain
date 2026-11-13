@@ -1,3 +1,4 @@
+import appIcon from '../../../assets/providers/apps/netease.jpg';
 import type { SongResult, UnifiedSong } from '../../../types';
 import { OnlineProviderError } from '../../../types/onlineMusic';
 import type {
@@ -377,7 +378,7 @@ export const neteaseProvider: OnlineMusicProvider = {
     displayName: 'NetEase Cloud Music',
     shortName: '网易云',
     shortNameKey: 'onlineProviderName.netease',
-    mark: { letter: '云', color: '#dc2626' },
+    mark: { letter: '云', color: '#dc2626', iconUrl: appIcon },
     watch: watchNeteaseLocalService,
     describeFailure: describeNeteaseFailure,
     getAvailability: () => ({ configured: true }),

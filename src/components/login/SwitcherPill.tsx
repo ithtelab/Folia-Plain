@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { useMotionValueEvent } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { providerDisplayName } from '../../i18n/providerName';
+import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
 import { playerBottomBarLiveOffset } from '../../stores/motionSignals';
 import type { LibraryAccountController } from '../../library/core/account/account.contract';
 import { useLibraryAccountProviders } from '../../library/core/account/useLibraryAccount';
@@ -114,19 +115,20 @@ const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer }) 
             className="pointer-events-auto absolute bottom-4 right-4 z-[100] md:bottom-6 md:right-6"
             style={{ ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reduced), '--login-edge': 'var(--st-menu)' } as React.CSSProperties}
         >
-            <div className="flex items-center rounded-[26px] bg-[var(--st-menu)] p-0.5 text-[color:var(--st-t1)] shadow-lg md:p-1.5">
+            <div className="liquid-glass-host relative flex items-center rounded-[26px] bg-[var(--st-menu)] p-1 text-[color:var(--st-t1)] shadow-lg md:p-1.5">
+                <LiquidGlassSurface isDaylight={isDaylight} legacy="provider" />
                 <Tooltip text={t('home.switchOnlineProvider')} className="inline-flex">
                     <button
                         type="button"
                         onClick={event => openLoginWindow(provider.providerId, event.currentTarget.querySelector('[data-login-pill]'))}
                         aria-label={t('home.switchOnlineProvider')}
-                        className="st-t-fast flex h-10 min-w-10 items-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
+                        className="st-t-fast flex h-9 min-w-9 items-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
                     >
                         {/* 登录窗口从这里出来，登录成功后头像飞回这里（done/LoginDone.tsx 按这个属性找它，属性的值是这里画的平台）。 */}
                         <span data-login-pill={provider.providerId} className="inline-flex" style={landing && status === 'signed-in' ? { opacity: 0 } : undefined}>
                             {status === 'signed-in' && provider.user
-                                ? <AccountPicture user={provider.user} size={40} providerId={provider.providerId} />
-                                : <PlatformMark providerId={provider.providerId} label={providerDisplayName(t, provider)} size={40} ranOut={status === 'ran-out'} />}
+                                ? <AccountPicture user={provider.user} size={32} providerId={provider.providerId} />
+                                : <PlatformMark providerId={provider.providerId} label={providerDisplayName(t, provider)} size={32} ranOut={status === 'ran-out'} />}
                         </span>
                         <span className={`st-t-move overflow-hidden whitespace-nowrap text-xs font-semibold transition-[max-width,opacity,padding] ${showLabel || status === 'checking' ? 'max-w-[180px] pl-2.5 pr-3 opacity-100' : 'max-w-0 opacity-0'}`}>
                             {status === 'checking' ? t('login.rowChecking') : providerDisplayName(t, provider)}
@@ -139,9 +141,9 @@ const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer }) 
                         type="button"
                         onClick={onBackToPlayer}
                         aria-label={t('home.backToPlayer')}
-                        className="st-t-fast flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
+                        className="st-t-fast flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
                     >
-                        <ChevronRight size={21} />
+                        <ChevronRight size={19} />
                     </button>
                 </Tooltip>
             </div>
