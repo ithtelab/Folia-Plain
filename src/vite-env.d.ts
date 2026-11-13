@@ -938,6 +938,7 @@ declare global {
       checkForUpdates: () => Promise<ElectronUpdateStatus>;
       markUpdateSeen: (version?: string | null) => Promise<ElectronUpdateStatus>;
       openUpdateReleasePage: (version?: string | null) => Promise<boolean>;
+      openUpdateMirrorDownload: (version?: string | null) => Promise<boolean>;
       downloadMacInstaller?: () => Promise<unknown>;
       openMacInstaller?: () => Promise<unknown>;
       openExternalUrl: (url: string) => Promise<boolean>;

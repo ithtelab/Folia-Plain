@@ -139,6 +139,7 @@ contextBridge.exposeInMainWorld('electron', {
     checkForUpdates: () => ipcRenderer.invoke('updates-check'),
     markUpdateSeen: (version) => ipcRenderer.invoke('updates-mark-seen', version),
     openUpdateReleasePage: (version) => ipcRenderer.invoke('updates-open-release-page', version),
+    openUpdateMirrorDownload: (version) => ipcRenderer.invoke('updates-open-mirror-download', version),
     downloadMacInstaller: () => ipcRenderer.invoke('updates-download-mac-installer'),
     openMacInstaller: () => ipcRenderer.invoke('updates-open-mac-installer'),
     openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),

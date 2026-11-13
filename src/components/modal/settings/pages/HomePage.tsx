@@ -47,6 +47,7 @@ const O = {
     tabLocal: option(HOME, 'showHomeTabLocal', 'options.showHomeTabLocal'),
     cardStyle: option(HOME, 'grid3dCardStyle', 'options.grid3dCardStyle', GRID_ONLY),
     rememberPosition: option(HOME, 'rememberHomeCardPosition', 'options.rememberHomeCardPosition', GRID_ONLY),
+    playlistView: option(HOME, 'playlistViewStyle', 'options.playlistViewStyle'),
     fullBleedCover: option(GRID, 'gridViewFullBleedCover', 'options.gridViewFullBleedCover'),
     squareCard: option(GRID, 'gridViewSquareCard', 'options.gridViewSquareCard'),
     minCardScale: option(GRID, 'gridViewMinCardScale', 'options.gridViewMinCardScale'),
@@ -72,6 +73,7 @@ const HomePage: React.FC = () => {
         tabExplore: state.showHomeTabExplore,
         cardStyle: state.grid3dCardStyle,
         rememberPosition: state.rememberHomeCardPosition,
+        playlistViewStyle: state.playlistViewStyle,
         setTabPlaylist: state.handleToggleHomeTabPlaylist,
         setTabRadio: state.handleToggleHomeTabRadio,
         setTabAlbums: state.handleToggleHomeTabAlbums,
@@ -79,6 +81,7 @@ const HomePage: React.FC = () => {
         setTabExplore: state.handleToggleHomeTabExplore,
         setCardStyle: state.handleSetGrid3dCardStyle,
         setRememberPosition: state.handleToggleRememberHomeCardPosition,
+        setPlaylistViewStyle: state.setPlaylistViewStyle,
     })));
     const grid = useGridViewSettingsStore(useShallow(state => ({
         fullBleedCover: state.gridViewFullBleedCover,
@@ -119,6 +122,16 @@ const HomePage: React.FC = () => {
             <BravaisWallGroup />
 
             <Group def={HOME}>
+                <Row option={O.playlistView} note={t('options.playlistViewStyleDesc')}>
+                    <Segmented
+                        value={home.playlistViewStyle}
+                        options={[
+                            { value: 'grid', label: t('options.playlistViewGrid') },
+                            { value: 'lattice', label: t('options.playlistViewLattice') },
+                        ]}
+                        onChange={home.setPlaylistViewStyle}
+                    />
+                </Row>
                 {/* The entries are one option: one row, a chip for each, named and ordered as the home screen has them. */}
                 <Row option={O.tabs}>
                     <Chips

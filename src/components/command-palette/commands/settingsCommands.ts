@@ -18,6 +18,8 @@ import { librarySuitePickerSurface } from '../surfaces/librarySuitePickerSurface
 import { libraryWallLookCommands } from './libraryWallLookCommands';
 import { openCurrentPagePonder } from '../../../services/ponder/pagePonderTarget';
 import { copyText } from '../../../utils/system/clipboard';
+import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
+import { useGraphicsSettingsStore } from '../../../stores/useGraphicsSettingsStore';
 
 // src/components/command-palette/commands/settingsCommands.ts
 // Commands in the `settings` group: settings subviews, app toggles, theme, sync, and desktop-only switches.
@@ -50,6 +52,37 @@ function gpuPreferenceCommand(preference: GpuPreference, title: string, descript
 }
 
 export const settingsCommands: CommandPaletteCommand[] = [
+    defineCommand({
+        id: 'liquid-glass-toggle', group: 'settings', title: 'Switch glass material',
+        description: 'Switch between Liquid Glass and the classic upstream material',
+        keywords: ['glass appearance', 'classic material', '毛玻璃', '原版材质'],
+        execute: () => {
+            const state = useGlassSettingsStore.getState();
+            state.setLiquidGlassEnabled(!state.liquidGlassEnabled);
+            return true;
+        },
+    }),
+    defineCommand({
+        id: 'gpu-hardware-acceleration-toggle', group: 'settings', platform: ['electron'],
+        title: 'Toggle GPU hardware acceleration', description: 'Save the GPU preference for the next app launch',
+        keywords: ['graphics rendering', 'hardware acceleration', '硬件加速', '显卡'],
+        execute: async () => {
+            await useGraphicsSettingsStore.getState().refreshGpuSettings();
+            const state = useGraphicsSettingsStore.getState();
+            if (!state.gpuReady || state.gpuSaving) return false;
+            return state.setGpuHardwareAcceleration(!state.gpuHardwareAcceleration);
+        },
+    }),
+    defineCommand({
+        id: 'download-update-mirror', group: 'settings', platform: ['win'],
+        title: 'Download update with China relay', description: 'Open this project’s installer using the GH-Proxy relay',
+        keywords: ['download accelerator', 'github relay', '国内加速', '更新下载'],
+        execute: async () => {
+            const status = await window.electron?.getUpdateStatus();
+            if (!status?.availableVersion) return false;
+            return await window.electron?.openUpdateMirrorDownload(status.availableVersion) ?? false;
+        },
+    }),
     createSettingsCommand('settings-help', 'Open Help', 'Open help and shortcuts', ['help', '帮助'], 'help', null, { executeShortcut: 'h' }),
     {
         id: 'ponder-current-page',

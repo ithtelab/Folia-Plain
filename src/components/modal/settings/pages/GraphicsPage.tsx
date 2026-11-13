@@ -6,6 +6,7 @@ import { MOTION_SURFACE_IDS, useMotionSettingsStore, type MotionSurfaceId } from
 import { useDesktopSettingsStore } from '../../../../stores/useDesktopSettingsStore';
 import { usePlayerChromeSettingsStore } from '../../../../stores/usePlayerChromeSettingsStore';
 import { useThemeSettingsStore } from '../../../../stores/useThemeSettingsStore';
+import { useGraphicsSettingsStore } from '../../../../stores/useGraphicsSettingsStore';
 import { useVisualizerSettingsStore } from '../../../../stores/useVisualizerSettingsStore';
 import type { LyricAntialias } from '../../../../types';
 import { VISUALIZER_FRAME_RATE_OPTIONS } from '../../../../utils/frameRateLimiter';
@@ -37,6 +38,7 @@ const PERFORMANCE: SettingsGroupDef = { id: 'graphicsPerformance', titleKey: 'op
 const MOTION: SettingsGroupDef = { id: 'graphicsMotion', titleKey: 'options.reduceMotionSection' };
 
 const O = {
+    gpu: option(PERFORMANCE, 'gpuHardwareAcceleration', 'options.gpuHardwareAcceleration', { electronOnly: true }),
     staticMode: option(PERFORMANCE, 'enableStaticMode', 'options.enableStaticMode'),
     homeBackground: option(PERFORMANCE, 'disableHomeDynamicBackground', 'options.disableHomeDynamicBackground'),
     nativeBlur: option(PERFORMANCE, 'enablePlayerPageNativeBlur', 'options.enablePlayerPageNativeBlur'),
@@ -71,6 +73,7 @@ const GraphicsPage: React.FC = () => {
     const { t } = useTranslation();
     const { isDaylight } = useSettingsKitTheme();
     const { isElectron } = useSettingsPage();
+    const gpu = useGraphicsSettingsStore();
     const theme = useThemeSettingsStore(useShallow(state => ({
         staticMode: state.staticMode,
         homeBackgroundOff: state.disableHomeDynamicBackground,
@@ -103,6 +106,14 @@ const GraphicsPage: React.FC = () => {
     return (
         <>
             <Group def={PERFORMANCE}>
+                {isElectron && (
+                    <Row option={O.gpu} hint={gpu.gpuHardwareAcceleration !== gpu.gpuAtStart
+                        ? `${t('options.gpuHardwareAccelerationDesc')} ${t('options.gpuRestartPending')}`
+                        : t('options.gpuHardwareAccelerationDesc')}>
+                        <Toggle checked={gpu.gpuHardwareAcceleration} disabled={!gpu.gpuReady || gpu.gpuSaving}
+                            onChange={enabled => { void gpu.setGpuHardwareAcceleration(enabled); }} />
+                    </Row>
+                )}
                 <Row option={O.staticMode} hint={t('options.enableStaticModeDesc')}>
                     <Toggle checked={theme.staticMode} onChange={theme.setStaticMode} />
                 </Row>
