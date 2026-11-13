@@ -1757,7 +1757,10 @@ export const GridView: React.FC<GridViewProps> = ({
                         </div>
                     )
                 ) : gridItems.length === 0 ? (
-                    <div className="max-w-md px-6 text-center text-sm font-sans opacity-40">
+                    // Readable rather than nearly invisible: an empty list is what a failed read also
+                    // looks like from here, and a page whose only word is at 40% opacity on the page's
+                    // own dark ground reads as a black screen with nothing to do about it.
+                    <div className="max-w-md px-6 text-center text-sm font-sans opacity-70">
                         {loadFailureSaid
                             ? (
                                 <>
