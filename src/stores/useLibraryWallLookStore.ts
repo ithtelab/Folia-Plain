@@ -21,9 +21,9 @@ import { normalizeLibraryWallSeamDirection, type LibraryWallSeamDirection } from
 // handleImportConfig」的规则把它们补进短码或 JSON，也不进同步的视觉设置快照。
 // collectionStackEdges 没有这样的用户决定，按规则进了外观配置的导入导出（visualSettingsConfig、appearanceCodec 的 bse、
 // 导入确认的「资料库墙」组）；不进同步快照（同步只覆盖播放页的视觉设置）。
-// seamClear / seamStyle / backdropLyrics / backdropBlur / seamDirection 同样没有用户例外，按规则进外观配置导入导出
-// （libraryWallSeamClear / libraryWallSeamStyle / libraryWallBackdropLyrics / libraryWallBackdropBlur / libraryWallSeamDirection，
-// 短码 lwsc / lwss / lwbl / lwbb / lwsd），同样不进同步快照。
+// seamClear / seamStyle / backdropLyrics / backdropBlur 同样没有用户例外，按规则进外观配置导入导出（libraryWallSeamClear /
+// libraryWallSeamStyle / libraryWallBackdropLyrics / libraryWallBackdropBlur，短码 lwsc / lwss / lwbl / lwbb），同样不进同步快照。
+// seamDirection（上游新增）也一样：按规则进外观配置导入导出（libraryWallSeamDirection，短码 lwsd），不进同步快照。
 //
 // 存储读写都包 try/catch：存储不可用（隐私模式、配额满）时本次会话照常用内存里的值。
 // 读到非法档位回默认档，读到越界或非数字的窗数钳制 / 回默认（规则在 utils/libraryWallLook）。

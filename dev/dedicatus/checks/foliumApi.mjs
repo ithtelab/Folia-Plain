@@ -96,6 +96,19 @@ export function checkFoliumApi(files, { readBase, readCurrent }) {
     // 改一行在 diff 里是一删一加：成对的算“改动”，只报一次（按删除行）
     const removedTexts = new Set(removed.map(entry => entry.text.trim()));
     const addedOnly = added.filter(entry => !removedTexts.has(entry.text.trim()));
+    // 把内联类型换成同名的 interface 是上游扩字段的写法：`'x': { a: number }` 变成
+    // `'x': FoliumThing`，字段只增不减。删掉的那行里对象字面量写出的字段只要都还在新文件中
+    // （同名 interface 的成员里）出现，就不是接口删改。
+    const widenedInlineType = entry => {
+        const match = /^'([^']+)':\s*\{(.*)\}\s*;\s*$/.exec(entry.text.trim());
+        if (!match) return false;
+        const fields = [...match[2].matchAll(/(\w+)\s*[?]?:/g)].map(field => field[1]);
+        if (fields.length === 0) return false;
+        const afterLines = after.split('\n');
+        return diff.added.some(addedEntry => /^\s*'[^']+':\s*[A-Za-z_$][\w$]*\s*;\s*$/.test(addedEntry.text))
+            && fields.every(field => afterLines.some(line => new RegExp(`\\breadonly\\s+${field}\\s*[?]?:`).test(line)));
+    };
+    const removedStable = removed.filter(entry => !widenedInlineType(entry));
 
     const versionOf = text => {
         try {
@@ -111,8 +124,8 @@ export function checkFoliumApi(files, { readBase, readCurrent }) {
     const minorBumped = majorBumped || newVersion.minor > oldVersion.minor;
 
     const findings = [];
-    if (removed.length > 0 && !majorBumped) {
-        findings.push(...removed.slice(0, 10).map(entry => ({
+    if (removedStable.length > 0 && !majorBumped) {
+        findings.push(...removedStable.slice(0, 10).map(entry => ({
             code: 'D513',
             file: FOLIUM_TYPES,
             line: entry.newLine || undefined,
