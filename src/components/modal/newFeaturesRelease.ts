@@ -1,4 +1,4 @@
-import { BarChart3, Clapperboard, Mic2, Sparkles } from 'lucide-react';
+import { AppWindow, Clapperboard, Shapes, Sparkles, SquareDashed } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -18,16 +18,15 @@ type NewFeaturesRelease = {
 
 // Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_8_0',
-    // What v0.8.0 changed. The cards are the things a listener can notice without being told where
-    // to look; the release notes carry the rest (playback races, lyric clocks, the macOS wallpaper
-    // guard, the remote window's text backing). `test/unit/newFeaturesRelease.test.ts` requires this
-    // list to match the v0_8_0 block in every locale exactly, and refuses a card id another release
-    // already used.
+    i18nKey: 'releaseNotes.v0_8_1',
+    // 0.8.1 is the release in which upstream 0.7.28's work actually reached listeners: the auto-open
+    // version still said 0.7.28, so the intro never opened. The cards are upstream's work up front,
+    // with the repairs this fork needed to make it land (see the release notes for the rest).
     features: [
-        { id: 'sodaPlatform', icon: Mic2 },
-        { id: 'hanabi', icon: Clapperboard },
-        { id: 'listeningReport', icon: BarChart3 },
-        { id: 'exploreOwn', icon: Sparkles },
+        { id: 'scenes', icon: Clapperboard },
+        { id: 'newLook', icon: Shapes },
+        { id: 'windowControls', icon: AppWindow },
+        { id: 'styleOptions', icon: Sparkles },
+        { id: 'glassFixes', icon: SquareDashed },
     ],
 };

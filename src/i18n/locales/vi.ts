@@ -4191,6 +4191,29 @@ export default {
         "description": "Sau khi đăng nhập, danh sách phát riêng tư của bạn nay có thể tải bài hát với phân trang thực tế. Máy chủ tự lưu trữ cần chạy qq-music-api 3.1.2 trở lên; phiên bản cũ hơn sẽ tự động quay về cơ chế dự phòng, và danh sách phát không đọc được sẽ báo rõ là danh sách không công khai thay vì hiển thị trống."
       }
     },
+    "v0_8_1": {
+      "intro": "Bản này đưa 0.7.28 từ dự án gốc vào thật sự: kiểu lời bài hát mới, cảnh rạp chiếu phim, vị trí nút cửa sổ, cùng một loạt sửa lỗi kính và biểu tượng.",
+      "scenes": {
+        "title": "Cảnh: rạp chiếu phim (beta)",
+        "description": "Trang phát nhạc có thể biến thành rạp chiếu phim, với kiểu lời và nền của bạn trên màn hình; kéo để nhìn quanh. Mở từ hàng Cảnh ở trang giao diện. Bản máy tính còn có thể dò âm thanh trong phòng. Nút quay lại giờ nằm ở góc trên bên trái của trang, không còn đi theo kiểu lời lên màn hình."
+      },
+      "newLook": {
+        "title": "Biểu tượng mới và dấu nền tảng",
+        "description": "Biểu tượng ứng dụng mới: chữ F ghép từ bốn khối. Cả chín nền tảng nhạc dùng biểu tượng ứng dụng thật của mình, giống nhau ở nút đăng nhập, bộ chuyển nền tảng và trang tài khoản."
+      },
+      "windowControls": {
+        "title": "Nút cửa sổ",
+        "description": "Nút cửa sổ có thể ở bên trái hoặc bên phải. Trên macOS có thể dùng đèn giao thông của hệ thống, và menu Dock điều khiển phát nhạc. Khôi phục từ khay và thu nhỏ giờ đều cập nhật nút phát trên ảnh thu nhỏ thanh tác vụ."
+      },
+      "styleOptions": {
+        "title": "Tùy chọn kiểu lời mới",
+        "description": "Monet có thể lật gương, tắt chân dung và đặt mô tả riêng. Mặt đồng hồ có thể nghiêng và phân lớp, và có thêm góc nhìn trục. Vòng lặp có thể di chuyển và hiện bản dịch quanh vòng."
+      },
+      "glassFixes": {
+        "title": "Kính và độ đọc được",
+        "description": "Liquid Glass đã trở lại trên thanh điều hướng, ô tìm kiếm, thanh phát dưới, thẻ đang phát và nút đăng nhập. Ô tìm kiếm không còn chảy khi gõ, và viên tab đứng yên. Viền kính không còn răng cưa trên màn hình tỉ lệ cao, và chữ ở thanh điều hướng cùng ô tìm kiếm vẫn đọc được trên hình nền nhạt."
+      }
+    },
     "v0_7_28": {
       "intro": "Chào mừng bạn đến với 0.7.28, Mimiambol Update—một bản cập nhật lớn. Phiên bản này thêm cảnh rạp chiếu phim, biểu tượng ứng dụng mới, nút cửa sổ đặt được bên trái hoặc phải, và tùy chọn mới cho một số kiểu lời bài hát.",
       "scenes": {

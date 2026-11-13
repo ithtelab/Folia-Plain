@@ -5155,6 +5155,29 @@ export default {
         "description": "Setelah masuk, playlist pribadi buatan Anda kini dapat memuat lagu dengan paging sungguhan. Backend yang di-host sendiri harus memakai qq-music-api 3.1.2 atau lebih baru; backend lama beralih otomatis, dan playlist yang tidak dapat dibaca kini menjelaskan bahwa playlist itu tidak publik, alih-alih tampil kosong tanpa keterangan."
       }
     },
+    "v0_8_1": {
+      "intro": "Rilis ini benar-benar memasukkan 0.7.28 dari proyek asal: gaya lirik baru, scene bioskop, penempatan tombol jendela, dan sejumlah perbaikan kaca serta ikon.",
+      "scenes": {
+        "title": "Scene: bioskop (beta)",
+        "description": "Halaman pemutaran bisa berubah menjadi bioskop, dengan gaya lirik dan latar Anda di layar; geser untuk menengok sekeliling. Buka dari baris Scene di halaman tampilan. Versi desktop juga bisa melacak suara di ruangan. Tombol kembali kini menetap di sudut kiri atas halaman, tidak lagi mengikuti gaya lirik ke layar."
+      },
+      "newLook": {
+        "title": "Ikon baru dan tanda platform",
+        "description": "Ikon aplikasi baru: huruf F dari empat balok. Kesembilan penyedia musik memakai ikon aplikasi aslinya masing-masing, sama di tombol masuk, pengalih penyedia, dan halaman akun."
+      },
+      "windowControls": {
+        "title": "Tombol jendela",
+        "description": "Tombol jendela bisa di kiri atau kanan. Di macOS lampu lalu lintas bawaan sistem bisa mengambil alih, dan menu Dock mengendalikan pemutaran. Memulihkan dari tray dan meminimalkan kini sama-sama memperbarui tombol pemutaran di thumbnail taskbar."
+      },
+      "styleOptions": {
+        "title": "Opsi gaya lirik baru",
+        "description": "Monet bisa dicerminkan, potretnya dimatikan, dan deskripsinya disesuaikan. Dial jam bisa dimiringkan dan dilapis, serta mendapat tampilan hub. Lingkaran bisa dipindah dan menampilkan terjemahan di sekelilingnya."
+      },
+      "glassFixes": {
+        "title": "Kaca dan keterbacaan",
+        "description": "Liquid Glass kembali di navigasi, kolom pencarian, pemutar bawah, kartu sedang diputar, dan tombol masuk. Kolom pencarian tidak lagi mengalir saat mengetik, dan pil tab tetap diam. Tepi kaca tidak lagi bergerigi di layar berskala tinggi, dan teks navigasi serta pencarian tetap terbaca di atas wallpaper pucat."
+      }
+    },
     "v0_7_28": {
       "intro": "Selamat datang di 0.7.28, Mimiambol Update—sebuah pembaruan besar. Versi ini menghadirkan adegan bioskop, ikon aplikasi baru, tombol jendela di kiri atau kanan, dan opsi baru untuk beberapa gaya lirik.",
       "scenes": {

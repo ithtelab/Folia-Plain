@@ -5155,6 +5155,29 @@ export default {
         "description": "When signed in, your own private playlists now load their songs, with real paging. Self-hosted backends must run qq-music-api 3.1.2 or later; older backends fall back automatically, and a playlist that cannot be read now says it is not public instead of silently showing as empty."
       }
     },
+    "v0_8_1": {
+      "intro": "This release brings upstream 0.7.28 in for real: new lyric styles, the cinema scene, window control placement, and a round of glass and icon fixes.",
+      "scenes": {
+        "title": "Scenes: cinema (beta)",
+        "description": "The playback page can become a cinema, with your lyric style and background on the screen; drag to look around. Open it from the Scenes row on the appearance page. The desktop app can also trace sound through the room. The back button now sits at the page's top-left corner instead of following the lyric style onto the screen."
+      },
+      "newLook": {
+        "title": "New icon and platform marks",
+        "description": "A new app icon: an F built from four blocks. All nine music providers show their own real app icon, the same one on the sign-in button, the provider switcher and the account page."
+      },
+      "windowControls": {
+        "title": "Window controls",
+        "description": "Window buttons can sit on the left or the right. On macOS the system traffic lights can take over, and the Dock menu controls playback. Restoring from the tray and minimising now both keep the taskbar thumbnail's playback buttons up to date."
+      },
+      "styleOptions": {
+        "title": "New lyric style options",
+        "description": "Monet can mirror, drop its portrait and take a custom description. The clock's dial can tilt and layer, and gains a hub view. The loop can be moved and shows translations around the ring."
+      },
+      "glassFixes": {
+        "title": "Glass and legibility",
+        "description": "Liquid Glass is back on the navigation, the search field, the bottom player, the now-playing card and the sign-in button. The search field no longer flows while you type, and the tab pill stays still. Glass edges no longer stair-step on high-scaled displays, and the navigation and search text stay readable over a pale wallpaper."
+      }
+    },
     "v0_7_28": {
       "intro": "Welcome to 0.7.28, the Mimiambol Update—a major update. It adds the cinema hall scene, a new app icon, window controls on either side, and new options for several lyric styles.",
       "scenes": {
