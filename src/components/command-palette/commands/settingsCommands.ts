@@ -18,6 +18,8 @@ import { librarySuitePickerSurface } from '../surfaces/librarySuitePickerSurface
 import { libraryWallLookCommands } from './libraryWallLookCommands';
 import { openCurrentPagePonder } from '../../../services/ponder/pagePonderTarget';
 import { copyText } from '../../../utils/system/clipboard';
+import { listeningReportCommand } from './listeningReportCommand';
+import { useHomeLayoutSettingsStore } from '../../../stores/useHomeLayoutSettingsStore';
 import { useGlassSettingsStore } from '../../../stores/useGlassSettingsStore';
 import { useGraphicsSettingsStore } from '../../../stores/useGraphicsSettingsStore';
 
@@ -52,6 +54,7 @@ function gpuPreferenceCommand(preference: GpuPreference, title: string, descript
 }
 
 export const settingsCommands: CommandPaletteCommand[] = [
+    listeningReportCommand,
     defineCommand({
         id: 'liquid-glass-toggle', group: 'settings', title: 'Switch glass material',
         description: 'Switch between Liquid Glass and the classic upstream material',
@@ -73,6 +76,17 @@ export const settingsCommands: CommandPaletteCommand[] = [
             return state.setGpuHardwareAcceleration(!state.gpuHardwareAcceleration);
         },
     }),
+    ...(['grid', 'lattice'] as const).map(style => defineCommand({
+        id: `playlist-view-${style}`,
+        group: 'settings',
+        title: style === 'grid' ? 'Open playlists as cover grids' : 'Open playlists as collages',
+        description: 'Choose how playlists open in the grid library interface',
+        keywords: ['playlist layout', 'collage browsing', '歌单打开方式', '歌单拼贴'],
+        execute: () => {
+            useHomeLayoutSettingsStore.getState().setPlaylistViewStyle(style);
+            return true;
+        },
+    })),
     defineCommand({
         id: 'download-update-mirror', group: 'settings', platform: ['win'],
         title: 'Download update with China relay', description: 'Open this project’s installer using the GH-Proxy relay',

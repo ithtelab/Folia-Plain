@@ -324,50 +324,12 @@ declare global {
     filePath: string | null;
   }
 
-  interface ElectronRemoteControlSnapshot {
-    remoteActions?: import('./types/remoteControl').RemoteActionsSnapshot;
-    hasTrack: boolean;
-    trackKey: string | null;
-    title: string | null;
-    artist: string | null;
-    coverUrl: string | null;
-    currentTime: number;
-    duration: number;
-    playerState: string;
-    loopMode: 'off' | 'all' | 'one';
-    canGoPrevious: boolean;
-    canGoNext: boolean;
-    prevTrackKey: string | null;
-    prevTrackTitle: string | null;
-    prevTrackArtist: string | null;
-    prevTrackCoverUrl: string | null;
-    nextTrackKey: string | null;
-    nextTrackTitle: string | null;
-    nextTrackArtist: string | null;
-    nextTrackCoverUrl: string | null;
-    trackTransition: import('./types/remoteControl').RemoteTrackTransition | null;
-    controlsDisabled: boolean;
-    isStageActive: boolean;
-    transparentModeEnabled: boolean;
-    mainWindowClickThroughEnabled: boolean;
-    mainWindowAlwaysOnTop: boolean;
-    mainWindowBorderVisible: boolean;
-    playerChromeHidden: boolean;
-    playerChromeVisibilityMode: import('./types/remoteControl').PlayerChromeVisibilityMode;
-    exportState: ElectronVideoExportState;
-    isDaylight?: boolean;
-    lyrics?: import('./types').LyricData | null;
-    subtitleContentMode: import('./types').SubtitleContentMode;
-    isLiked?: boolean;
-    canLike?: boolean;
-    likeUnavailableProvider?: string;
-    updatedAt: number;
-    mainWindowWidth?: number;
-    mainWindowHeight?: number;
-    queue?: readonly import('./types/remoteControl').RemoteQueueItem[];
-    queuePlayingKey?: string | null;
-    queueReadOnly?: boolean;
-  }
+  /**
+   * The remote window's snapshot, as the canonical type in `types/remoteControl.ts` defines it.
+   * Kept as one alias rather than a second copy: the two had already drifted (`lyricOffsetMs`,
+   * `clockRevision` were missing here), and a reader of this copy would silently get `undefined`.
+   */
+  type ElectronRemoteControlSnapshot = import('./types/remoteControl').RemoteControlSnapshot;
 
   interface ElectronPlaybackSyncBridgeStatus {
     remoteControlOpen: boolean;

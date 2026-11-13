@@ -131,7 +131,6 @@ const { createApprovedMpvPathStore, isReservedHifiSettingKey } = require('./hifi
 const { registerMprisIpc } = require('./hifi/mpris/mprisIpc.cjs');
 const { sanitizeDualTheme: sanitizeGeneratedDualTheme } = require('../shared/themeSanitizer.cjs');
 const {
-  detectOpenAICompatibleProvider,
   normalizeOpenAIChatCompletionsUrl,
   runAiConnectionTest,
   runAiJsonCompletion,
@@ -5913,11 +5912,12 @@ function createRemoteControlWindow() {
     win.on('will-move', (event, newBounds) => keepRemoteControlCoverOnScreen(win, event, newBounds));
   }
   // Remember where the window last sat: after a drag, and again when it closes so an undragged
-  // window keeps the spot it opened on.
+  // window keeps the spot it opened on. What is remembered is the card's spot, not the window's:
+  // with the queue expanded upwards the window's y is the queue's top edge, and storing that would
+  // put the card a queue's height lower the next time it opens.
   const persistRemoteControlPosition = () => {
     if (!win.isDestroyed()) {
-      const { x, y } = win.getBounds();
-      store.set(REMOTE_CONTROL_WINDOW_BOUNDS_SETTING_KEY, { x, y });
+      store.set(REMOTE_CONTROL_WINDOW_BOUNDS_SETTING_KEY, getRemoteControlCardPosition(win.getBounds(), remoteControlQueueExpansion));
     }
   };
   win.on('moved', persistRemoteControlPosition);

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import en from '../../src/i18n/locales/en';
 import inLocale from '../../src/i18n/locales/in';
 import zhCN from '../../src/i18n/locales/zh-CN';
@@ -9,6 +11,9 @@ import { USER_GUIDE_AUTO_OPEN_VERSION } from '../../src/components/modal/userGui
 // The release intro reads every card's text by key at render time; a key missing in one locale shows the raw key there.
 
 const LOCALES = { en, in: inLocale, 'zh-CN': zhCN } as Record<string, unknown>;
+const packageVersion = (JSON.parse(
+    readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8'),
+) as { version: string }).version;
 
 const lookup = (tree: unknown, path: string): unknown => path.split('.').reduce<unknown>(
     (node, segment) => (node && typeof node === 'object' ? (node as Record<string, unknown>)[segment] : undefined),
@@ -44,6 +49,13 @@ describe('new features release', () => {
         const ids = NEW_FEATURES_RELEASE.features.map(feature => feature.id);
         expect(new Set(ids).size).toBe(ids.length);
         expect(NEW_FEATURES_RELEASE.i18nKey).toBe(`releaseNotes.v${(USER_GUIDE_AUTO_OPEN_VERSION ?? '').replace(/\./g, '_')}`);
+    });
+
+    // The dialog only opens when the version it describes is the version running. A sync once put
+    // upstream's number back here while package.json kept ours, and the whole first-run flow
+    // (what's new, the playback entry choice, the Ponder walkthrough) silently stopped appearing.
+    it('names the version this build actually is', () => {
+        expect(USER_GUIDE_AUTO_OPEN_VERSION).toBe(packageVersion);
     });
 
     // v0.7.25 shipped with four cards copied from v0.7.24 and one naming a feature that landed

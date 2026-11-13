@@ -81,6 +81,33 @@
   color: rgb(var(--remote-ink));
 }
 
+/* While the queue shows, the window is taller than the card, so centring would drift the card
+   towards the middle of the taller window. `data-queue` says which side the queue took: the card
+   stays on the opposite edge, 4 px in, where it sits without a queue (the window is the card plus
+   4 px of room). */
+.remote-window[data-queue='down'] .remote-card {
+  top: 4px;
+  margin-top: 0;
+  transition: top 220ms var(--remote-settle);
+}
+
+.remote-window[data-queue='up'] .remote-card {
+  top: auto;
+  bottom: 4px;
+  margin-top: 0;
+}
+
+/* Growing upwards moves the window's top edge, so the page is faded out while it happens and the
+   new height is laid out unseen; the queue's own block takes the new height meanwhile. */
+.remote-window[data-shifting='true'] {
+  opacity: 0;
+  transition: opacity 90ms ease;
+}
+.remote-window[data-shifting='false'] {
+  opacity: 1;
+  transition: opacity 140ms ease;
+}
+
 /* Everything of the card in use, at the place and size it has always had. */
 .remote-face {
   position: absolute;

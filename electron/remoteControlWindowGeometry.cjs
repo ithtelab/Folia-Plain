@@ -101,10 +101,14 @@ function resolveRemoteControlWindowPosition(saved, workAreas, expandCover = true
 }
 
 /**
- * The queue, squeezed into a short strip of screen, still keeps its search field and three rows:
+ * The height at which the queue still shows its search field and three rows:
  * 6 gap + 40 search + 3 x 36 rows + 6 (src/components/remote/useRemoteQueue.ts lays it out).
+ *
+ * A name, not a floor: a queue with fewer than three songs asks for less (88 for one, 124 for two)
+ * and gets it, because there is nothing below to fill the rest. What this number does is decide
+ * whether a side of the screen is worth growing into at all.
  */
-const REMOTE_CONTROL_QUEUE_MIN_HEIGHT = 160;
+const REMOTE_CONTROL_QUEUE_FULL_ROWS_HEIGHT = 160;
 
 /** @typedef {'down' | 'up'} RemoteControlQueueDirection */
 /** @typedef {{ direction: RemoteControlQueueDirection, height: number }} RemoteControlQueueExpansion */
@@ -112,7 +116,7 @@ const REMOTE_CONTROL_QUEUE_MIN_HEIGHT = 160;
 /**
  * Where the window grows to show the play queue: down when the work area has room below the
  * window, else up when it has room above, else towards the larger room, the queue cut to fit it
- * (but never below REMOTE_CONTROL_QUEUE_MIN_HEIGHT). `bounds` is the window without the queue.
+ * (but never below REMOTE_CONTROL_QUEUE_FULL_ROWS_HEIGHT). `bounds` is the window without the queue.
  * `preferred` is the side the page has anchored the card for (a queue already shown, or one the
  * page asked where to put): it is kept, only the height changing, as long as that side still holds
  * the search field and three rows; otherwise the side is chosen afresh rather than run off the
@@ -134,7 +138,7 @@ function getRemoteControlQueueExpansion(bounds, workArea, wantedHeight, preferre
     down: workArea.y + workArea.height - (bounds.y + bounds.height),
     up: bounds.y - workArea.y,
   };
-  const least = Math.min(wanted, REMOTE_CONTROL_QUEUE_MIN_HEIGHT);
+  const least = Math.min(wanted, REMOTE_CONTROL_QUEUE_FULL_ROWS_HEIGHT);
   const side = preferred && room[preferred] >= least
     ? preferred
     : room.down >= wanted ? 'down' : room.up >= wanted ? 'up' : room.up > room.down ? 'up' : 'down';
