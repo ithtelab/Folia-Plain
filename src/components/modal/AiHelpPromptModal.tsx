@@ -1,20 +1,20 @@
 import { useMemo, useState } from 'react';
 import { BookOpen, Check, Copy, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { openDiscordInvite } from '../shared/discordCommunity';
 import { Sheet, SheetButton } from '../shared/Sheet';
 import { Group, Row, Value, type SettingsGroupDef } from './settings/kit';
 import { copyText } from '../../utils/system/clipboard';
 import { openOutsideLink } from '../../utils/system/outsideLink';
 import { iconLabel } from './settings/pages/iconLabel';
-import productIdentity from '../../../shared/productIdentity.mjs';
 
 // src/components/modal/AiHelpPromptModal.tsx
 // The 遇到问题？ dialog of the Help page: where to read and where to ask, and a prompt to copy for
 // an AI model, which names the guide and the repository.
 
-const FOLIA_GUIDE_URL = `${productIdentity.upstreamDocsUrl}llm-routing`;
-const FOLIA_DOCS_URL = productIdentity.upstreamDocsUrl;
-const FOLIA_REPOSITORY_URL = productIdentity.repositoryUrl;
+const FOLIA_GUIDE_URL = 'https://folia-site.cielaniska.top/guide/llm-routing';
+const FOLIA_DOCS_URL = 'https://folia-site.cielaniska.top/guide/';
+const FOLIA_REPOSITORY_URL = 'https://github.com/chthollyphile/folia-major';
 
 const LINKS: SettingsGroupDef = { id: 'aiHelpLinks', titleKey: 'aiHelp.title' };
 const ASK_AI: SettingsGroupDef = { id: 'aiHelpPrompt', titleKey: 'aiHelp.askAiTitle' };
@@ -34,14 +34,13 @@ export const AiHelpPromptModal: React.FC<AiHelpPromptModalProps> = ({
     const [copied, setCopied] = useState(false);
 
     const prompt = useMemo(() => t('aiHelp.prompt', {
-        appName: productIdentity.name,
         guideUrl: FOLIA_GUIDE_URL,
         repoUrl: FOLIA_REPOSITORY_URL,
         defaultValue: [
-            `I am using ${productIdentity.name}, a fork of folia-major, and need help with a problem.`,
+            'I am using Folia and need help with a problem.',
             '',
-            `Upstream Folia Guide (some details may differ): ${FOLIA_GUIDE_URL}`,
-            `${productIdentity.name} repository: ${FOLIA_REPOSITORY_URL}`,
+            `Folia Guide: ${FOLIA_GUIDE_URL}`,
+            `Folia repository: ${FOLIA_REPOSITORY_URL}`,
             '',
             'Please read these references as context, then help me understand and solve the problem I describe next. Ask for any missing details before making assumptions, and give me steps I can try safely.'
         ].join('\n')
@@ -87,11 +86,11 @@ export const AiHelpPromptModal: React.FC<AiHelpPromptModalProps> = ({
             {/* A group keeps the space a settings page has above its first card; here the sheet's own padding is that space. */}
             <div className="-mt-5">
                 <Group def={LINKS} bare>
-                    <Row label={iconLabel(BookOpen, t('aiHelp.docsTitle'))} hint={t('aiHelp.upstreamDocsNotice')} onClick={() => openOutsideLink(FOLIA_DOCS_URL)}>
+                    <Row label={iconLabel(BookOpen, t('aiHelp.docsTitle'))} onClick={() => openOutsideLink(FOLIA_DOCS_URL)}>
                         <Value>{t('aiHelp.openDocs')}</Value>
                     </Row>
-                    <Row label={iconLabel(MessageCircle, t('help.reportIssue'))} onClick={() => openOutsideLink(productIdentity.issuesUrl)}>
-                        <Value>GitHub</Value>
+                    <Row label={iconLabel(MessageCircle, t('aiHelp.discordTitle'))} onClick={openDiscordInvite}>
+                        <Value>{t('aiHelp.openDiscord')}</Value>
                     </Row>
                 </Group>
                 <Group def={ASK_AI} foot={t('aiHelp.usageHint')}>

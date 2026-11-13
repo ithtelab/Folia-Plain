@@ -15,6 +15,7 @@ const listeners = new Set<() => void>();
 /** 模块级常量（身份稳定，与真 App 的 host 一样不随可用性重建）。 */
 export const PROBE_WALL_TOOLS_HOST: WallToolsHost = {
     getSnapshot: () => snapshot,
+        openSettings: () => {},
     subscribe: listener => {
         listeners.add(listener);
         return () => listeners.delete(listener);

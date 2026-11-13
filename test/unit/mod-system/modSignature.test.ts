@@ -134,7 +134,22 @@ describe('signed digest and message (shared vector)', () => {
         expect(crypto.sign(null, buildSignedMessage(VECTOR_FIELDS), privateKey).toString('base64')).toBe(VECTOR_SIGNATURE);
     });
 
-    it('refuses trees that cannot hash the same on every machine', () => {
+    // Making a symlink needs a privilege Windows does not always grant (developer mode or an elevated
+    // shell): without it the tree this test wants cannot be built here at all. CI is Linux, where it runs.
+    const symlinksAvailable = (() => {
+        const probe = fs.mkdtempSync(path.join(os.tmpdir(), 'folium-symlink-probe-'));
+        try {
+            fs.writeFileSync(path.join(probe, 'a.txt'), 'x');
+            fs.symlinkSync('a.txt', path.join(probe, 'l.txt'));
+            return true;
+        } catch {
+            return false;
+        } finally {
+            fs.rmSync(probe, { recursive: true, force: true });
+        }
+    })();
+
+    it.runIf(symlinksAvailable)('refuses trees that cannot hash the same on every machine', () => {
         const dir = writeVectorTree();
         fs.symlinkSync('client.mjs', path.join(dir, 'link.mjs'));
         expect(computeSignedDigest(dir)).toBeNull();

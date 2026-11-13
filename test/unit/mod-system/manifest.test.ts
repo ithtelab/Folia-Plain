@@ -80,6 +80,15 @@ describe('validateManifest', () => {
         }
     });
 
+    // Folium 1.7: replaceQueue's own permission, taken on its own (it needs no playback.control).
+    it('accepts playback.queue', () => {
+        const result = validateManifest({ ...validManifest, permissions: ['playback.queue'] });
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+            expect(result.value.permissions).toEqual(['playback.queue']);
+        }
+    });
+
     it('rejects duplicate permissions', () => {
         const result = validateManifest({ ...validManifest, permissions: ['render.export', 'render.export'] });
         expect(result.ok).toBe(false);
@@ -149,6 +158,42 @@ describe('validateManifest Folium entries and opt-ins', () => {
         expect(platform(['platform.nowhere.read']).ok).toBe(false);
         // The opt-in alone asks for nothing.
         expect(platform([]).ok).toBe(true);
+    });
+
+    // Folium 1.7: folium.equalizer's writes; no opt-in and no other permission goes with it.
+    it('accepts equalizer.control on its own', () => {
+        const result = validateManifest({ ...validManifest, permissions: ['equalizer.control'] });
+        expect(result.ok).toBe(true);
+        expect(result.value.permissions).toEqual(['equalizer.control']);
+    });
+
+    // Folium 1.8: folium.visualizer.setRenderQuality; no opt-in and no other permission goes with it.
+    it('accepts visualizer.renderQuality on its own', () => {
+        const result = validateManifest({ ...validManifest, permissions: ['visualizer.renderQuality'] });
+        expect(result.ok).toBe(true);
+        expect(result.value.permissions).toEqual(['visualizer.renderQuality']);
+    });
+
+    // Folium 1.8: folium.visualizer.setMode / setTuning / setBeatEffects, each its own permission.
+    it('accepts visualizer.mode, visualizer.tuning and visualizer.beatEffects, alone or together', () => {
+        for (const permission of ['visualizer.mode', 'visualizer.tuning', 'visualizer.beatEffects']) {
+            const result = validateManifest({ ...validManifest, permissions: [permission] });
+            expect(result.ok, permission).toBe(true);
+            expect(result.value.permissions).toEqual([permission]);
+        }
+        const all = ['visualizer.renderQuality', 'visualizer.mode', 'visualizer.tuning', 'visualizer.beatEffects'];
+        expect(validateManifest({ ...validManifest, permissions: all }).value.permissions).toEqual(all);
+    });
+
+    // Folium 1.9: folium.visualizer.setBackground / setAnimationIntensity, each its own permission.
+    it('accepts visualizer.background and visualizer.animationIntensity, alone or together', () => {
+        for (const permission of ['visualizer.background', 'visualizer.animationIntensity']) {
+            const result = validateManifest({ ...validManifest, permissions: [permission] });
+            expect(result.ok, permission).toBe(true);
+            expect(result.value.permissions).toEqual([permission]);
+        }
+        const both = ['visualizer.background', 'visualizer.animationIntensity'];
+        expect(validateManifest({ ...validManifest, permissions: both }).value.permissions).toEqual(both);
     });
 
     it('accepts an optional preview image path inside the mod directory', () => {

@@ -32,6 +32,7 @@ const WindowTitlebarProbe: React.FC = () => {
 
     return (
         <AppShell appStyle={{ background: '#171b21', color: '#f4f4f5' }}
+            onClickThroughTransportAction={() => {}}
             theme={DEFAULT_THEME} isDaylight={false} audioElement={null}
             isElectronWindow hideFullscreenButton={false} usesCustomWindowChrome
             useCustomWindowRadius={false} showTransparentWindowBorder={false} isPlayerView={false}

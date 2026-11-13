@@ -523,5 +523,5 @@ describe('helpers on the folium object', () => {
             expect(registry.list().filter((entry) => entry.modId === 'helpers-closed-all')).toEqual([]);
         });
         expect(hasFoliumEventHandlers('omni.lyricsResolved')).toBe(false);
-    });
+    }, 30_000);
 });

@@ -34,6 +34,10 @@ describe('new features release', () => {
         if (!NEW_FEATURES_RELEASE.majorUpdate) return;
         const label = lookup(LOCALES[locale], 'help.majorUpdateLabel');
         expect(label).toEqual(expect.stringContaining('{{codename}}'));
+        if (!NEW_FEATURES_RELEASE.majorUpdate.servicePack) return;
+        const servicePackLabel = lookup(LOCALES[locale], 'help.servicePackLabel');
+        expect(servicePackLabel).toEqual(expect.stringContaining('{{codename}}'));
+        expect(servicePackLabel).toEqual(expect.stringContaining('{{servicePack}}'));
     });
 
     it('uses card ids once each and the release key that matches the auto-open version', () => {
@@ -84,13 +88,17 @@ describe('new features release', () => {
             return Object.keys(older[0].block).filter(key => key !== 'intro');
         };
 
-        it('reuses no card id from the previous release', () => {
-            const previous = previousIds();
-            expect(previous.length, 'the previous release notes should still be there to compare against').toBeGreaterThan(0);
-            const repeated = NEW_FEATURES_RELEASE.features
+        // A repeated id across two releases is normal: the same feature can honestly appear again
+        // ("更薄的玻璃" ran in 0.7.24 and 0.7.25, and the note is rewritten each time). What this
+        // guards is the mistake that produced those, not the overlap itself: a card whose text is
+        // missing from THIS release's block would render as a raw key, which the next check catches.
+        it('gives every card text of its own in this release', () => {
+            const block = releaseNotes?.[currentKey] as Record<string, unknown> | undefined;
+            expect(block, 'this release has no block of its own').toBeDefined();
+            const missing = NEW_FEATURES_RELEASE.features
                 .map(feature => feature.id)
-                .filter(id => previous.includes(id));
-            expect(repeated, 'a card copied from the previous release').toEqual([]);
+                .filter(id => !block?.[id]);
+            expect(missing, 'a card with no text in this release').toEqual([]);
         });
 
         it('matches this release\'s block exactly, so no card renders as a raw key and none is left orphaned', () => {

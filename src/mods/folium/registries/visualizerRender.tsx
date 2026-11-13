@@ -21,7 +21,7 @@ const VISUALIZER = foliumMountName('visualizers', 'visualizer');
  * The shared bottom subtitle layer (translation / upcoming line) for mod modes.
  * Builtin modes wire this inside their own renderers; a mod has no React and no
  * access to the host's subtitle settings, so the host fills the gap here and
- * mod modes get the same font scaling, opacity, offset, blur and content mode
+ * mod modes get the same font scaling, opacity, offset, blur and rows
  * as every builtin mode. Font sizes come from subtitleFontSizes, so switching
  * from a builtin mode to a mod mode keeps the subtitles in place.
  */
@@ -40,8 +40,7 @@ const FoliumSubtitleOverlay: React.FC<VisualizerSharedProps> = (props) => {
         subtitleUpcomingLyricsBlur,
         isPlayerChromeHidden,
         hideTranslationSubtitle,
-        showSubtitleTranslation,
-        subtitleContentMode,
+        subtitleOverlayLayout,
     } = props;
     const { activeLine, recentCompletedLine, nextLines } = useVisualizerRuntime({
         currentTime,
@@ -52,7 +51,6 @@ const FoliumSubtitleOverlay: React.FC<VisualizerSharedProps> = (props) => {
     const subtitleFontSizes = resolveSubtitleFontSizes(lyricsFontScale);
     return (
         <VisualizerSubtitleOverlay
-            currentTime={currentTime}
             showText={showText}
             activeLine={activeLine}
             recentCompletedLine={recentCompletedLine}
@@ -66,8 +64,7 @@ const FoliumSubtitleOverlay: React.FC<VisualizerSharedProps> = (props) => {
             subtitleUpcomingLyricsBlur={subtitleUpcomingLyricsBlur}
             isPlayerChromeHidden={isPlayerChromeHidden}
             hideTranslationSubtitle={hideTranslationSubtitle}
-            showSubtitleTranslation={showSubtitleTranslation}
-            subtitleContentMode={subtitleContentMode}
+            subtitleOverlayLayout={subtitleOverlayLayout}
         />
     );
 };

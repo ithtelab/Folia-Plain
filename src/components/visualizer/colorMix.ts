@@ -85,10 +85,14 @@ export const parseColorChannels = (color: string): Channels | null => {
     return typeof parsed === 'string' ? null : { ...parsed };
 };
 
-/** Suppress dark, muddy halos; fade in over midtones so animated RGB (0–255) does not pop. */
+/**
+ * Suppress dark, muddy halos; fade in over midtones so animated RGB (0–255) does not pop.
+ * Gated on HSV value (the brightest channel), not luma: saturated keyword colours such as red
+ * #ef4444 or blue #2563eb have low luma but still glow cleanly, while near-black navy stays dark.
+ */
 export const resolveGlowColorStrength = (r: number, g: number, b: number): number => {
-    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
-    const progress = clamp((brightness - 110) / 50, 0, 1);
+    const value = Math.max(r, g, b);
+    const progress = clamp((value - 110) / 50, 0, 1);
     return progress * progress * (3 - 2 * progress);
 };
 

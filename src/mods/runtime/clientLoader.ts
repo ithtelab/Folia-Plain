@@ -65,6 +65,9 @@ const startedListeners = new Set<(modId: string) => void>();
 // Where each active client's start stands.
 const starts = new Map<string, FoliumClientStart>();
 let queue: Promise<void> = Promise.resolve();
+// Folium 1.7 (runtime/equalizer/): the mod list the main window last reconciled, and who wants to hear of a new one.
+let latestMainModList: readonly ModRuntimeInfo[] | null = null;
+const modListListeners = new Set<() => void>();
 let experimentalPromise: Promise<typeof import('../folium/experimental')> | null = null;
 let apiPromise: Promise<typeof import('../folium/api')> | null = null;
 
@@ -206,6 +209,18 @@ const activate = async (mod: ModRuntimeInfo, url: string, context: FoliumContext
  * mod-id order. Per-mod failures only affect that mod.
  */
 export const reconcileFoliumClients = (mods: ModRuntimeInfo[], context: FoliumContextKind): Promise<void> => {
+    // The list itself, as it arrives and before the queue gets to it: what it says is enabled is what the
+    // user chose, whether or not that mod's client has started (yet) here.
+    if (context === 'main') {
+        latestMainModList = Object.freeze([...mods]);
+        modListListeners.forEach((listener) => {
+            try {
+                listener();
+            } catch (error) {
+                console.warn('[Folium] a listener for the mod list failed', error);
+            }
+        });
+    }
     const run = async () => {
         const desired = new Map(
             mods
@@ -264,6 +279,20 @@ export const getFoliumClientStart = (modId: string): FoliumClientStart | undefin
 
 /** The name a mod's client was last started under; its id when it never started here. */
 export const foliumModName = (modId: string) => modNames.get(modId) || modId;
+
+/** Folium 1.7 (runtime/equalizer/): the mod list the main window last reconciled; null before the first. */
+export const getFoliumModList = (): readonly ModRuntimeInfo[] | null => latestMainModList;
+
+/**
+ * Calls `listener` each time the main window reconciles a mod list (the first one, an enable, a disable, a
+ * removal, an install, a push from the main process); read it with getFoliumModList.
+ */
+export const onFoliumModListChanged = (listener: () => void): (() => void) => {
+    modListListeners.add(listener);
+    return () => {
+        modListListeners.delete(listener);
+    };
+};
 
 /** Mod ids whose client is currently active (for the mods panel). */
 export const isFoliumClientActive = (modId: string) => activeClients.has(modId);

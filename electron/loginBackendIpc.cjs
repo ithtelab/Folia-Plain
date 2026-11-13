@@ -1,6 +1,7 @@
 "use strict";
 
 const { createSenderGuardedHandler } = require('./ipcAccessGuard.cjs');
+
 const os = require('os');
 const { runLoginSelfCheck } = require('./loginSelfCheck.cjs');
 
@@ -41,6 +42,7 @@ const describeApp = ({ app, safeStorage }) => {
 
 /**
  * 注册内嵌后端的 IPC。getDefaultSession() 返回 Electron 的默认 session（app ready 之后才可用），自检用它解析系统代理。
+ * isTrustedSender(event) 由宿主注入（见 electron/main.cjs）：只有第一方窗口的请求才回真实数据。
  */
 function registerLoginBackendIpc({
   ipcMain,

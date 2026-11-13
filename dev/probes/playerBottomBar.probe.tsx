@@ -77,7 +77,6 @@ const PlayerBottomBarProbe: React.FC = () => {
             {/* 预览里的字幕：不在 Provider 内，必须始终停在默认位置，不受底栏偏移影响 */}
             <div data-probe-subtitle-preview className="absolute inset-0">
                 <VisualizerSubtitleOverlay
-                    currentTime={currentTime}
                     showText
                     activeLine={{ startTime: 0, endTime: 9, fullText: 'Preview line', translation: 'Preview subtitle' } as never}
                     recentCompletedLine={null}
@@ -92,7 +91,6 @@ const PlayerBottomBarProbe: React.FC = () => {
             <PlayerBottomBarLayoutContext.Provider value={true}>
             <div data-probe-subtitle-host className="absolute inset-0">
                 <VisualizerSubtitleOverlay
-                    currentTime={currentTime}
                     showText
                     activeLine={{ startTime: 0, endTime: 9, fullText: 'Probe line', translation: 'Probe subtitle' } as never}
                     recentCompletedLine={null}
@@ -106,9 +104,9 @@ const PlayerBottomBarProbe: React.FC = () => {
             </PlayerBottomBarLayoutContext.Provider>
 
             <FloatingPlayerControls
+                currentTime={currentTime}
                 currentSong={{ name: 'Probe Song' }}
                 playerState={PlayerState.PLAYING}
-                currentTime={currentTime}
                 duration={200}
                 loopMode="all"
                 currentView={currentView}

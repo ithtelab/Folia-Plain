@@ -65,6 +65,17 @@ describe('花火的分词与切片', () => {
         expect(segments[2]!.endTime).toBeCloseTo(11.8);
     });
 
+    it('没有逐字时间时用应用的分词：手动分词优先于 icu-folia，标点并进前一个词', () => {
+        const plain: Line = { fullText: '夜空に光る星たち。', startTime: 0, endTime: 9, words: [] };
+        const offsets = (target: Line) => segmentHanabiLine(target).map(segment => [segment.startOffset, segment.endOffset]);
+        expect(offsets({ ...plain, autoWordSegments: ['夜空', 'に', '光る', '星たち', '。'] }))
+            .toEqual([[0, 2], [2, 3], [3, 5], [5, 9]]);
+        expect(offsets({ ...plain, wordSegments: ['夜空に光る', '星たち。'], autoWordSegments: ['夜空', 'に', '光る', '星たち', '。'] }))
+            .toEqual([[0, 5], [5, 9]]);
+        const segments = segmentHanabiLine({ ...plain, wordSegments: ['夜空に光る', '星たち。'] });
+        expect(segments[1]!.startTime).toBeCloseTo(5);
+    });
+
     it('切片按偏移裁词、时间按比例；整行原样返回', () => {
         expect(sliceLine(line, 0, line.fullText.length)).toBe(line);
         const tail = sliceLine(line, 4, 8);

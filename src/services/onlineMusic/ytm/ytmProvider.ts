@@ -1,12 +1,11 @@
 import type { UnifiedSong } from '../../../types';
-import appIcon from '../../../assets/providers/apps/ytm.jpg';
-import type { OnlineMusicProvider, ProviderUser } from '../../../types/onlineMusic';
+import type { OnlineMusicProvider, ProviderCollection, ProviderPage, ProviderUser } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
 import { isMacPlatform } from '../../../utils/platform';
 import { parseLyricsByFormat } from '../../../utils/lyrics/parserCore';
 import { noteYtmAccount, ytmHasPremium } from './ytmAccount';
 import { getYtmTransportAvailability, requestYtm } from './ytmTransport';
-import type { YtmWirePage, YtmWireSong, YtmWireWebLoginState } from './ytmTransport';
+import type { YtmWireCollection, YtmWirePage, YtmWireSong, YtmWireWebLoginState } from './ytmTransport';
 import { createYtmPager, normalizeYtmCollection, normalizeYtmSong, normalizeYtmUser, requireYtmSong } from './ytmNormalize';
 import { clearYtmCatalogCache, ytmCatalog } from './ytmCatalog';
 import { clearYtmLibraryCache, ytmLibrary } from './ytmLibrary';
@@ -28,6 +27,24 @@ import i18n from '../../../i18n/config';
 const WEB_LOGIN_TTL_MS = 12 * 60 * 1000;
 
 const searchPager = createYtmPager<UnifiedSong>();
+// The searches of callers beside the host's own screen (a mod, through Folium's `folium.omni`),
+// which name themselves with a `session`: walked in a pager of their own, by session and text, so
+// that such a search never starts the listener's search over, and the walks it keeps (the pager
+// holds as many as `searchPager`) only ever make room among themselves.
+const sessionSearchPager = createYtmPager<UnifiedSong>();
+// Album and playlist searches, walked by kind and text as songs are.
+const collectionSearchPager = createYtmPager<ProviderCollection>();
+const searchYtmCollections = (kind: 'album' | 'playlist', query: string, limit: number, offset: number): Promise<ProviderPage<ProviderCollection>> => {
+    const text = query.trim();
+    if (!text) return Promise.resolve({ items: [], total: 0, nextOffset: offset, hasMore: false });
+    return collectionSearchPager.page(`${kind}:${text}`, offset, limit, async continuation => {
+        const page = await requestYtm<YtmWirePage<YtmWireCollection>>(
+            kind === 'album' ? 'search_albums' : 'search_playlists',
+            continuation ? { continuation } : { query: text },
+        );
+        return { items: page.items.map(item => normalizeYtmCollection(item, kind)), continuation: page.continuation };
+    });
+};
 // A letter of any script but Latin.
 const NON_LATIN_LETTER = /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u;
 // The key of the sign-in in progress.
@@ -39,6 +56,8 @@ let loginStarts = 0;
 
 const forgetPages = (): void => {
     searchPager.clear();
+    sessionSearchPager.clear();
+    collectionSearchPager.clear();
     clearYtmCatalogCache();
     clearYtmLibraryCache();
     forgetYtmMusicPage();
@@ -48,8 +67,8 @@ const forgetPages = (): void => {
 i18n.on('languageChanged', forgetPages);
 
 export const ytmProvider: OnlineMusicProvider = {
-    id: 'ytm', displayName: 'YouTube Music', shortName: 'YT Music',
-    mark: { letter: 'Y', color: '#e11d48', iconUrl: appIcon },
+    id: 'ytm', displayName: 'YouTube Music', shortName: 'YT Music', shortNameKey: 'onlineProviderName.ytm',
+    mark: { letter: 'Y', color: '#e11d48' },
     getAvailability: getYtmTransportAvailability,
     describeFailure: describeYtmFailure,
     // `recommendations` is the radio tab (ytmRecommendations.ts): a personal FM made of song
@@ -65,14 +84,19 @@ export const ytmProvider: OnlineMusicProvider = {
     normalizeSong: normalizeYtmSong, normalizeUser: normalizeYtmUser, normalizeCollection: normalizeYtmCollection,
     songMetadata: { getSongMetadata: createProviderSongMetadata },
     search: {
-        async searchSongs(query, limit, offset) {
+        async searchSongs(query, limit, offset, context) {
             const text = query.trim();
             if (!text) return { items: [], total: 0, nextOffset: offset, hasMore: false };
-            return searchPager.page(`search:${text}`, offset, limit, async continuation => {
+            const session = context?.session;
+            const pager = session === undefined ? searchPager : sessionSearchPager;
+            const key = session === undefined ? `search:${text}` : `search:${session}\n${text}`;
+            return pager.page(key, offset, limit, async continuation => {
                 const page = await requestYtm<YtmWirePage<YtmWireSong>>('search_songs', continuation ? { continuation } : { query: text });
                 return { items: page.items.map(normalizeYtmSong), continuation: page.continuation };
             });
         },
+        searchAlbums: (query, limit, offset) => searchYtmCollections('album', query, limit, offset),
+        searchPlaylists: (query, limit, offset) => searchYtmCollections('playlist', query, limit, offset),
     },
     playback: {
         async getSongDetail(id) {
@@ -95,11 +119,19 @@ export const ytmProvider: OnlineMusicProvider = {
         async getAudioSource(song, quality) {
             const id = requireYtmSong(song);
             const startedAt = Date.now();
-            const audio = await requestYtm<{ url: string; route: string; itag?: number; bitrate?: number; level?: 'high' }>('audio', { id, quality });
+            const audio = await requestYtm<{ url: string; route: string; itag?: number; bitrate?: number; level?: 'high'; loudnessDb?: number }>('audio', { id, quality });
             const served = audio.level ?? quality;
             const format = audio.itag ? ` (itag ${audio.itag}, ${Math.round((audio.bitrate ?? 0) / 1000)} kbit/s)` : '';
             console.log(`[Ytm] Audio for "${song.name}" (${id}) at ${quality}${served === quality ? '' : ` (served at ${served})`} is ready by the ${audio.route} route${format} after ${Date.now() - startedAt}ms`);
-            return { url: audio.url, fetchedAt: Date.now(), quality: served };
+            // YouTube turns a track down by how much louder than its playback level it is: that is its track gain.
+            // A quieter one it leaves as it is, and so does this: with no peak known, a lift could clip.
+            const replayGain = typeof audio.loudnessDb === 'number' && Number.isFinite(audio.loudnessDb) ? { trackGain: Math.min(0, -audio.loudnessDb) } : undefined;
+            return { url: audio.url, fetchedAt: Date.now(), quality: served, ...(replayGain ? { replayGain } : {}) };
+        },
+        // A music video a list showed as itself, its song not known in time, is played as that song.
+        async getPlayedSong(song) {
+            const { song: played } = await requestYtm<{ song: YtmWireSong | null }>('played_as', { id: requireYtmSong(song) });
+            return played && normalizeYtmSong(played);
         },
     },
     lyrics: {

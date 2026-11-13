@@ -1,6 +1,5 @@
 import type { UnifiedSong } from '../../../types';
-import appIcon from '../../../assets/providers/apps/spotify.jpg';
-import type { OnlineMusicProvider, ProviderUser, LoginState } from '../../../types/onlineMusic';
+import type { LoginMethod, OnlineMusicProvider, ProviderUser, LoginState } from '../../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
 import { parseLyricsByFormat } from '../../../utils/lyrics/parserCore';
 import { formatLrcTimestamp } from '../../../utils/lyrics/lrcTimestamp';
@@ -19,6 +18,8 @@ import { spotifyMutations } from './spotifyMutations';
 import { resetSpotifyRecommendations, spotifyRecommendations } from './spotifyRecommendations';
 import { describeSpotifyLoginFailure, spotifyLoginFailure } from './spotifyLoginFailure';
 import { describeSpotifyFailure } from './spotifyFailure';
+import { readSpotifyPlaybackMode, spotifyPlaybackMode, spotifyPlaysThroughSoloist, spotifySoloistOffered, spotifySoloistPlayback } from './spotifySoloistPlayback';
+import { checkSpotifyAfterLogin, getSpotifySetup, runSpotifySetupAction } from './spotifySetup';
 
 // src/services/onlineMusic/spotify/spotifyProvider.ts
 // Spotify adapter. Sign-in happens in the browser where the person is already signed in to
@@ -48,12 +49,18 @@ interface SearchWalk { songs: UnifiedSong[]; seen: Set<string>; asked: number; d
 // The searches gone back to are few: the one on screen, and the ones the listener returns to.
 const MAX_SEARCH_WALKS = 8;
 const searchWalks = new Map<string, SearchWalk>();
-// Makes room for `kept`. A search read past its first page is one the listener is in; a lookup
-// (a song's lyrics) asks one page and never comes back. So the oldest of those goes first.
-const dropSearchWalk = (kept: SearchWalk): void => {
-    const held = [...searchWalks];
+// The searches of callers beside the host's own screen (a mod, through Folium's `folium.omni`),
+// which name themselves with a `session`: kept apart from the host's by session and text, under a
+// bound of their own, so that such a search never starts the listener's search over and never
+// drops it to make room.
+const MAX_SESSION_SEARCH_WALKS = 16;
+const sessionSearchWalks = new Map<string, SearchWalk>();
+// Makes room for `kept` in `walks`. A search read past its first page is one the listener is in; a
+// lookup (a song's lyrics) asks one page and never comes back. So the oldest of those goes first.
+const dropSearchWalk = (walks: Map<string, SearchWalk>, kept: SearchWalk): void => {
+    const held = [...walks];
     const [text] = held.find(([, walk]) => !walk.paged && walk !== kept) ?? held[0];
-    searchWalks.delete(text);
+    walks.delete(text);
 };
 // The sign-in attempt in progress; the desktop side decides how long it stays open.
 let activeLogin: SpotifyWireLoginStart | null = null;
@@ -61,21 +68,34 @@ let activeLogin: SpotifyWireLoginStart | null = null;
 // The desktop side asks for pages in the app's language; an album or artist read before the
 // language changed is named in the previous one.
 i18n.on('languageChanged', clearSpotifyCatalogCache);
+// The way Spotify plays is read at once: a song played right after the start takes its route from it.
+void readSpotifyPlaybackMode();
+
+// The two ways of signing in: the same sign-in in the browser (the library, the lyrics and the
+// search need it either way), and then one of the two ways Spotify plays (spotifySoloistPlayback.ts).
+const SPOTIFY_LOGIN_METHODS: LoginMethod[] = [
+    { id: 'standard', labelKey: 'soloist.method.standard', iconKey: '', noteKey: 'soloist.method.standardNote' },
+    { id: 'soloist', labelKey: 'soloist.method.soloist', iconKey: '', noteKey: 'soloist.method.soloistNote' },
+];
 
 export const spotifyProvider: OnlineMusicProvider = {
-    id: 'spotify', displayName: 'Spotify', shortName: 'Spotify',
-    mark: { letter: 'S', color: '#22c55e', iconUrl: appIcon },
+    id: 'spotify', displayName: 'Spotify', shortName: 'Spotify', shortNameKey: 'onlineProviderName.spotify',
+    mark: { letter: 'S', color: '#22c55e' },
     getAvailability: getSpotifyTransportAvailability,
     describeFailure: describeSpotifyFailure,
     // `recommendations` is the radio tab: a personal FM, daily songs and playlists, each made of
     // what Spotify has for the account (spotifyRecommendations.ts). `personalFmModes` stays off:
     // the FM here has no modes. Spotify's recommendation page is the explore tab.
+    // `externalPlayback` follows the way Spotify plays: through Soloist, the app steers that program
+    // (`externalPlayback` below); else `playback.getAudioSource` gives a URL. `playback` stays on
+    // either way for `getSongDetail`.
     capabilities: {
         search: true, playback: true, lyrics: true, wordByWordLyrics: false, auth: true,
         userLibrary: true, playlists: true, albums: true, artists: true, userAlbums: true,
         // `playlistSubscription` is albums and other people's playlists (`mutations.canSubscribe`).
         recommendations: true, explore: true, mutations: true, likes: true, playlistTrackMutations: true,
         playlistSubscription: true,
+        get externalPlayback() { return spotifyPlaysThroughSoloist(); },
     },
     normalizeSong: normalizeSpotifySong, normalizeUser: normalizeSpotifyUser, normalizeCollection: normalizeSpotifyCollection,
     songMetadata: { getSongMetadata: createProviderSongMetadata },
@@ -86,15 +106,20 @@ export const spotifyProvider: OnlineMusicProvider = {
         // its start and kept: a page here is what the next rows add that no earlier row gave. A
         // search the listener comes back to goes on where it was; one no longer kept is walked again
         // from its start as far as the page asked for. A search asked from offset 0 begins anew.
-        async searchSongs(query, limit, offset) {
+        // A caller with a `session` has walks of its own (`sessionSearchWalks`).
+        async searchSongs(query, limit, offset, context) {
             const text = query.trim();
             if (!text) return { items: [], total: 0, nextOffset: offset, hasMore: false };
-            let walk = offset === 0 ? undefined : searchWalks.get(text);
+            const session = context?.session;
+            const walks = session === undefined ? searchWalks : sessionSearchWalks;
+            const maxWalks = session === undefined ? MAX_SEARCH_WALKS : MAX_SESSION_SEARCH_WALKS;
+            const key = session === undefined ? text : `${session}\n${text}`;
+            let walk = offset === 0 ? undefined : walks.get(key);
             if (!walk) {
                 walk = { songs: [], seen: new Set(), asked: 0, done: false, queue: Promise.resolve(), paged: false };
-                searchWalks.delete(text);
-                searchWalks.set(text, walk);
-                while (searchWalks.size > MAX_SEARCH_WALKS) dropSearchWalk(walk);
+                walks.delete(key);
+                walks.set(key, walk);
+                while (walks.size > maxWalks) dropSearchWalk(walks, walk);
             }
             if (offset > 0) walk.paged = true;
             const current = walk;
@@ -174,8 +199,17 @@ export const spotifyProvider: OnlineMusicProvider = {
             resetSpotifyRecommendations();
             await requestSpotify('logout');
         },
-        async startLogin() {
-            activeLogin = await requestSpotify<SpotifyWireLoginStart>('login_start');
+        // Two ways only where Soloist is offered (the desktop side says so); else the one sign-in.
+        // The way it plays now is picked to begin with: signing in again does not change it unasked.
+        async resolveLoginMethods() {
+            const answer = await readSpotifyPlaybackMode();
+            if (!(answer?.soloist ?? spotifySoloistOffered())) return [];
+            const now = answer?.mode ?? spotifyPlaybackMode();
+            return SPOTIFY_LOGIN_METHODS.map(method => ({ ...method, preferred: method.id === now }));
+        },
+        // The way picked goes with the sign-in: the desktop side keeps it once Spotify approves.
+        async startLogin(methodId) {
+            activeLogin = await requestSpotify<SpotifyWireLoginStart>('login_start', methodId ? { method: methodId } : {});
             return activeLogin.key;
         },
         async openLoginPage(key) { await requestSpotify('login_open', { key }); },
@@ -183,7 +217,12 @@ export const spotifyProvider: OnlineMusicProvider = {
         // is removed without a sign-out): the FM and the lists of the one before are forgotten.
         async checkLogin(key) {
             const state = await requestSpotify<LoginState>('login_check', { key });
-            if (state.state === 'confirmed') resetSpotifyRecommendations();
+            // The desktop side keeps the way picked with this sign-in now: the route follows it at once,
+            // whether or not the check after the sign-in is reached.
+            if (state.state === 'confirmed') {
+                resetSpotifyRecommendations();
+                void readSpotifyPlaybackMode();
+            }
             if (state.state !== 'error') return state;
             const failure = spotifyLoginFailure(state.message);
             return failure ? { ...state, failure } : state;
@@ -194,7 +233,12 @@ export const spotifyProvider: OnlineMusicProvider = {
             await requestSpotify('login_cancel', { key });
         },
         getLoginTtlMs: () => (activeLogin?.expiresInMs || DEFAULT_LOGIN_TTL_MS) + LOGIN_SETTLE_MS,
+        // After a sign-in: the way picked was kept with it; whether it can play is checked here.
+        checkAfterLogin: checkSpotifyAfterLogin,
+        getSetup: getSpotifySetup,
+        runSetupAction: runSpotifySetupAction,
     },
+    externalPlayback: spotifySoloistPlayback,
     catalog: spotifyCatalog,
     library: spotifyLibrary,
     mutations: spotifyMutations,

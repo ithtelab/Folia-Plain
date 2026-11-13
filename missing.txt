@@ -1,0 +1,16 @@
+../../../mods/runtime/queue/queueReplaceUndo
+../../folium/equalizer/service
+../../shared/ai/providerRegistry.mjs
+./BravaisWallHint
+./bravaisEmptyWallHint
+./equalizer/ModCurveNotice
+./equalizer/service
+./omni/hostOmni
+./omni/service
+./queueReplaceUndo
+./queueVersion
+./useAiModels
+./useBravaisSeamRowFit
+@/mods/folium/equalizer/service
+@/mods/runtime/queue/queueReplaceUndo
+@/mods/runtime/queue/queueVersion

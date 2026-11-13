@@ -36,7 +36,7 @@ const ProbeBody: React.FC = () => {
                     <SettingsPageContext.Provider value={PAGE_CONTEXT}>
                         <HelpPage
                             onOpenReleaseNotes={() => setShowReleaseNotes(true)}
-                            onOpenAiHelp={() => {}}
+                            onOpenAiHelp={() => {}} onProjectLabelClick={() => {}}
                         />
                     </SettingsPageContext.Provider>
                 </SettingsKitThemeContext.Provider>

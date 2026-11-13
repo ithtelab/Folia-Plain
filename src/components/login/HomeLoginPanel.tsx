@@ -2,13 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LibraryAccountController } from '../../library/core/account/account.contract';
 import { useLibraryAccountProviders } from '../../library/core/account/useLibraryAccount';
+import { providerDisplayName } from '../../i18n/providerName';
 import { settingsTokens, useSettingsKitTheme } from '../modal/settings/kit/kitTheme';
 import { kitMotionTokens, useKitReducedMotion } from '../modal/settings/kit/motion';
 import { openLoginWindow } from './loginWindowStore';
 import { PlatformMark } from './PlatformMark';
 import { orderRows, rowStatus } from './platformRows';
 import './login.css';
-import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
 
 // src/components/login/HomeLoginPanel.tsx
 // 主页上没有人登录时的样子：一句标题、一句提示，和一个带着前三个平台记号的「登录」按钮。
@@ -40,21 +40,20 @@ const HomeLoginPanel: React.FC<HomeLoginPanelProps> = ({ account }) => {
             </h2>
             <p className="login-rise mt-2 max-w-[516px] whitespace-pre-line text-[13px] leading-5 text-[color:var(--st-t2)]" style={{ animationDelay: '40ms' }}>
                 {ranOut
-                    ? t('home.guestPromptProvider', { provider: active?.shortName || active?.displayName || activeProviderId })
+                    ? t('home.guestPromptProvider', { provider: active ? providerDisplayName(t, active, activeProviderId) : activeProviderId })
                     : t('home.guestPrompt')}
             </p>
             <button
                 type="button"
                 data-ponder="sign-in"
                 onClick={event => openLoginWindow(ranOut ? activeProviderId : null, event.currentTarget)}
-                className="login-rise st-t-fast liquid-glass-host liquid-glass-button relative mt-7 inline-flex h-12 max-w-full items-center gap-2.5 rounded-xl pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-t1)]"
-                style={{ animationDelay: '80ms' }}
+                className="login-rise st-t-fast mt-7 inline-flex h-12 max-w-full items-center gap-2.5 rounded-xl bg-[var(--st-accent)] pl-2.5 pr-[22px] text-[15px] font-semibold text-[color:var(--st-on-accent)] transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
+                style={{ animationDelay: '80ms', '--login-edge': 'var(--st-accent)' } as React.CSSProperties}
             >
-                <LiquidGlassSurface isDaylight={isDaylight} radius={12} legacy="login" />
                 <span className="flex shrink-0">
                     {marks.map((row, index) => (
-                        <span key={row.providerId} className={`inline-flex rounded-full ${index > 0 ? '-ml-2' : ''}`}>
-                            <PlatformMark providerId={row.providerId} label={row.shortName} size={28} />
+                        <span key={row.providerId} className={`inline-flex rounded-full shadow-[0_0_0_2px_var(--st-accent)] ${index > 0 ? '-ml-2' : ''}`}>
+                            <PlatformMark providerId={row.providerId} label={providerDisplayName(t, row)} size={28} />
                         </span>
                     ))}
                 </span>

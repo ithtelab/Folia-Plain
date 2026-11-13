@@ -151,8 +151,11 @@ export const buildSonnetTextView = (
 
     const hasGlow = options.glowEnabled && !isDecoration;
     const glowBlur = Math.max(12, fontSize * 0.18);
-    const glowRgb = pixi.Color.shared.setValue(glowColor);
-    const glowStrength = hasGlow ? resolveGlowColorStrength(glowRgb.red * 255, glowRgb.green * 255, glowRgb.blue * 255) : 0;
+    let glowStrength = 0;
+    if (hasGlow) {
+        const glowRgb = pixi.Color.shared.setValue(glowColor);
+        glowStrength = resolveGlowColorStrength(glowRgb.red * 255, glowRgb.green * 255, glowRgb.blue * 255);
+    }
     const baseDropShadow = glowStrength > 0 ? {
         color: glowColor,
         alpha: 0.8 * glowStrength,

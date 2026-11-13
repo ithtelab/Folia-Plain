@@ -33,8 +33,6 @@ import { useLibraryHomeDirectory } from '../../../core/home/useLibraryHomeDirect
 import { useLibraryHomeListRegistration, useLibraryHomeTabsRegistration } from '../../../core/home/useLibraryHomeSurfaceRegistration';
 import { cycleIndex } from '../../../core/home/homeSources';
 import { useUpdateIndicator } from '../../../../hooks/useUpdateIndicator';
-import LiquidGlassSurface from '../../../../components/shared/liquid-glass/LiquidGlassSurface';
-import { useReducedMotionFor } from '../../../../hooks/useReducedMotionFor';
 
 // src/library/suites/grid/home/Grid3D.tsx
 // Glassmorphic interactive desktop home view replacing the legacy 3D carousel.
@@ -133,7 +131,6 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     } = props;
 
     const { t, i18n } = useTranslation();
-    const reducedUiMotion = useReducedMotionFor('uiMicroMotion');
     const {
         isDaylight,
     } = useThemeSettingsStore(useShallow(state => ({
@@ -262,8 +259,10 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
     // Background style mappings
     const mainBg = isDaylight ? 'bg-white/40' : 'bg-black/20';
+    const inputBg = isDaylight ? 'bg-black/5 focus:bg-black/10' : 'bg-white/5 focus:bg-white/10';
+    const navPillBg = isDaylight ? 'bg-black/5' : 'bg-white/10';
     const navPillInactiveText = isDaylight ? 'text-black/60 hover:text-black' : 'text-white/60 hover:text-white';
-    const activeTabBg = isDaylight ? 'text-black font-bold' : 'text-white font-bold';
+    const activeTabBg = isDaylight ? 'text-black font-bold' : 'text-black';
 
     const bottomPadding = currentTrack ? 'pb-28 md:pb-32' : '';
 
@@ -298,15 +297,12 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         <div
             ref={gridRootRef}
             data-ponder-page-scope="grid-page"
-            // Put the existing home blur on a sibling behind the controls, never on their ancestor:
-            // an ancestor backdrop filter would isolate navigation/search from the real background.
-            className={`relative isolate w-full h-full flex flex-col font-sans overflow-hidden pointer-events-auto ${bottomPadding}`}
+            className={`relative w-full h-full flex flex-col font-sans overflow-hidden ${mainBg} pointer-events-auto backdrop-blur-sm ${bottomPadding}`}
         >
 
-            <div aria-hidden="true" className={`absolute inset-0 -z-10 pointer-events-none ${mainBg} backdrop-blur-sm`} />
             {/* Main Header Container (Fades out when sliding/interacting) */}
             <div className="transition-opacity duration-300 ease-in-out z-20 opacity-100 select-none">
-                <div className="grid grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 pt-[max(1rem,var(--window-titlebar-safe-top,0px))] md:pt-[max(2rem,var(--window-titlebar-safe-top,0px))] gap-y-4 md:gap-y-0">
+                <div className="grid grid-cols-2 md:grid-cols-3 items-center w-full max-w-7xl mx-auto p-4 md:p-8 gap-y-4 md:gap-y-0">
                     {/* Left title and settings */}
                     <div className="flex items-center justify-start order-1 md:order-none">
                         <h1 className="text-2xl font-bold tracking-tight opacity-90 flex items-center gap-3">
@@ -388,12 +384,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
                     {/* Center Tab Switcher */}
                     <div className="flex justify-center order-3 md:order-none col-span-2 md:col-span-1">
-                        <div className="liquid-glass-host relative p-1 rounded-full scale-90 md:scale-100 origin-center">
-                            {/* The tab capsule keeps its glass and its rim light, but not the moving
-                                reflection: a flowing highlight around the one control you read at a
-                                glance was noise, not life. The bottom player is static for the same
-                                reason. */}
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} flow="static" legacy="navigation" />
+                        <div className={`relative ${navPillBg} backdrop-blur-md p-1 rounded-full scale-90 md:scale-100 origin-center`}>
                             <div className="inline-flex items-center gap-0">
                                 {homeTabs.map((tab) => {
                                     const isActive = homeViewTab === tab.key;
@@ -415,8 +406,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                                 {isActive && (
                                                     <motion.span
                                                         layoutId="home-active-tab-pill-desktop"
-                                                        className="liquid-glass-selection absolute inset-0 rounded-full"
-                                                        transition={reducedUiMotion ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 24, mass: 1 }}
+                                                        className="absolute inset-0 rounded-full bg-white shadow-sm"
+                                                        transition={{ type: 'spring', stiffness: 460, damping: 36, mass: 0.9 }}
                                                     />
                                                 )}
                                                 <span className="relative z-10">{tab.label}</span>
@@ -468,8 +459,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
                     {/* Right Search Bar */}
                     <div className="flex justify-end order-2 md:order-none">
-                        <form onSubmit={handleSearch} className="liquid-glass-host relative rounded-full w-full md:w-56 transition-[width] focus-within:md:w-72">
-                            <LiquidGlassSurface isDaylight={isDaylight} active={isInteractive} legacy="search" />
+                        <form onSubmit={handleSearch} className="relative w-full md:w-56 transition-all focus-within:md:w-72">
                             {isSearchingActive ? (
                                 <Loader2 className="absolute left-3 top-1/2 w-4 h-4 animate-spin opacity-40 -mt-2" />
                             ) : (
@@ -484,7 +474,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 placeholder={homeViewTab === 'local' ? t('home.searchLocal') : homeViewTab === 'navidrome' ? t('home.searchNavidrome') : t('home.searchDatabase')}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full bg-transparent rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none placeholder:text-current placeholder:opacity-60 select-text"
+                                className={`w-full ${inputBg} border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-white/20 transition-all placeholder:text-current placeholder:opacity-40 select-text`}
                                 style={{ color: 'var(--text-primary)' }}
                             />
                         </form>

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { motionValue } from 'framer-motion';
 import * as pixi from 'pixi.js';
 import type { Line, Theme } from '@/types';
-import { resolveGlowColorStrength } from '@/components/visualizer/colorMix';
+import { parseColorChannels, resolveGlowColorStrength } from '@/components/visualizer/colorMix';
 import { buildSonnetTextView } from '@/components/visualizer/sonnet/sonnetTextViewBuilder';
 import type { SonnetTypographyPlacement } from '@/components/visualizer/sonnet/sonnetTypographyLayout';
 import { createLatticeLineView } from '@/components/app/lattice/lyrics/latticeLyricScene';
@@ -135,6 +135,13 @@ describe('glow color strength', () => {
             expect(resolveGlowColorStrength(channel, channel, channel)).toBeCloseTo(strength);
         },
     );
+
+    it.each([['#ef4444', 1], ['#2563eb', 1], ['#101828', 0], ['#111827', 0]])(
+        'gates %s on its brightest channel, not luma', (hex, strength) => {
+            const { r, g, b } = parseColorChannels(hex)!;
+            expect(resolveGlowColorStrength(r, g, b)).toBeCloseTo(strength);
+        },
+    );
 });
 
 describe('Lattice lyric glow', () => {
@@ -159,6 +166,15 @@ describe('Lattice lyric glow', () => {
         expect((view.near.children[0] as pixi.Sprite).tint).toBe(0);
         expect(view.near.children[0].alpha).toBe(0);
         expect(view.near.renderable).toBe(false);
+    });
+
+    it('keeps a saturated keyword glowing at its peak on a light dark-theme base', () => {
+        const view = lattice({ primaryColor: '#f8fafc', wordColors: [{ word: 'Glow', color: '#ef4444' }] });
+        view.update(1.18);
+        expect((view.near.children[0] as pixi.Sprite).tint).toBe(0xef4444);
+        expect(view.near.children[0].alpha).toBeGreaterThan(0.8);
+        expect(view.near.renderable).toBe(true);
+        expect(view.far.renderable).toBe(true);
     });
 
     it.each([false, true])('preserves bright glow strength, translation and quiet/waiting behavior (chorus=%s)', chorus => {

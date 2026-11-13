@@ -3,6 +3,7 @@ import type { SongResult } from '../../../types';
 import type { PlaybackNavigationOptions } from '../../../types/appPlayback';
 import type { WallToolsHost, WallToolsHostSnapshot } from '../../wall/wallToolsHost';
 import { usePlaybackStore } from '../../../stores/usePlaybackStore';
+import { useSettingsModalStore } from '../../../stores/useSettingsModalStore';
 
 // src/components/app/wall-tools/useAppWallToolsHost.ts
 // App 给墙面工具（components/wall 的 WallToolsButton，bravais 与 Lattice 共用）的宿主：在这里把应用的动作组装成
@@ -56,6 +57,7 @@ export const createWallToolsHostStore = (latest: { current: WallToolsHostDeps })
     const listeners = new Set<() => void>();
     return {
         host: {
+            openSettings: () => useSettingsModalStore.getState().openSettings('options'),
             getSnapshot: () => snapshot,
             subscribe: listener => {
                 listeners.add(listener);

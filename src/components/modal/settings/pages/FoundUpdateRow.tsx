@@ -2,7 +2,9 @@ import React, { useId, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, Menu, Progress, Reveal, Row } from '../kit';
+import { openOutsideLink } from '../../../../utils/system/outsideLink';
 import { useSettingsPage } from './settingsPageContext';
+import { offersChinaDrives } from './ChinaDrivesRow';
 
 // src/components/modal/settings/pages/FoundUpdateRow.tsx
 // The row a found update gets, on the 通用 page and on the Help page: the new version, the list of
@@ -10,6 +12,7 @@ import { useSettingsPage } from './settingsPageContext';
 // itself can do with it: download it, show how far the download has come, restart to install. It
 // unfolds once the update check has found a version.
 
+const AUR_PACKAGE_URL = 'https://aur.archlinux.org/packages/folia-major-bin';
 
 type FoundUpdateRowProps = {
     /** Under the row above it: indented. */
@@ -33,36 +36,34 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
     const autoUpdateSupported = Boolean(updateStatus?.autoUpdateSupported);
     const isDownloading = updateStatus?.status === 'downloading';
     const isDownloaded = updateStatus?.status === 'downloaded';
-    // macOS: the app fetches the dmg and opens it; dragging the app over is the listener's step.
-    const assistedUpdateSupported = Boolean(updateStatus?.assistedUpdateSupported);
-    const hasMacInstaller = Boolean(updateStatus?.manualInstallerPath);
     const isLinuxBuild = updateStatus?.platform === 'linux';
-    const offersMirror = updateStatus?.platform === 'win32';
-    const macInProgress = assistedUpdateSupported && isDownloading && !hasMacInstaller;
-    const macFinished = assistedUpdateSupported && hasMacInstaller;
+    const isStableChannel = electronSettings.UPDATE_CHANNEL === 'realeco';
+    // The two drives are offered for the stable channel, and not on Linux.
+    const offersDrives = offersChinaDrives(updateStatus, electronSettings.UPDATE_CHANNEL);
     // What a found version needs from the listener where the app cannot update itself.
-    const manualNotice = assistedUpdateSupported
-        ? t('options.macAssistedUpdateNotice')
-        : updateStatus?.platform === 'darwin'
-            ? t('options.macManualUpdateNotice')
-            : isLinuxBuild
-                ? t('options.linuxManualUpdateNotice')
-                : autoUpdateSupported ? null : t('options.manualUpdateNotice');
+    const manualNotice = updateStatus?.platform === 'darwin'
+        ? t('options.macManualUpdateNotice')
+        : isLinuxBuild
+            ? t('options.linuxManualUpdateNotice')
+            : autoUpdateSupported ? null : t('options.manualUpdateNotice');
 
     const sources = [
-        ...(offersMirror ? [
-            { id: 'mirror', label: t('options.mirrorDownload'), onSelect: () => void window.electron?.openUpdateMirrorDownload(version) },
+        ...(offersDrives ? [
+            { id: 'quark', label: t('options.quarkDrive'), onSelect: () => void update.onOpenChinaDownload() },
+            { id: 'baidu', label: t('options.baiduDrive'), onSelect: () => void update.onOpenBaiduDownload() },
         ] : []),
         {
             id: 'github',
             label: t(autoUpdateSupported ? 'options.githubRelease' : 'options.fullInstallerGithub'),
             onSelect: () => void window.electron?.openUpdateReleasePage(version),
         },
+        ...(isLinuxBuild && isStableChannel ? [
+            { id: 'aur', label: t('options.aurPackage'), onSelect: () => openOutsideLink(AUR_PACKAGE_URL) },
+        ] : []),
     ].map(source => ({ ...source, end: <ExternalLink size={14} /> }));
     const notes = [
         ...(manualNotice ? [manualNotice] : []),
-        t('options.updateRepositoryNotice'),
-        ...(offersMirror ? [t('options.chinaDownloadHint')] : []),
+        ...(offersDrives ? [t('options.chinaDownloadHint')] : []),
     ];
     // The updater gives no usable percent while it does not know the size.
     const reported = updateStatus?.downloadProgress?.percent;
@@ -111,21 +112,6 @@ export const FoundUpdateRow: React.FC<FoundUpdateRowProps> = ({ sub }) => {
                 )}
                 {autoUpdateSupported && isDownloaded && (
                     <Button variant="primary" onClick={() => void update.onInstallUpdate()}>{t('options.restartToInstallUpdate')}</Button>
-                )}
-                {macInProgress && (
-                    <Progress value={percent / 100}>
-                        {t('options.downloadingProgress', { percent: Math.round(percent) })}
-                    </Progress>
-                )}
-                {assistedUpdateSupported && !hasMacInstaller && !isDownloading && (
-                    <Button variant="primary" onClick={() => void update.onDownloadMacInstaller()}>
-                        {t('options.downloadToDownloads')}
-                    </Button>
-                )}
-                {macFinished && (
-                    <Button variant="primary" onClick={() => void update.onOpenMacInstaller()}>
-                        {t('options.openDownloadedInstaller')}
-                    </Button>
                 )}
             </Row>
         </Reveal>

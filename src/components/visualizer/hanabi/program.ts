@@ -1,6 +1,7 @@
 // Copyright (c) 2026 chthollyphile
 import type { Line, Word } from '../../../types';
 import { splitLyricGraphemes } from '../../../utils/lyrics/graphemeTiming';
+import { segmentLyricWords } from '../../../utils/lyrics/wordSegmentation';
 import type { ParagraphKind, StructureLine } from '../paragraphStructure';
 import type { Mood } from './hanabiKernel';
 import { createRng } from './hanabiRandom';
@@ -111,15 +112,11 @@ const locateWords = (line: Line): Array<{ word: Word; start: number; end: number
     return located.length > 0 ? located : null;
 };
 
-const wordSegmenter = typeof Intl !== 'undefined' && Intl.Segmenter
-    ? new Intl.Segmenter('zh-CN', { granularity: 'word' })
-    : null;
-
 const hasLetters = (text: string) => /[\p{L}\p{N}]/u.test(text);
 
 /**
- * 把一行切成词（切长行的边界）：有逐字时间就用逐字时间的词，否则按 Intl.Segmenter 分词、
- * 时间按文字偏移在整行里线性分配。空白与标点并进前一个词。
+ * 把一行切成词（切长行的边界）：有逐字时间就用逐字时间的词，否则用应用的分词（手动分词 → icu-folia →
+ * Intl.Segmenter，与文字排版同一份），时间按文字偏移在整行里线性分配。空白与标点并进前一个词。
  */
 export const segmentHanabiLine = (line: Line): HanabiSegment[] => {
     const text = line.fullText;
@@ -127,13 +124,7 @@ export const segmentHanabiLine = (line: Line): HanabiSegment[] => {
     if (located && located.length >= 2) {
         return located.map(({ word, start, end }) => ({ startOffset: start, endOffset: end, startTime: word.startTime, endTime: word.endTime }));
     }
-    const pieces = wordSegmenter
-        ? Array.from(wordSegmenter.segment(text), ({ segment, index }) => ({ start: index, end: index + segment.length, text: segment }))
-        : splitLyricGraphemes(text).reduce<Array<{ start: number; end: number; text: string }>>((list, grapheme) => {
-            const start = list.at(-1)?.end ?? 0;
-            list.push({ start, end: start + grapheme.length, text: grapheme });
-            return list;
-        }, []);
+    const pieces = segmentLyricWords(line).map(({ segment, index }) => ({ start: index, end: index + segment.length, text: segment }));
     const merged: Array<{ start: number; end: number }> = [];
     for (const piece of pieces) {
         const last = merged.at(-1);

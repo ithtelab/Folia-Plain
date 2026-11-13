@@ -35,6 +35,7 @@ const args = {
     isDev: false,
     isElectronWindow: false,
     audioRef: { current: null },
+            blobUrlRef: { current: null },
     shouldAutoPlayRef: { current: false },
     pendingResumeTimeRef: { current: null },
     lastAudioRecoverySourceRef: { current: null },

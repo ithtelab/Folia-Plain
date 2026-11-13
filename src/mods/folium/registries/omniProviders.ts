@@ -70,6 +70,9 @@ const buildProvider = (modId: string, providerId: string, def: FoliumOmniProvide
         mutations: false,
         // A provider's tracks can be word-timed. Declarative only: nothing in the host reads this flag.
         wordByWordLyrics: typeof def.getLyrics === 'function',
+        // Songs are looked up by id only through the mod's `getSong`. Without it `playback.getSongDetail`
+        // still answers (null), so the flag tells such a source apart before anything is asked.
+        songDetail: typeof def.getSong === 'function',
     };
     return {
         id: providerId,

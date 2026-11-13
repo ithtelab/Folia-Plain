@@ -1,4 +1,4 @@
-import { BarChart3, Clapperboard, Mic2, Sparkles } from 'lucide-react';
+import { AppWindow, Clapperboard, Palette, Shapes, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -10,23 +10,21 @@ type NewFeatureCard = {
 
 type NewFeaturesRelease = {
     i18nKey: string;
-    /** 重大更新：介绍上方显示「<代号> Update · 重大更新」标签；代号不翻译，文案在 help.majorUpdateLabel。 */
-    majorUpdate?: { codename: string };
+    /** 重大更新：介绍上方显示「<代号> Update · 重大更新」标签；代号不翻译，文案在 help.majorUpdateLabel。
+     *  servicePack：同一重大更新的热修复版，标签改成「<代号> Update SP<n> · 重大更新」，文案在 help.servicePackLabel。 */
+    majorUpdate?: { codename: string; servicePack?: number };
     features: NewFeatureCard[];
 };
 
-// Defines the current Folia Plain release and its localized feature cards.
+// Defines the current release's cards; their localized text lives under i18nKey in every locale.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_8_0',
-    // What v0.8.0 changed. The cards are the things a listener can notice without being told where
-    // to look; the release notes carry the rest (playback races, lyric clocks, the macOS wallpaper
-    // guard, the remote window's text backing). `test/unit/newFeaturesRelease.test.ts` refuses a
-    // card id another release already used, and requires this list to match the v0_8_0 block in
-    // every locale exactly.
+    i18nKey: 'releaseNotes.v0_7_28',
+    majorUpdate: { codename: 'Mimiambol' },
     features: [
-        { id: 'sodaPlatform', icon: Mic2 },
-        { id: 'hanabi', icon: Clapperboard },
-        { id: 'listeningReport', icon: BarChart3 },
-        { id: 'exploreOwn', icon: Sparkles },
+        { id: 'scenes', icon: Clapperboard },
+        { id: 'newLook', icon: Shapes },
+        { id: 'windowControls', icon: AppWindow },
+        { id: 'styleOptions', icon: Palette },
+        { id: 'moreDetails', icon: Sparkles },
     ],
 };

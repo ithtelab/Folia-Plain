@@ -14,7 +14,7 @@ import type { ConfigThemeControls } from './storage/visualConfigTransfer';
 // not in a store, the dialogs a row opens, and the state the dialog keeps while it is open.
 
 /** The kinds of data the app keeps on disk, each of which can be cleared on its own. */
-export type CacheCategory = 'playlist' | 'lyrics' | 'cover' | 'media' | 'analysis';
+export type CacheCategory = 'playlist' | 'lyrics' | 'cover' | 'media' | 'analysis' | 'volumeBalance';
 
 /** A provider key the desktop app keeps in its main process. */
 export type AiApiKeyName = 'GEMINI_API_KEY' | 'OPENAI_API_KEY';
@@ -23,6 +23,8 @@ export type AiApiKeyName = 'GEMINI_API_KEY' | 'OPENAI_API_KEY';
 export type ElectronSettingsState = {
     /** Drafts of a replacement key: a saved key never reaches the renderer. */
     GEMINI_API_KEY: string;
+    GEMINI_API_MODEL: string;
+    AI_PROVIDER_PRESET: string;
     OPENAI_API_KEY: string;
     OPENAI_API_URL: string;
     OPENAI_API_MODEL: string;
@@ -61,6 +63,8 @@ export type SettingsPageContextValue = {
     onOpenVisPlayground: () => void;
     /** Opens the theme colour editor over the dialog. */
     onOpenThemePark: () => void;
+    /** Opens the scene window over the dialog. */
+    onOpenSceneWindow: () => void;
     onToggleTransparentPlayerBackground: (enabled: boolean) => void;
     /**
      * State the dialog itself holds (the desktop app's settings file, the Navidrome form, cache
@@ -149,11 +153,9 @@ export type SettingsPageContextValue = {
                 /** Removes a saved key from the main process at once. */
                 onClearAiApiKey: (key: AiApiKeyName) => Promise<void> | void;
                 onDownloadUpdate: () => Promise<void> | void;
-                /** macOS: fetch the dmg into Downloads (the app cannot install it itself). */
-                onDownloadMacInstaller: () => Promise<void> | void;
-                /** macOS: open the downloaded dmg so the listener can drag the app over. */
-                onOpenMacInstaller: () => Promise<void> | void;
                 onInstallUpdate: () => Promise<void> | void;
+                onOpenBaiduDownload: () => Promise<void> | void;
+                onOpenChinaDownload: () => Promise<void> | void;
                 onUpdateChannelChange: (channel: 'realeco' | 'limo' | 'cielo') => Promise<void> | void;
                 onSaveElectronSettings: () => Promise<void> | void;
                 onToggleAutoUpdate: () => Promise<void> | void;

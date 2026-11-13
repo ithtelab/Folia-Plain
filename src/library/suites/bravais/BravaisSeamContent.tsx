@@ -5,7 +5,7 @@ import type { BravaisLayer } from './bravaisLayer';
 import type { BravaisHomeShortcut } from './bravaisHomeModels';
 import type { BravaisSeamLevel } from './bravaisSeamLevel';
 import type { BravaisSeamContentVariant } from './bravaisSeamTarget';
-import { BravaisSeamCollectionMenu, BravaisSeamCollectionMeta, BravaisSeamStar, BravaisSeamStatusLine } from './BravaisSeamCollection';
+import { BravaisSeamCollectionMenu, BravaisSeamCollectionMeta, BravaisSeamMetaLine, BravaisSeamStar, BravaisSeamStatusLine } from './BravaisSeamCollection';
 import { BravaisSeamSpineTitle, BravaisSeamTitleArea } from './BravaisSeamTitle';
 import BravaisSeamFilterField from './BravaisSeamFilterField';
 import { openBravaisFilter } from './useBravaisSeamFilter';
@@ -20,6 +20,8 @@ import BravaisSeamCrumbs from './BravaisSeamCrumbs';
 import BravaisSeamPoster from './BravaisSeamPoster';
 import BravaisSeamAlbumPoster from './BravaisSeamAlbumPoster';
 import { BravaisSeamFlipText } from './BravaisSeamFlip';
+import { BravaisSeamFullRow, BravaisSeamSpineRow } from './BravaisSeamRow';
+import BravaisSeamHomeRow from './BravaisSeamHomeRow';
 
 // src/library/suites/bravais/BravaisSeamContent.tsx
 // 缝里的四套内容（设计稿 §5）：首页窄缝（竖排「书库」+ 竖排页签）、首页书脊、完整信息条（面包屑行、竖排标题、
@@ -35,6 +37,8 @@ import { BravaisSeamFlipText } from './BravaisSeamFlip';
 // 当前页过滤（设计稿 §7.6）：完整信息条的面包屑行下面是缝自己的过滤输入位（BravaisSeamFilterField）；书脊放不下输入框，
 // 过滤中只留一个过滤图标（点它或在墙上打字，缝临时展开成完整信息条）。
 // 歌手页、专辑页的完整等级画成海报（BravaisSeamPoster / BravaisSeamAlbumPoster，相机把它带到视口最左边）；过滤、面板、表单时回到上面这几套。
+// 信息条横向（row）：首页窄缝 / 书脊与完整信息条 / 书脊换成横条的排法（BravaisSeamHomeRow、BravaisSeamRow），搜索框同一个
+// 组件、横条样式（bravaisSeamRow.css）；面板、表单、海报总是竖的（bravaisSeamTarget 的 resolveSeamAxis）。
 
 export type BravaisSeamActions = {
     setLevel: (level: BravaisSeamLevel) => void;
@@ -49,6 +53,8 @@ export type BravaisSeamActions = {
 
 type BravaisSeamContentProps = {
     variant: BravaisSeamContentVariant;
+    /** 这套内容画在横的缝里。 */
+    row?: boolean;
     layer: BravaisLayer | null;
     /** 导航栈深度：面包屑在首页与当前层之间折叠中间层。 */
     depth: number;
@@ -94,8 +100,9 @@ const FullSeam: React.FC<{ layer: BravaisLayer; depth: number; actions: BravaisS
                 onCollapse={collapse} />
             <div className="bravais-seam-rule" />
             {/* 歌手页的统计已是「关于艺术家」的附注：相同时元数据行不重复（过滤中是匹配数，照常显示）。 */}
+            {/* 集合能重新拉取时，这一行就是「重新拉取」按钮（不在「⋯ 更多」里）。 */}
             {!(seam.artist?.stats && seam.artist.stats === seam.meta) && (
-                <BravaisSeamFlipText as="div" flipKey={seam.meta} className="bravais-seam-meta">{seam.meta}</BravaisSeamFlipText>
+                <BravaisSeamMetaLine meta={seam.meta} reload={collection?.reload} className="bravais-seam-meta" />
             )}
             {seam.artist && <BravaisSeamArtist artist={seam.artist} />}
             {collection?.description && (
@@ -162,8 +169,17 @@ const SpineSeam: React.FC<{ layer: BravaisLayer; actions: BravaisSeamActions }> 
     );
 };
 
-const BravaisSeamContent: React.FC<BravaisSeamContentProps> = ({ variant, layer, depth, actions }) => {
+const BravaisSeamContent: React.FC<BravaisSeamContentProps> = ({ variant, row = false, layer, depth, actions }) => {
     if (!layer) return null;
+    if (row) {
+        switch (variant) {
+            case 'home': return <BravaisSeamHomeRow layer={layer} compact={false} setLevel={actions.setLevel} openShortcut={actions.openShortcut} />;
+            case 'home-spine': return <BravaisSeamHomeRow layer={layer} compact setLevel={actions.setLevel} openShortcut={actions.openShortcut} />;
+            case 'full': return <BravaisSeamFullRow layer={layer} actions={actions} />;
+            case 'spine': return <BravaisSeamSpineRow layer={layer} actions={actions} />;
+            default: break;
+        }
+    }
     switch (variant) {
         case 'home': return <BravaisSeamHome layer={layer} compact={false} setLevel={actions.setLevel} openShortcut={actions.openShortcut} />;
         case 'home-spine': return <BravaisSeamHome layer={layer} compact setLevel={actions.setLevel} openShortcut={actions.openShortcut} />;

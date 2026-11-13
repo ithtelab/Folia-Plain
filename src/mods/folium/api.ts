@@ -36,6 +36,9 @@ import { FOLIUM_HOST_VERSION } from './shared';
 import { FOLIUM_EVENT_TYPES } from './eventTypes';
 import { addFoliumRpcListener, FOLIUM_RPC_NAME_PATTERN } from './rpcMessages';
 import { createFoliumAccountService } from './account';
+import { createFoliumOmniService } from './omni/service';
+import { createFoliumEqualizerService } from './equalizer/service';
+import { createFoliumVisualizerService } from './visualizer/service';
 
 // src/mods/folium/api.ts
 // Builds the `folium` object one mod's client entry receives. Everything is
@@ -312,6 +315,15 @@ export const createFoliumClientApi = (mod: ModRuntimeInfo, options: FoliumClient
         lyrics: createFoliumLyricsService(context),
         theme: FOLIUM_THEME_HELPERS,
         account: createFoliumAccountService(context),
+        // Folium 1.7: the host's online sources through Omni, read only (omni/service.ts; the main window
+        // installs the source, runtime/omni/hostOmni.ts).
+        omni: createFoliumOmniService(mod, context, stopped, onRelease),
+        // Folium 1.7: the host's equalizer (equalizer/service.ts; the main window installs the source,
+        // runtime/equalizer/hostEqualizer.ts).
+        equalizer: createFoliumEqualizerService(mod, context, stopped),
+        // Folium 1.8: the global lyric render quality, the mode, the builtin modes' tuning and the beat effects
+        // (visualizer/service.ts; the main window installs the source, runtime/visualizer/hostVisualizer.ts).
+        visualizer: createFoliumVisualizerService(mod, context, stopped),
         every: scope.every,
         onDispose: scope.onDispose,
         experimental,

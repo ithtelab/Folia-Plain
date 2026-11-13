@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useMotionValueEvent } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { providerDisplayName } from '../../i18n/providerName';
 import { playerBottomBarLiveOffset } from '../../stores/motionSignals';
 import type { LibraryAccountController } from '../../library/core/account/account.contract';
 import { useLibraryAccountProviders } from '../../library/core/account/useLibraryAccount';
@@ -12,8 +13,6 @@ import { kitMotionTokens, useKitReducedMotion } from '../modal/settings/kit/moti
 import { openLoginWindow, useLoginWindowStore } from './loginWindowStore';
 import { AccountPicture, PlatformMark } from './PlatformMark';
 import { pillProvider, pillSeenNext, rowStatus, type PillSeen } from './platformRows';
-import LiquidGlassSurface from '../shared/liquid-glass/LiquidGlassSurface';
-import MembershipSummary from './MembershipSummary';
 
 // src/components/login/SwitcherPill.tsx
 // 主页右下角的切换器：正在用的账号的头像，角上是平台的记号（没有人登录时只有记号；登录失效时记号上
@@ -115,36 +114,34 @@ const SwitcherPill: React.FC<SwitcherPillProps> = ({ account, onBackToPlayer }) 
             className="pointer-events-auto absolute bottom-4 right-4 z-[100] md:bottom-6 md:right-6"
             style={{ ...settingsTokens(isDaylight, theme), ...kitMotionTokens(reduced), '--login-edge': 'var(--st-menu)' } as React.CSSProperties}
         >
-            <div className="liquid-glass-host relative flex items-center rounded-full p-1 text-[color:var(--st-t1)]">
-                <LiquidGlassSurface isDaylight={isDaylight} legacy="provider" />
+            <div className="flex items-center rounded-[26px] bg-[var(--st-menu)] p-0.5 text-[color:var(--st-t1)] shadow-lg md:p-1.5">
                 <Tooltip text={t('home.switchOnlineProvider')} className="inline-flex">
                     <button
                         type="button"
                         onClick={event => openLoginWindow(provider.providerId, event.currentTarget.querySelector('[data-login-pill]'))}
                         aria-label={t('home.switchOnlineProvider')}
-                        className="st-t-fast flex h-10 min-w-10 items-center justify-center rounded-full p-1.5 transition-colors hover:bg-[var(--st-fill)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                        className="st-t-fast flex h-10 min-w-10 items-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
                     >
                         {/* 登录窗口从这里出来，登录成功后头像飞回这里（done/LoginDone.tsx 按这个属性找它，属性的值是这里画的平台）。 */}
-                        <span data-login-pill={provider.providerId} className="inline-flex shrink-0" style={landing && status === 'signed-in' ? { opacity: 0 } : undefined}>
+                        <span data-login-pill={provider.providerId} className="inline-flex" style={landing && status === 'signed-in' ? { opacity: 0 } : undefined}>
                             {status === 'signed-in' && provider.user
-                                ? <AccountPicture user={provider.user} size={28} providerId={provider.providerId} />
-                                : <PlatformMark providerId={provider.providerId} label={provider.shortName} size={28} ranOut={status === 'ran-out'} />}
+                                ? <AccountPicture user={provider.user} size={40} providerId={provider.providerId} />
+                                : <PlatformMark providerId={provider.providerId} label={providerDisplayName(t, provider)} size={40} ranOut={status === 'ran-out'} />}
                         </span>
-                        <span className={`st-t-move overflow-hidden whitespace-nowrap text-xs font-semibold transition-[max-width,opacity,padding] ${showLabel ? 'max-w-[180px] pl-2.5 pr-3 opacity-100' : 'max-w-0 opacity-0'}`}>
-                            {provider.shortName || provider.displayName}
+                        <span className={`st-t-move overflow-hidden whitespace-nowrap text-xs font-semibold transition-[max-width,opacity,padding] ${showLabel || status === 'checking' ? 'max-w-[180px] pl-2.5 pr-3 opacity-100' : 'max-w-0 opacity-0'}`}>
+                            {status === 'checking' ? t('login.rowChecking') : providerDisplayName(t, provider)}
                         </span>
-                        {provider.user?.membership && <MembershipSummary user={provider.user} mode="badge" />}
                     </button>
                 </Tooltip>
-                <span className="mx-1 hidden h-4 w-px bg-current opacity-10 md:block" aria-hidden="true" />
+                <span className="mx-1.5 hidden h-6 w-px bg-[var(--st-line2)] md:block" aria-hidden="true" />
                 <Tooltip text={t('home.backToPlayer')} className="hidden md:inline-flex">
                     <button
                         type="button"
                         onClick={onBackToPlayer}
                         aria-label={t('home.backToPlayer')}
-                        className="st-t-fast flex h-10 w-9 items-center justify-center rounded-full opacity-65 transition-[color,opacity,background-color] hover:bg-[var(--st-fill)] hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                        className="st-t-fast flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--st-fill)]"
                     >
-                        <ChevronRight size={18} strokeWidth={1.8} />
+                        <ChevronRight size={21} />
                     </button>
                 </Tooltip>
             </div>

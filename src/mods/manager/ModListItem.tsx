@@ -270,6 +270,50 @@ export const ModListItem: React.FC<ModListItemProps> = ({
                                         : ''}
                                 </div>
                             ) : null}
+                            {/* Folium 1.7: the one permission that lets a mod drop the user's queue, said in words. */}
+                            {mod.permissions.includes('playback.queue') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.queueReplaceHint')}
+                                </div>
+                            ) : null}
+                            {mod.permissions.includes('equalizer.control') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.equalizerControlHint')}
+                                </div>
+                            ) : null}
+                            {/* Folium 1.8: the global lyric render quality, which every canvas or WebGL style follows. */}
+                            {mod.permissions.includes('visualizer.renderQuality') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.renderQualityHint')}
+                                </div>
+                            ) : null}
+                            {/* Folium 1.8: the mode, the styles' options and the beat effects, each its own permission. */}
+                            {mod.permissions.includes('visualizer.mode') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.visualizerModeHint')}
+                                </div>
+                            ) : null}
+                            {mod.permissions.includes('visualizer.tuning') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.visualizerTuningHint')}
+                                </div>
+                            ) : null}
+                            {mod.permissions.includes('visualizer.beatEffects') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.visualizerBeatEffectsHint')}
+                                </div>
+                            ) : null}
+                            {/* Folium 1.9: the background type and the animation intensity. */}
+                            {mod.permissions.includes('visualizer.background') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.visualizerBackgroundHint')}
+                                </div>
+                            ) : null}
+                            {mod.permissions.includes('visualizer.animationIntensity') ? (
+                                <div className="text-[11px] opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                    {t('mods.visualizerAnimationIntensityHint')}
+                                </div>
+                            ) : null}
                             {mod.trustStale ? (
                                 <div className={`flex items-start gap-2 text-xs rounded-lg border px-3 py-2 ${classes.warning}`}>
                                     <TriangleAlert size={14} className="mt-px shrink-0" />

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { BravaisLayer } from './bravaisLayer';
 import type { BravaisHomeShortcut } from './bravaisHomeModels';
 import type { BravaisSeamLevel } from './bravaisSeamLevel';
+import type { SeamAxis } from '../../../components/wall/seamPlan';
 import type { BravaisSeamContentVariant } from './bravaisSeamTarget';
 import type { BravaisPanelActions } from './BravaisListPanel';
 import BravaisSeamContent from './BravaisSeamContent';
@@ -18,15 +19,22 @@ import type { LibraryNavigationContext } from '../../core/suite/suite.contract';
 // fb4（缝内的过渡）：每一次整条翻走——转出的半圈（降低动效时的淡出）里旧内容一律 inert + aria-hidden，
 // 读屏与用例只看得到要换上的那一层。
 // 当前页过滤（设计稿 §7.6）：输入位在缝的内容里（BravaisSeamFilterField，随内容翻牌），不再给命令面板的内联框留锚点。
+// 信息条横向（axis 'y'）：缝是一道横条（data-bravais-seam-axis="y"，bravaisSeamRow.css），内容按「此刻渲染的这一套」的
+// 高度排版、竖直居中，底部不留播放条安全区（横条不贴底）；开口落定时横条不裁内容（菜单可以伸出横条，renderFrame 写
+// data-bravais-seam-settled）。
 
 type BravaisSeamProps = {
     seamRef: RefObject<HTMLDivElement | null>;
+    /** 缝外面的轨道：缝的平移写在它上面（useBravaisFrame）。 */
+    trackRef: RefObject<HTMLDivElement | null>;
     contentRef: RefObject<HTMLDivElement | null>;
     tabRef: RefObject<HTMLButtonElement | null>;
     variant: BravaisSeamContentVariant;
+    /** 这套内容开在哪个方向（折叠时为 null，按竖的画）。 */
+    axis: SeamAxis | null;
     /** 正画着的内容正要翻走（useBravaisSeam 的 leaving）。 */
     leaving: boolean;
-    /** 此刻渲染的那一套内容的排版宽度（翻转不重排）。 */
+    /** 此刻渲染的那一套内容的排版宽度（翻转不重排；横条是排版高度）。 */
     contentWidth: number;
     layer: BravaisLayer | null;
     /** 当前层（标签上的标题跟着它，不等内容翻转）。 */
@@ -47,9 +55,11 @@ type BravaisSeamProps = {
 
 const BravaisSeam: React.FC<BravaisSeamProps> = ({
     seamRef,
+    trackRef,
     contentRef,
     tabRef,
     variant,
+    axis,
     leaving,
     contentWidth,
     layer,
@@ -65,6 +75,7 @@ const BravaisSeam: React.FC<BravaisSeamProps> = ({
 }) => {
     const { t } = useTranslation();
     const width = contentWidth;
+    const row = axis === 'y';
     const tabLabel = currentLayer?.seam.title ?? '';
     const hideLeaving = leaving;
     // 渲染时就写：缝里的内容卸载（cleanup）时读到的已经是这一轮的当前层。
@@ -73,26 +84,30 @@ const BravaisSeam: React.FC<BravaisSeamProps> = ({
     const currentLayerKey = useCallback(() => currentLayerKeyRef.current, []);
     return (
         <>
-            <div
-                ref={seamRef}
-                className="bravais-seam"
-                data-bravais-seam={variant}
-                data-bravais-seam-level={level}
-                aria-label={t('libraryBravais.seamLabel')}
-                role="region"
-            >
-                <div ref={contentRef} className="bravais-seam-content" style={{ width, marginLeft: -width / 2 }}>
-                    <motion.div
-                        className="bravais-seam-body"
-                        style={{ paddingBottom: bottomPx }}
-                        inert={hideLeaving}
-                        aria-hidden={hideLeaving || undefined}
-                        data-bravais-seam-leaving={hideLeaving || undefined}
-                    >
-                        <BravaisSeamNavigation.Provider value={navigation}>
-                            <BravaisSeamContent variant={variant} layer={layer} depth={navigation.depth} actions={{ setLevel, openList, panel, openShortcut, currentLayerKey }} />
-                        </BravaisSeamNavigation.Provider>
-                    </motion.div>
+            {/* 轨道：缝的平移在它身上、它自己成合成层；倾斜落定后缝的旋转画进这一层，字不会被当成图片转糊（seamTransforms）。 */}
+            <div ref={trackRef} className="bravais-seam-track">
+                <div
+                    ref={seamRef}
+                    className="bravais-seam"
+                    data-bravais-seam={variant}
+                    data-bravais-seam-axis={row ? 'y' : 'x'}
+                    data-bravais-seam-level={level}
+                    aria-label={t('libraryBravais.seamLabel')}
+                    role="region"
+                >
+                    <div ref={contentRef} className="bravais-seam-content" style={row ? { height: width, marginTop: -width / 2 } : { width, marginLeft: -width / 2 }}>
+                        <motion.div
+                            className="bravais-seam-body"
+                            style={{ paddingBottom: bottomPx }}
+                            inert={hideLeaving}
+                            aria-hidden={hideLeaving || undefined}
+                            data-bravais-seam-leaving={hideLeaving || undefined}
+                        >
+                            <BravaisSeamNavigation.Provider value={navigation}>
+                                <BravaisSeamContent variant={variant} row={row} layer={layer} depth={navigation.depth} actions={{ setLevel, openList, panel, openShortcut, currentLayerKey }} />
+                            </BravaisSeamNavigation.Provider>
+                        </motion.div>
+                    </div>
                 </div>
             </div>
             <button

@@ -3,6 +3,7 @@ import { OnlineProviderError } from '@/types/onlineMusic';
 import { omni } from '@/services/onlineMusic/omni';
 import type { ModRuntimeInfo } from '../types';
 import type {
+    FoliumAccountState,
     FoliumJsonValue,
     FoliumPlatformDescription,
     FoliumPlatformErrorCode,
@@ -11,6 +12,7 @@ import type {
 } from './contract';
 import { readFoliumAccountState } from './account';
 import type { FoliumStoppedCheck } from './api';
+import { isFoliumRequestQuotaError, runFoliumRequest } from './omni/requestQuota';
 
 // src/mods/folium/platformRaw.ts
 // The experimental `platform.raw` (Folium 1.7, #788): a platform's own backend endpoints, called as the
@@ -20,14 +22,26 @@ import type { FoliumStoppedCheck } from './api';
 // are never open, and the adapter adds the session. Here: the mod's permissions against that table, its
 // arguments, a cap on how often one mod may call, dropping an answer that comes after the account
 // changed, and the platform's failures as the contract's codes.
+//
+// The cap is the allowance per mod id that `folium.omni` shares (omni/requestQuota.ts): 120 requests a
+// minute and 8 under way at once. platform.raw does not join the allowance per source across all mods,
+// and sets no answer time limit of the host's: the platform's transport gives these requests one.
 
 /**
- * Requests one mod may make in a minute, and may have under way at once. Past the minute's allowance a
- * request is refused; past the ones at once it waits for one of them to finish, first come first served.
+ * What `folium.omni` offers for the omni method a platform's endpoint does (the `omni` of its row in the
+ * platform's table), for the developer log. A method not here has no typed interface yet; reading a
+ * collection by id (`getCollectionDetail`, `getCollectionTracks`) is not here because those collections
+ * are playlists on some platforms, and `folium.omni` opens no playlists.
  */
-const RATE_WINDOW_MS = 60_000;
-const RATE_PER_WINDOW = 120;
-const MAX_IN_FLIGHT = 8;
+const FOLIUM_OMNI_MEMBERS: ReadonlyMap<string, string> = new Map([
+    ['getSongDetail', 'folium.omni.resolveSongs'],
+    ['getLyrics', 'folium.omni.getLyrics'],
+    ['searchSongs', 'folium.omni.searchSongs'],
+    ['getAlbumDetail', 'folium.omni.resolveCollection (an album\'s songs: folium.omni.getTracks)'],
+    ['getArtistDetail', 'folium.omni.resolveCollection'],
+    ['getArtistSongs', 'folium.omni.getTracks'],
+    ['getArtistAlbums', 'folium.omni.getArtistAlbums'],
+]);
 /** The most `params` may weigh, as JSON. */
 const MAX_PARAMS_LENGTH = 16 * 1024;
 const PARAM_NAME = /^[A-Za-z][A-Za-z0-9_]*$/;
@@ -76,13 +90,6 @@ const codeOfFailure = (error: unknown, signedIn: boolean): FoliumPlatformErrorCo
     return 'network';
 };
 
-/* Rejects with `aborted` as soon as `signal` aborts, whatever `work` is doing then. */
-const untilAborted = <T>(work: Promise<T>, signal: AbortSignal): Promise<T> => new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(platformError('aborted'));
-    signal.addEventListener('abort', onAbort, { once: true });
-    work.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
-});
-
 /**
  * `folium.experimental['platform.raw']` for one mod. `stopped` refuses calls after the activation was torn
  * down; `onRelease` receives the function that ends it, which aborts the requests still under way.
@@ -92,10 +99,6 @@ export const createFoliumPlatformService = (
     stopped: FoliumStoppedCheck = () => false,
     onRelease: (release: () => void) => void = () => {},
 ): FoliumPlatformService => {
-    const started: number[] = [];
-    let inFlight = 0;
-    // Requests waiting for one of the MAX_IN_FLIGHT places, oldest first: each is the function that lets it in.
-    const waiting: Array<() => void> = [];
     // The requests under way or waiting, aborted when the activation ends: each then rejects with `aborted`.
     const underWay = new Set<AbortController>();
     onRelease(() => {
@@ -104,36 +107,6 @@ export const createFoliumPlatformService = (
     });
     // Endpoints this mod has called, for the log line said once per endpoint.
     const told = new Set<string>();
-
-    /*
-     * Waits for one of the places at once, all of them being taken; rejects with `aborted` if `signal`
-     * aborts first. A free place is taken without waiting (in `request`), so a request is sent in the
-     * same turn as it was made whenever it can be.
-     */
-    const waitForPlace = (signal: AbortSignal): Promise<void> => new Promise<void>((resolve, reject) => {
-        if (signal.aborted) {
-            reject(platformError('aborted'));
-            return;
-        }
-        const enter = () => {
-            signal.removeEventListener('abort', leave);
-            inFlight += 1;
-            resolve();
-        };
-        const leave = () => {
-            const index = waiting.indexOf(enter);
-            if (index >= 0) waiting.splice(index, 1);
-            reject(platformError('aborted'));
-        };
-        waiting.push(enter);
-        signal.addEventListener('abort', leave, { once: true });
-    });
-
-    /* Gives a place back and lets the oldest waiting request in. */
-    const givePlace = () => {
-        inFlight -= 1;
-        waiting.shift()?.();
-    };
 
     const describe = (providerId: string): FoliumPlatformDescription => {
         const info = typeof providerId === 'string' ? omni.getRawRequestInfo(providerId) : null;
@@ -173,19 +146,15 @@ export const createFoliumPlatformService = (
         const problem = omni.checkRawParams(providerId, endpoint, sent);
         if (problem !== null) throw new TypeError(`invalid-params: ${problem}`);
 
-        // A request counts against the minute when it is accepted, waiting for a place included.
-        const now = Date.now();
-        while (started.length > 0 && now - started[0] >= RATE_WINDOW_MS) started.shift();
-        if (started.length >= RATE_PER_WINDOW) {
-            console.warn(`[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: refused, over ${RATE_PER_WINDOW} requests a minute`);
-            throw platformError('rate-limited');
-        }
-        started.push(now);
+        // Said once per endpoint, when the mod first calls it, refused by the allowance or not.
         if (!told.has(`${providerId}\n${endpoint}`)) {
             told.add(`${providerId}\n${endpoint}`);
-            console.info(rule.omni
-                ? `[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: Omni already offers this (omni.${rule.omni}); the host's typed interface is the one to use where it has it`
-                : `[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: first call (${rule.access})`);
+            const typed = rule.omni ? FOLIUM_OMNI_MEMBERS.get(rule.omni) : undefined;
+            console.info(typed
+                ? `[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: Omni already offers this (omni.${rule.omni}), and Folium has it as ${typed}: use that instead`
+                : rule.omni
+                    ? `[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: Omni already offers this (omni.${rule.omni}); Folium has no typed interface for it yet`
+                    : `[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: first call (${rule.access})`);
         }
 
         // Aborted by the caller's signal or by the end of the activation, whichever comes first, also while
@@ -194,42 +163,44 @@ export const createFoliumPlatformService = (
         const abort = () => controller.abort(signal?.reason);
         signal?.addEventListener('abort', abort, { once: true });
         underWay.add(controller);
-        let hasPlace = false;
+        // The account the request is made as, read when it is sent. An answer that comes after a switch
+        // of the provider or the account is dropped: it may be the previous account's.
+        const sentAs = { generation: 0, before: null as FoliumAccountState | null };
+        let body: JsonValue;
         try {
-            // While anyone waits all places are taken (a freed one goes straight to the oldest waiting), so
-            // a free place here never jumps the queue.
-            if (inFlight < MAX_IN_FLIGHT) inFlight += 1;
-            else await waitForPlace(controller.signal);
-            hasPlace = true;
-            // Let in and aborted in the same moment: nothing has been sent yet.
+            // The allowance answers `aborted` at once when the controller aborts; the request itself is
+            // aborted too (it gets the same signal), and its place comes back once it has stopped.
+            body = await runFoliumRequest({
+                modId: mod.id,
+                providerId,
+                origin: 'host',
+                perSource: false,
+                signal: controller.signal,
+                answerWithinMs: null,
+                what: `platform.raw ${providerId} ${endpoint}`,
+            }, () => {
+                sentAs.generation = omni.getActiveRequestGeneration();
+                sentAs.before = readFoliumAccountState(providerId);
+                return omni.requestProviderRaw(providerId, endpoint, sent, controller.signal);
+            });
+        } catch (error) {
             if (controller.signal.aborted) throw platformError('aborted');
-            // The account the request is made as, read when it is sent. An answer that comes after a switch
-            // of the provider or the account is dropped: it may be the previous account's.
-            const generation = omni.getActiveRequestGeneration();
-            const before = readFoliumAccountState(providerId);
-            const signedIn = before?.status === 'signed-in';
-            const work = omni.requestProviderRaw(providerId, endpoint, sent, controller.signal);
-            let body: JsonValue;
-            try {
-                body = await untilAborted(work, controller.signal);
-            } catch (error) {
-                if (controller.signal.aborted) throw platformError('aborted');
-                if ((error as { code?: unknown } | null)?.code === 'aborted') throw error;
-                const code = codeOfFailure(error, signedIn);
-                console.warn(`[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: ${code}`, error);
-                throw platformError(code);
-            }
-            const after = readFoliumAccountState(providerId);
-            if (generation !== omni.getActiveRequestGeneration() || (after?.accountKey ?? null) !== (before?.accountKey ?? null)) {
-                console.warn(`[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: the account changed while it was under way; the answer is dropped`);
-                throw platformError('account-changed');
-            }
-            return Object.freeze({ body, accountKey: after?.accountKey ?? null });
+            // The allowance's own refusal (`rate-limited`), already said in the developer log.
+            if (isFoliumRequestQuotaError(error)) throw error;
+            if ((error as { code?: unknown } | null)?.code === 'aborted') throw error;
+            const code = codeOfFailure(error, sentAs.before?.status === 'signed-in');
+            console.warn(`[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: ${code}`, error);
+            throw platformError(code);
         } finally {
-            if (hasPlace) givePlace();
             underWay.delete(controller);
             signal?.removeEventListener('abort', abort);
         }
+        const after = readFoliumAccountState(providerId);
+        if (sentAs.generation !== omni.getActiveRequestGeneration() || (after?.accountKey ?? null) !== (sentAs.before?.accountKey ?? null)) {
+            console.warn(`[Folium:${mod.id}] platform.raw ${providerId} ${endpoint}: the account changed while it was under way; the answer is dropped`);
+            throw platformError('account-changed');
+        }
+        return Object.freeze({ body, accountKey: after?.accountKey ?? null });
     };
 
     return Object.freeze({ describe, request });

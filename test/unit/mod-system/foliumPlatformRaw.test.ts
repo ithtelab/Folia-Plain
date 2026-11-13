@@ -26,6 +26,7 @@ import { useOnlineProviderAccountStore } from '@/stores/useOnlineProviderAccount
 import { createFoliumExperimental } from '@/mods/folium/experimental';
 import { createFoliumPlatformService } from '@/mods/folium/platformRaw';
 import { createFoliumClientApi } from '@/mods/folium/api';
+import { createFoliumRequestGate, resetFoliumRequestQuotasForTest } from '@/mods/folium/omni/requestQuota';
 import { getFoliumAccountState, installFoliumHostAccount } from '@/mods/runtime/hostAccount';
 import { clientApiOptions } from './clientApiOptions';
 
@@ -35,6 +36,8 @@ import { clientApiOptions } from './clientApiOptions';
 // unlisted endpoints refused), the answer with the account key folium.account gives, an answer dropped
 // when the account changed meanwhile, abort, the per-mod allowance (120 a minute, eight at once and the
 // rest waiting their turn), and the platform's failures as the contract's codes. The platform's adapter is real; only its request to the backend is replaced.
+// The allowance is the one per mod id that folium.omni shares (omni/requestQuota.ts), kept for the
+// whole page: each case ends by resetting it, and a reloaded mod keeps its minute.
 
 installFoliumHostAccount();
 
@@ -64,6 +67,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    resetFoliumRequestQuotasForTest();
     vi.restoreAllMocks();
 });
 
@@ -313,5 +317,96 @@ describe('platform.raw request', () => {
         const lines = info.mock.calls.map(([line]) => String(line)).filter((line) => line.includes('platform.raw netease lyric'));
         expect(lines).toHaveLength(1);
         expect(lines[0]).toContain('omni.getLyrics');
+    });
+
+    it('points the developer log at folium.omni where it has the endpoint, and says when nothing typed has', async () => {
+        const info = vi.mocked(console.info);
+        const platform = createFoliumPlatformService(mod());
+        await platform.request('netease', 'song_detail', { ids: '1' });
+        await platform.request('netease', 'playlist_track_all', { id: 1 });
+        await platform.request('netease', 'listen_data_total');
+        const lineOf = (endpoint: string) => info.mock.calls.map(([line]) => String(line)).find((line) => line.includes(`platform.raw netease ${endpoint}:`));
+        expect(lineOf('song_detail')).toContain('folium.omni.resolveSongs');
+        // A playlist's tracks: Omni does it, folium.omni opens no playlists.
+        expect(lineOf('playlist_track_all')).toContain('omni.getCollectionTracks');
+        expect(lineOf('playlist_track_all')).toContain('no typed interface');
+        expect(lineOf('playlist_track_all')).not.toContain('folium.omni');
+        expect(lineOf('listen_data_total')).toContain('first call (read)');
+    });
+
+    /* A gate of folium.omni for mod-a, as one call of its methods would get it, asking built-in sources. */
+    const omniGate = (modId = 'mod-a') => createFoliumRequestGate({
+        modId, what: 'omni.test', signal: new AbortController().signal, originOf: () => 'host',
+    });
+
+    it('shares the allowance per mod with folium.omni: its places and its minute', async () => {
+        const held = holdAnswers();
+        const omniAnswers: Array<() => void> = [];
+        for (let i = 0; i < 8; i += 1) {
+            void omniGate().run('netease', () => new Promise<void>((resolve) => { omniAnswers.push(resolve); }));
+        }
+        // All of mod-a's places are folium.omni's: platform.raw waits its turn, another mod does not.
+        const raw = createFoliumPlatformService(mod()).request('netease', 'listen_data_total');
+        await settle();
+        expect(send).not.toHaveBeenCalled();
+        void createFoliumPlatformService(mod({ id: 'mod-b' })).request('netease', 'listen_data_total');
+        expect(send).toHaveBeenCalledTimes(1);
+        omniAnswers[0]();
+        await settle();
+        expect(send).toHaveBeenCalledTimes(2);
+        held.answer(0);
+        held.answer(1);
+        await expect(raw).resolves.toMatchObject({ accountKey: null });
+
+        resetFoliumRequestQuotasForTest();
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(new Date('2026-10-21T12:00:00Z'));
+            send.mockResolvedValue({ code: 200 });
+            const omniCalls = Array.from({ length: 119 }, () => omniGate().run('netease', () => Promise.resolve('omni')));
+            const platform = createFoliumPlatformService(mod());
+            const last = platform.request('netease', 'listen_data_total');
+            await expect(failureOf(platform.request('netease', 'listen_data_total'))).resolves.toBe('rate-limited');
+            await expect(failureOf(omniGate().run('netease', () => Promise.resolve('omni')))).resolves.toBe('rate-limited');
+            await expect(Promise.all([...omniCalls, last])).resolves.toHaveLength(120);
+            expect(vi.mocked(console.warn)).toHaveBeenCalledWith('[Folium:mod-a] platform.raw netease listen_data_total: refused, over 120 requests a minute');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('keeps the minute of a mod across a reload: a new activation of the same id counts on', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+            vi.setSystemTime(new Date('2026-10-21T12:00:00Z'));
+            const releases: Array<() => void> = [];
+            const before = createFoliumPlatformService(mod(), () => false, (release) => releases.push(release));
+            await expect(Promise.all(Array.from({ length: 120 }, () => before.request('netease', 'listen_data_total')))).resolves.toHaveLength(120);
+            releases.forEach((release) => release());
+            const after = createFoliumPlatformService(mod());
+            await expect(failureOf(after.request('netease', 'listen_data_total'))).resolves.toBe('rate-limited');
+            vi.setSystemTime(new Date('2026-10-21T12:01:00Z'));
+            await expect(after.request('netease', 'listen_data_total')).resolves.toMatchObject({ accountKey: null });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('rejects an aborted request at once, and lets the next one in once the aborted request has stopped', async () => {
+        const held = holdAnswers();
+        const platform = createFoliumPlatformService(mod());
+        const callers = Array.from({ length: 8 }, () => new AbortController());
+        const aborted = callers.map((caller, i) => failureOf(platform.request('netease', 'listen_data_total', { order: i }, { signal: caller.signal })));
+        callers.forEach((caller) => caller.abort());
+        await expect(Promise.all(aborted)).resolves.toEqual(Array(8).fill('aborted'));
+        // The eight have not stopped at the backend yet (the stand-in ignores the signal): a ninth waits.
+        const next = platform.request('netease', 'listen_data_total', { order: 8 });
+        await settle();
+        expect(held.sentParams).toHaveLength(8);
+        held.answer(3);
+        await settle();
+        expect(held.sentParams[8]).toEqual({ order: 8 });
+        held.answer(8);
+        await expect(next).resolves.toMatchObject({ accountKey: null });
     });
 });

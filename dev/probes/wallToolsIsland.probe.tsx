@@ -61,6 +61,7 @@ const editQueue = (edit: (queue: SongResult[]) => SongResult[]) => {
 /** 假宿主：身份稳定（模块级），队列动作改播放 store，其余只记账。 */
 const PROBE_HOST: WallToolsHost = {
     getSnapshot: () => snapshot,
+        openSettings: () => {},
     subscribe: listener => {
         snapshotListeners.add(listener);
         return () => snapshotListeners.delete(listener);

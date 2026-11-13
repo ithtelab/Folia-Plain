@@ -2,6 +2,14 @@ import { DualTheme } from "../types";
 import { applyStoredAnimationIntensityToDualTheme } from "./themePreferences";
 import { sanitizeDualTheme } from "./themeSanitizer";
 import { getWebAiProvider, type WebAiProvider } from "./runtimeConfig";
+export {
+  AI_PROVIDER_PRESETS,
+  inferAiProviderFromUrl,
+  modelAlwaysThinks,
+  resolveAiConnection,
+  resolveAiProviderPreset,
+  retiredModelHint,
+} from '../../shared/ai/providerRegistry.mjs';
 
 // src/services/aiText.ts
 
@@ -23,6 +31,9 @@ import { getWebAiProvider, type WebAiProvider } from "./runtimeConfig";
  *
  * It lives in src/services/ because the theme controller, the OBS overlay, the lyric segmentation
  * and the settings form all use it, and none of them owns it.
+ *
+ * The settings form also reads the provider registry through here (presets, sites, default and
+ * retired models: shared/ai/providerRegistry.mjs), so no component imports shared/ai/ itself.
  */
 
 /** Our web route for the theme ask, one per service. */
@@ -160,6 +171,16 @@ export const requestLyricSegmentation = async (lines: string[], signal?: AbortSi
 
   return (payload as { lines?: unknown }).lines;
 };
+
+/** Whether model discovery can run here; saved credentials stay in the desktop main process. */
+export const canListAiModels = (): boolean => Boolean(window.electron?.listAiModels);
+
+/** Loads the current connection's models without exposing its saved key to the renderer. */
+export const fetchAiModels = (payload: AiConnectionTestPayload): Promise<AiModelListResult> => (
+  window.electron?.listAiModels
+    ? window.electron.listAiModels(payload)
+    : Promise.resolve({ ok: false, errorKind: 'config' })
+);
 
 /** Whether the connection test can run here. It is desktop only: there is no web route for it. */
 export const canRunAiConnectionTest = (): boolean => Boolean(window.electron?.testAiConnection);

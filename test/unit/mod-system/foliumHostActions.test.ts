@@ -21,7 +21,7 @@ import { usePlaybackStore } from '@/stores/usePlaybackStore';
 import { useAudioSettingsStore } from '@/stores/useAudioSettingsStore';
 import { useStatusMessageStore } from '@/stores/useStatusMessageStore';
 import { addFoliumEventHandler, removeFoliumEventHandlers } from '@/mods/folium/events';
-import { resolveFoliumSongRef, toFoliumSong } from '@/mods/folium/dto';
+import { FOLIUM_SONG_REF_POOL_SIZE, resolveFoliumSongRef, toFoliumSong } from '@/mods/folium/dto';
 import { useFoliumHostActions, type FoliumAppActions } from '@/mods/runtime/hostActions';
 import { createFoliumLyricsService, createFoliumPlaybackService } from '@/mods/folium/services';
 import { installFoliumHostEvents } from '@/mods/runtime/hostEvents';
@@ -54,8 +54,10 @@ const appActions = (overrides: Partial<FoliumAppActions> = {}): FoliumAppActions
     play: vi.fn(), pause: vi.fn(), toggle: vi.fn(), seek: vi.fn(), seekToLyricTime: vi.fn(),
     next: vi.fn(), previous: vi.fn(), playSong: vi.fn(), playQueueSong: vi.fn(), enqueue: vi.fn(),
     navigateToPlayer: vi.fn(), navigateToHome: vi.fn(),
+    navigateBackFromPlayer: vi.fn(), navigateBackFromLattice: vi.fn(), backCollection: vi.fn(), closeSearchView: vi.fn(),
     shuffleQueue: vi.fn(), toggleLike: vi.fn(), openVolume: vi.fn(),
     isLiked: false, controlsDisabled: false, isLyricsLoading: false,
+    persistQueue: vi.fn(async () => undefined), refreshQueuePrefetch: vi.fn(),
     ...overrides,
 });
 
@@ -267,7 +269,7 @@ describe('folium play queue', () => {
 
         usePlaybackStore.setState({ playQueue: queue, currentSong: { ...queue[600] } as SongResult });
         let page = playback.getQueue();
-        expect(page).toMatchObject({ length: 1000, currentIndex: 600, kind: 'queue' });
+        expect(page).toMatchObject({ length: 1000, currentIndex: 600, kind: 'queue', version: expect.any(String) });
         expect(page.items).toHaveLength(500);
         expect(page.items[0].index).toBe(350);
         expect(page.items[499].index).toBe(849);
@@ -317,11 +319,11 @@ describe('folium play queue', () => {
         const mintFillers = (count: number, from: number) => {
             for (let filler = 0; filler < count; filler += 1) toFoliumSong(song(from + filler));
         };
-        // The first entry's ref is the oldest in a full pool (2,000) and the second has none yet: minting
-        // the second must not evict the ref the same page has just handed out for the first.
+        // The first entry's ref is the oldest in a full pool (FOLIUM_SONG_REF_POOL_SIZE) and the second has
+        // none yet: minting the second must not evict the ref the same page has just handed out for the first.
         const [first, second] = [song(1), song(2)];
         const firstRef = toFoliumSong(first)!.ref;
-        mintFillers(1999, 10_000);
+        mintFillers(FOLIUM_SONG_REF_POOL_SIZE - 1, 10_000);
         usePlaybackStore.setState({ playQueue: [first, second] });
         const { items } = playback.getQueue({ offset: 0, limit: 2 });
         expect(items[0].song.ref).toBe(firstRef);
@@ -329,8 +331,9 @@ describe('folium play queue', () => {
         await expect(playback.playQueueItem(0, items[0].song.ref!)).resolves.toBe(true);
         expect((actions.playQueueSong as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(first);
 
-        // Still bounded: reading the page counts as use, so the ref outlives 1,998 newer ones, not 2,000.
-        mintFillers(1998, 20_000);
+        // Still bounded: reading the page counts as use, so the ref outlives FOLIUM_SONG_REF_POOL_SIZE - 2
+        // newer fillers (the page's second entry is newer than it too), not a whole pool's worth.
+        mintFillers(FOLIUM_SONG_REF_POOL_SIZE - 2, 20_000);
         expect(resolveFoliumSongRef(firstRef)).toBe(first);
         mintFillers(1, 30_000);
         expect(resolveFoliumSongRef(firstRef)).toBeNull();

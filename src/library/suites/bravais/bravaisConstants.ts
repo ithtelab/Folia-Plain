@@ -14,22 +14,38 @@ export const BRAVAIS_SEAM_HOME_WIDTH = 120;
 /** 书脊。 */
 export const BRAVAIS_SEAM_SPINE_WIDTH = 64;
 /**
+ * 信息条横向（设置「信息条横向」）：缝从块的横向缝隙（块行边界）裂开，墙上下分开。这三个是横条的开口高度，依次对应
+ * 完整信息条（与首页的搜索框）、首页窄缝、书脊（首页与集合层同一个高度）。
+ */
+export const BRAVAIS_SEAM_ROW_FULL_HEIGHT = 212;
+export const BRAVAIS_SEAM_ROW_HOME_HEIGHT = 72;
+export const BRAVAIS_SEAM_ROW_SPINE_HEIGHT = 52;
+/**
  * 歌手页的海报（完整等级下的歌手页缝）：宽度随视口取 46%，夹在这个范围里。海报仍是墙上的开口（与信息条同一层，
  * 从块边界裂开），只是相机把它带到视口最左边、贴边不留距离（bravaisFrame 的 poster）。
  */
 export const BRAVAIS_SEAM_POSTER_MIN_WIDTH = 520;
 export const BRAVAIS_SEAM_POSTER_MAX_WIDTH = 680;
 export const BRAVAIS_SEAM_POSTER_VIEWPORT_RATIO = 0.46;
-/** 海报在场时整层（两半墙与缝）倾斜的角度（度，负 = 逆时针），绕海报右缘、视口半高转。 */
-export const BRAVAIS_POSTER_TILT_DEG = -10;
+/**
+ * 整层（两半墙与缝）倾斜的角度（度，负 = 逆时针，0 = 不倾斜），绕缝的右缘、视口半高转。按缝里此刻要画的那一套内容取
+ * （bravaisTilt 的 resolveBravaisTiltDeg）：
+ * - home：首页的窄缝与书脊（不倾斜）；
+ * - collection：集合页（歌单、专辑与歌手页不画海报时）的信息条与书脊；
+ * - poster：歌手 / 专辑海报。
+ * 面板、表单、首页的搜索框、横向的缝与有限拼贴（过滤中）不倾斜。
+ * 倾斜、裁剪、缝的出血与内容缩进、排开口时离视口边多留的那一段、聚焦卡让位、换锚点时墙不跳，都按这张表的角度走。
+ * 还没管的两处，改 home 之前要看：空墙说明（BravaisWallHint，只在首页）不跟着转；信息条设成横向时不倾斜。
+ */
+export const BRAVAIS_TILT_DEG: Record<'home' | 'collection' | 'poster', number> = { home: 0, collection: -4, poster: -10 };
 /**
  * 倾斜的补间：张开时等裂缝先走一小段（DELAY）再转，转得比开口与相机慢一点，三者一起落定；回正跟着缝合上走。
  * 缓动两头都平（ease-in-out），不是一下子甩过去。
  */
-export const BRAVAIS_POSTER_TILT_IN_DELAY_S = 0.12;
-export const BRAVAIS_POSTER_TILT_IN_S = 0.95;
-export const BRAVAIS_POSTER_TILT_OUT_S = 0.5;
-export const BRAVAIS_POSTER_TILT_EASE = [0.45, 0, 0.2, 1] as const;
+export const BRAVAIS_TILT_IN_DELAY_S = 0.12;
+export const BRAVAIS_TILT_IN_S = 0.95;
+export const BRAVAIS_TILT_OUT_S = 0.5;
+export const BRAVAIS_TILT_EASE = [0.45, 0, 0.2, 1] as const;
 /** 视口窄于它时默认收成书脊（设计稿 §5 的 NARROW_VW）。 */
 export const BRAVAIS_NARROW_VIEWPORT_PX = 900;
 

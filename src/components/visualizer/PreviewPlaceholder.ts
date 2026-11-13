@@ -1,7 +1,7 @@
 import { type Line, type VisualizerMode } from '../../types';
 import { getLineRenderEndTime } from '../../utils/lyrics/renderHints';
-import placeholderCoverUrl from '../../../assets/placeholder_cover.svg';
-import placeholderCover2Url from '../../../assets/placeholder_cover-2.svg';
+import placeholderCoverUrl from '../../../assets/placeholder_cover.jpg';
+import placeholderCover2Url from '../../../assets/placeholder_cover-2.jpg';
 import { getVisualizerPreviewStartOffset } from './registry';
 
 const createCharacterWords = (text: string, startTime: number, endTime: number) => {
@@ -30,114 +30,113 @@ const createTokenWords = (tokens: string[], startTime: number, endTime: number) 
     }));
 };
 
-// Original preview lines demonstrate mixed scripts and background vocals without quoting songs.
 const DEFAULT_PREVIEW_PLACEHOLDER_LINES: Line[] = [
     {
         startTime: 0.7,
         endTime: 3.6,
-        fullText: '静听微光穿过窗，让旋律慢慢醒来。',
-        translation: 'Let the first light in; let the melody unfold.',
-        romanization: 'Jìng tīng wēiguāng chuānguò chuāng, ràng xuánlǜ mànmàn xǐnglái.',
-        words: createCharacterWords('静听微光穿过窗，让旋律慢慢醒来。', 0.7, 3.6),
+        fullText: '詩情を持たずとも、あなたを現実へと導くその神文の詩を紡ぐ。',
+        translation: '编织那没有诗意，却能将你带到现实的神文之诗。',
+        romanization: 'Shijō o motazu tomo, anata o genjitsu e to michibiku sono shinbun no shi o tsumugu.',
+        words: createCharacterWords('詩情を持たずとも、あなたを現実へと導くその神文の詩を紡ぐ。', 0.7, 3.6),
         backgroundVocal: {
-            text: 'closer to the morning',
+            text: 'of course i still love you',
             startTime: 1.3,
             endTime: 3.1,
-            words: createTokenWords(['closer', 'to', 'the', 'morning'], 1.3, 3.1),
-            translation: '向清晨再靠近一些。',
-            romanization: 'closer to the morning',
+            words: createTokenWords(['of', 'course', 'i', 'still', 'love', 'you'], 1.3, 3.1),
+            translation: '当然，我依然爱你。',
+            romanization: 'of course i still love you',
         },
     },
     {
         startTime: 4.2,
         endTime: 7.2,
-        fullText: 'We follow the rhythm of a quiet morning.',
-        translation: '我们跟随清晨安静的节拍。',
-        romanization: 'We follow the rhythm of a quiet morning.',
+        fullText: 'Weave that prosaic divine poem that leads you to reality.',
+        translation: '编织那没有诗意，却能将你带到现实的神文之诗。',
+        romanization: 'Weave that prosaic divine poem that leads you to reality.',
         words: createTokenWords(
-            ['We', 'follow', 'the', 'rhythm', 'of', 'a', 'quiet', 'morning.'],
+            ['Weave', 'that', 'prosaic', 'divine', 'poem', 'that', 'leads', 'you', 'to', 'reality.'],
             4.2,
             7.2,
         ),
         backgroundVocal: {
-            text: '风经过，声音留下。',
+            text: 'もちろん、今でもあなたを愛してるよ',
             startTime: 4.8,
             endTime: 6.6,
-            words: createCharacterWords('风经过，声音留下。', 4.8, 6.6),
-            translation: 'The breeze passes; the sound stays.',
-            romanization: 'Fēng jīngguò, shēngyīn liúxià.',
+            words: createCharacterWords('もちろん、今でもあなたを愛してるよ', 4.8, 6.6),
+            translation: '当然，我依然爱你。',
+            romanization: 'Mochiron, ima demo anata o aishiteru yo.',
         },
     },
     {
         startTime: 7.8,
         endTime: 10.9,
-        fullText: 'La lumière avance au rythme de nos pas.',
-        translation: '光沿着我们的步伐缓缓向前。',
-        romanization: 'La lumière avance au rythme de nos pas.',
+        fullText: 'Tisse ce poème divin sans poésie qui te mène au réel.',
+        translation: '编织那没有诗意，却能将你带到现实的神文之诗。',
+        romanization: 'Tisse ce poème divin sans poésie qui te mène au réel.',
         words: createTokenWords(
-            ['La', 'lumière', 'avance', 'au', 'rythme', 'de', 'nos', 'pas.'],
+            ['Tisse', 'ce', 'poème', 'divin', 'sans', 'poésie', 'qui', 'te', 'mène', 'au', 'réel.'],
             7.8,
             10.9,
         ),
         backgroundVocal: {
-            text: 'a new day begins',
+            text: 'もちろん、今でもあなたを愛してるよ',
             startTime: 8.4,
             endTime: 10.2,
-            words: createTokenWords(['a', 'new', 'day', 'begins'], 8.4, 10.2),
-            translation: '新的一天开始了。',
-            romanization: 'a new day begins',
+            words: createCharacterWords('もちろん、今でもあなたを愛してるよ', 8.4, 10.2),
+            translation: '当然，我依然爱你。',
+            romanization: 'Mochiron, ima demo anata o aishiteru yo.',
         },
     },
     {
         startTime: 11.5,
         endTime: 14.4,
-        fullText: '把今天的风，轻轻唱成一段远行。',
-        translation: 'Turn today’s breeze into a song for the road.',
-        romanization: 'Bǎ jīntiān de fēng, qīngqīng chàng chéng yī duàn yuǎnxíng.',
-        words: createCharacterWords('把今天的风，轻轻唱成一段远行。', 11.5, 14.4),
+        fullText: '编织那没有诗意，却能将你带到现实的神文之诗。',
+        translation: '编织那没有诗意，却能将你带到现实的神文之诗。',
+        romanization: 'Biānzhī nà méiyǒu shīyì, què néng jiāng nǐ dài dào xiànshí de shénwén zhī shī.',
+        words: createCharacterWords('编织那没有诗意，却能将你带到现实的神文之诗。', 11.5, 14.4),
     },
 ];
 
-const OPEN_ROADS_PREVIEW_PLACEHOLDER_LINES: Line[] = [
+const WILD_SESAME_PREVIEW_PLACEHOLDER_LINES: Line[] = [
     {
         startTime: 0,
         endTime: 3.1,
-        fullText: 'Every open road begins with a quiet step.',
-        translation: '每一段远行，都从安静的一步开始。',
-        romanization: 'Every open road begins with a quiet step.',
-        words: createTokenWords(['Every', 'open', 'road', 'begins', 'with', 'a', 'quiet', 'step.'], 0, 3.1),
+        fullText: 'You and the others who think',
+        translation: '你和那些自以为如此的人',
+        romanization: 'You and the others who think',
+        words: createTokenWords(['You', 'and', 'the', 'others', 'who', 'think'], 0, 3.1),
     },
     {
         startTime: 3.6,
         endTime: 6.9,
-        fullText: '沿着河流的方向，听见城市渐渐远去。',
-        translation: 'Follow the river and hear the city fade away.',
-        romanization: 'Yánzhe héliú de fāngxiàng, tīngjiàn chéngshì jiànjiàn yuǎnqù.',
-        words: createCharacterWords('沿着河流的方向，听见城市渐渐远去。', 3.6, 6.9),
+        fullText: '真実のために生きていると思う人たち、',
+        translation: '那些自以为为真理而活的人，',
+        romanization: 'Shinjitsu no tame ni ikite iru to omou hitotachi,',
+        words: createCharacterWords('真実のために生きていると思う人たち、', 3.6, 6.9),
         backgroundVocal: {
-            text: 'The horizon has room for another song.',
+            text: 'Soon this will all feel like a distant dream.',
             startTime: 4.2,
             endTime: 6.6,
-            words: createTokenWords(['The', 'horizon', 'has', 'room', 'for', 'another', 'song.'], 4.2, 6.6),
-            translation: '地平线还容得下一首歌。',
-            romanization: 'The horizon has room for another song.',
+            words: createTokenWords(['Soon', 'this', 'will', 'all', 'feel', 'like', 'a', 'distant', 'dream.'], 4.2, 6.6),
+            translation: '很快，这一切都会像一场遥远的梦。',
+            romanization: 'Soon this will all feel like a distant dream.',
         },
     },
     {
         startTime: 7.4,
         endTime: 10.3,
-        fullText: 'Un souffle léger accompagne nos pas.',
-        translation: '一阵轻风伴着我们的脚步。',
-        romanization: 'Un souffle léger accompagne nos pas.',
-        words: createTokenWords(['Un', 'souffle', 'léger', 'accompagne', 'nos', 'pas.'], 7.4, 10.3),
+        fullText: 'et, par extension, qui aiment',
+        translation: '并因此爱上一切……',
+        romanization: 'et, par extension, ki em',
+        words: createTokenWords(['et,', 'par', 'extension,', 'qui', 'aiment'], 7.4, 10.3),
     },
     {
         startTime: 10.8,
         endTime: 13.6,
-        fullText: '下一段旋律，就在前方。',
-        translation: 'The next melody is just ahead.',
-        romanization: 'Xià yī duàn xuánlǜ, jiù zài qiánfāng.',
-        words: createCharacterWords('下一段旋律，就在前方。', 10.8, 13.6),
+        fullText: '一切冰冷的事物。',
+        translation: 'all that is cold.',
+        romanization: 'Yīqiè bīnglěng de shìwù.',
+        words: createCharacterWords('一切冰冷的事物。', 10.8, 13.6),
     },
 ];
 
@@ -154,15 +153,15 @@ export interface PreviewPlaceholder {
 export const VIS_PLAYGROUND_PREVIEW_PLACEHOLDERS: Record<PreviewPlaceholderId, PreviewPlaceholder> = {
     default: {
         id: 'default',
-        title: 'First Light',
+        title: '神文之诗',
         lines: DEFAULT_PREVIEW_PLACEHOLDER_LINES,
         loopDuration: 14.4,
         coverUrl: placeholderCoverUrl,
     },
     reserved: {
         id: 'reserved',
-        title: 'Open Roads',
-        lines: OPEN_ROADS_PREVIEW_PLACEHOLDER_LINES,
+        title: '野芝麻',
+        lines: WILD_SESAME_PREVIEW_PLACEHOLDER_LINES,
         loopDuration: 13.6,
         coverUrl: placeholderCover2Url,
     },

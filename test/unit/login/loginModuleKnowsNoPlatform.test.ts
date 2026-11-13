@@ -32,20 +32,18 @@ describe('the sign-in window names no platform', () => {
 });
 
 describe('what each platform declares for the sign-in window', () => {
-    it('its mark: fallback text and colour, with bundled app artwork', () => {
-        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => {
-            const mark = omni.getProviderMark(provider.id)!;
-            expect(mark.iconUrl).toContain('/apps/' + provider.id + '.jpg');
-            return [provider.id, { letter: mark.letter, color: mark.color }];
-        }));
+    it('its mark: one letter and one colour', () => {
+        const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => [provider.id, omni.getProviderMark(provider.id)]));
         expect(marks).toEqual({
             netease: { letter: '云', color: '#dc2626' },
             kugou: { letter: 'K', color: '#2563eb' },
             qq: { letter: 'Q', color: '#16a34a' },
             bodian: { letter: '波', color: '#0d9488' },
+            fnmusic: { letter: '飞', color: '#0891b2' },
             ytm: { letter: 'Y', color: '#e11d48' },
             spotify: { letter: 'S', color: '#22c55e' },
             qishui: { letter: '汽', color: '#19a58c' },
+            appleMusic: { letter: 'A', color: '#fa243c' },
         });
     });
 
@@ -60,10 +58,12 @@ describe('what each platform declares for the sign-in window', () => {
             kugou: { title: 'home.loginTitleKugou', note: 'home.loginNoteKugou' },
             qq: { title: 'home.loginTitleQq', note: 'home.loginNoteQq' },
             bodian: { title: 'home.loginTitleBodian', note: 'home.loginNoteBodian' },
+            fnmusic: { title: 'home.loginTitleFnMusic', note: 'home.loginNoteFnMusic' },
             // The test runs where no browser tells the system: the note is the one for Windows and Linux.
             ytm: { title: 'home.loginTitleYtm', note: 'home.loginNoteYtmBrowser' },
             spotify: { title: 'home.loginTitleSpotify', note: 'home.loginNoteSpotify' },
             qishui: { title: 'home.loginTitleQishui', note: 'home.loginNoteQishui' },
+            appleMusic: { title: 'home.loginTitleAppleMusic', note: 'home.loginNoteAppleMusic' },
         });
     });
 

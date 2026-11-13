@@ -32,3 +32,8 @@ export const getStoredString = (key: string, fallback: string) => {
 
     return localStorage.getItem(key) || fallback;
 };
+
+/** Removes a stored key, for the settings that stop being written rather than being set to a default. */
+export const removeStoredKey = (key: string): void => {
+    try { window.localStorage.removeItem(key); } catch { /* storage unavailable */ }
+};
