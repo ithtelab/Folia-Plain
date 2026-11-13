@@ -37,8 +37,9 @@ describe('what each platform declares for the sign-in window', () => {
         // bundled app icon and is resolved to a hashed asset URL by the bundler, so pinning it here
         // would pin the build's file names rather than what a platform says about itself.
         const marks = Object.fromEntries(listOnlineMusicProviders().map(provider => {
-            const { letter, color } = omni.getProviderMark(provider.id);
-            return [provider.id, { letter, color }];
+            const mark = omni.getProviderMark(provider.id);
+            if (!mark) throw new Error(`${provider.id} declares no mark`);
+            return [provider.id, { letter: mark.letter, color: mark.color }];
         }));
         expect(marks).toEqual({
             netease: { letter: '云', color: '#dc2626' },

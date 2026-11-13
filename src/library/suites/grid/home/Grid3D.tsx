@@ -260,9 +260,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
     // Background style mappings
     const mainBg = isDaylight ? 'bg-white/40' : 'bg-black/20';
-    const inputBg = isDaylight ? 'bg-black/5 focus:bg-black/10' : 'bg-white/5 focus:bg-white/10';
-    const navPillBg = isDaylight ? 'bg-black/5' : 'bg-white/10';
-    const navPillInactiveText = isDaylight ? 'text-black/60 hover:text-black' : 'text-white/60 hover:text-white';
+    const inputBg = isDaylight ? 'bg-black/5 focus:bg-black/10' : 'bg-black/40 focus:bg-black/50';
+    // The theme says which way the chrome reads, not what is behind it: a dark theme over a pale
+    // wallpaper left the tab labels and the search placeholder at 5% white on a near-white picture.
+    // The tab pill and the search field carry their own darker bed so white text always has a
+    // ground, whatever the wallpaper does; the glass optics stay on top of it.
+    const navPillBg = isDaylight ? 'bg-black/5' : 'bg-black/45';
+    const navPillInactiveText = isDaylight ? 'text-black/60 hover:text-black' : 'text-white/70 hover:text-white';
     const activeTabBg = isDaylight ? 'text-black font-bold' : 'text-black';
 
     const bottomPadding = currentTrack ? 'pb-28 md:pb-32' : '';
@@ -482,7 +486,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 className={`w-full ${inputBg} border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-white/20 transition-all placeholder:text-current placeholder:opacity-40 select-text`}
-                                style={{ color: 'var(--text-primary)' }}
+                                style={{ color: isDaylight ? 'var(--text-primary)' : 'rgb(255 255 255 / 0.92)' }}
                             />
                         </form>
                     </div>
