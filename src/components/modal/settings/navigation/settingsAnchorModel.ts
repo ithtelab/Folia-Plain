@@ -13,7 +13,9 @@ export const SETTINGS_ANCHOR_DEFINITIONS = {
     lyricsRenderer: { section: 'appearance' },
     themePresets: { section: 'appearance' },
     glassMaterial: { section: 'appearance' },
-    electronSettings: { section: 'appearance' },
+
+    // pages/AiServicePage — the one AI connection every AI feature reads
+    electronSettings: { section: 'ai' },
 
     // pages/PlayerPage
     playbackEntryView: { section: 'player' },
