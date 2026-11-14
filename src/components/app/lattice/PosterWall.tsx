@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { SongResult } from '../../../types';
 import {
     overlaps,
@@ -14,7 +14,7 @@ import { useLatticePosterSelection } from './useLatticePosterSelection';
 import { useWallKeyboardFocus } from './useWallKeyboardFocus';
 import { useWallPointerPan } from '../../wall/useWallPointerPan';
 import { formatWorldTransform } from '../../wall/wallView';
-import type { LatticeTile } from './latticeModel';
+import type { LatticeTile, LatticeSongTile } from './latticeModel';
 import LatticePoster from './LatticePoster';
 import LatticeHeading from './LatticeHeading';
 import LatticeSectionFinder from './LatticeSectionFinder';
@@ -55,6 +55,13 @@ type PosterWallProps = {
     onSeek: (time: number) => void;
     onOpenPlayer: () => void;
     onBack: () => void;
+    /**
+     * Replaces the open card's transport chrome. The wall is also used where there is no playback
+     * provider to read — a collection's collage: its tracks are browsed, not played, so it shows its
+     * own play / add-to-queue buttons instead. Without this the transport chrome asked a provider
+     * that was not mounted and the whole tree went down.
+     */
+    renderControls?: (tile: LatticeSongTile) => ReactNode;
 };
 
 
@@ -96,6 +103,7 @@ export default function PosterWall({
     onSeek,
     onOpenPlayer,
     onBack,
+    renderControls,
 }: PosterWallProps) {
     countRender('PosterWall');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -485,6 +493,7 @@ export default function PosterWall({
                             onTogglePlayback={onTogglePlayback}
                             onSeek={onSeek}
                             onOpenPlayer={onOpenPlayer}
+                            renderControls={renderControls}
                         />
                     );
                 })}

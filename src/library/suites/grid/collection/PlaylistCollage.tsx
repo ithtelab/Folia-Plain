@@ -48,7 +48,8 @@ export default function PlaylistCollage({ tracks, matchIndexes, contextTracks, i
     return (
         <div data-playlist-collage className={`lattice-root lattice-playlist-root ${isDaylight ? 'is-daylight' : ''}`}>
             <PosterWall tiles={tiles} currentSong={null} onPlay={play} onPlayFromWall={play}
-                onTogglePlayback={ignore} onSeek={ignore} onOpenPlayer={ignore} onBack={onBack} />
+                onTogglePlayback={ignore} onSeek={ignore} onOpenPlayer={ignore} onBack={onBack}
+                renderControls={renderControls} />
         </div>
     );
 }

@@ -3,9 +3,9 @@ import { lazy, memo, Suspense, useMemo } from 'react';
 import { motion, type TransformProperties } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useRef, type KeyboardEvent, type MouseEvent, type MutableRefObject, type PointerEvent } from 'react';
+import { useRef, type KeyboardEvent, type MouseEvent, type MutableRefObject, type PointerEvent, type ReactNode } from 'react';
 import type { ReflowTile } from '../../wall/layout';
-import { latticeBadgeIsIndex, type LatticeTile } from './latticeModel';
+import { latticeBadgeIsIndex, type LatticeSongTile, type LatticeTile } from './latticeModel';
 import { useLatticeChromeDisclosure } from './useLatticeChromeDisclosure';
 import LatticePlaybackControls from './LatticePlaybackControls';
 import LatticeQuickActions from './LatticeQuickActions';
@@ -81,6 +81,12 @@ type LatticePosterProps = {
     onTogglePlayback: () => void;
     onSeek: (time: number) => void;
     onOpenPlayer: () => void;
+    /**
+     * Replaces the open card's transport chrome where there is no playback to drive — a collection's
+     * collage, which browses a playlist's tracks and offers play / add-to-queue per poster. Without
+     * it the transport chrome reads a provider the collage never mounts.
+     */
+    renderControls?: (tile: LatticeSongTile) => ReactNode;
 };
 
 // Lift for the card under the pointer or the wall's keyboard cursor. It scales the whole article,
@@ -162,6 +168,7 @@ function LatticePoster({
     onTogglePlayback,
     onSeek,
     onOpenPlayer,
+    renderControls,
 }: LatticePosterProps) {
     countRender('LatticePoster');
     const { t } = useTranslation();
@@ -373,6 +380,8 @@ function LatticePoster({
                                 </button>
                             </div>
                         </div>
+                    ) : renderControls ? (
+                        renderControls(tile)
                     ) : (
                         <LatticePlaybackControls
                             revealed={chrome.revealed}
