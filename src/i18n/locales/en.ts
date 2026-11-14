@@ -4244,6 +4244,25 @@ export default {
         "description": "When signed in, your own private playlists now load their songs, with real paging. Self-hosted backends must run qq-music-api 3.1.2 or later; older backends fall back automatically, and a playlist that cannot be read now says it is not public instead of silently showing as empty."
       }
     },
+    "v0_9_0": {
+      "intro": "Random play sits next to play-all, the seam bar's actions are one click away, and a large local folder no longer holds the app for half an hour after import.",
+      "shuffle": {
+        "title": "Random play, and rounds that do not repeat",
+        "description": "Play-all is now two halves: the left plays in order, the right shuffles the same set. Collection and artist pages get it too, for the whole collection or an artist's top songs. A new setting, “Shuffle in rounds”, keeps songs you have already heard this round behind the ones you have not, and shuffling the same set again continues where the last round left off; under list loop a finished round is reshuffled quietly on its own."
+      },
+      "seamActions": {
+        "title": "The seam bar acts first",
+        "description": "Play-all, shuffle and add-to-queue sit in one row; below it, star and list keep fixed cells and the rest fill the space by priority — add to playlist, save to notebook, rename, set cover, re-import, entity info, export, organise. Whatever does not fit, together with delete and collapsing the bar, stays under the ⋯. The local section on the home page now has its own row: folder, import, refresh and importing a playlist file."
+      },
+      "importSpeed": {
+        "title": "Large local folders import fast again",
+        "description": "Filling in metadata after importing used to re-read the whole library every 25 songs; with ten thousand songs that meant the better part of half an hour of waiting, with everything else queued behind it. It now looks up just what the current batch needs. The first launch after updating migrates the existing songs once."
+      },
+      "collageFix": {
+        "title": "Collage playlists open the player again",
+        "description": "With playlists set to open as collages, clicking a song drew the playback chrome into a wall that has no playback behind it, and the window went black. The collage now shows its own play and add-to-queue buttons, as it was meant to."
+      }
+    },
     "v0_8_1": {
       "intro": "This release brings upstream 0.7.28 in for real: new lyric styles, the cinema scene, window control placement, and a round of glass and icon fixes.",
       "scenes": {

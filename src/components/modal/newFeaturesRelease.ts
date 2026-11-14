@@ -1,4 +1,4 @@
-import { AppWindow, Clapperboard, Shapes, Sparkles, SquareDashed } from 'lucide-react';
+import { ListMusic, Shuffle, SquareDashed, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // src/components/modal/newFeaturesRelease.ts
@@ -18,15 +18,14 @@ type NewFeaturesRelease = {
 
 // Defines the current Folia Plain release and its localized feature cards.
 export const NEW_FEATURES_RELEASE: NewFeaturesRelease = {
-    i18nKey: 'releaseNotes.v0_8_1',
-    // 0.8.1 is the release in which upstream 0.7.28's work actually reached listeners: the auto-open
-    // version still said 0.7.28, so the intro never opened. The cards are upstream's work up front,
-    // with the repairs this fork needed to make it land (see the release notes for the rest).
+    i18nKey: 'releaseNotes.v0_9_0',
+    // 0.9.0 brings the shuffle work from upstream 0.7.28's follow-ups: random play next to play-all,
+    // rounds that do not repeat a song, the seam bar's actions one click away, and the import fix
+    // that kept a ten-thousand-song folder busy for the better part of half an hour.
     features: [
-        { id: 'scenes', icon: Clapperboard },
-        { id: 'newLook', icon: Shapes },
-        { id: 'windowControls', icon: AppWindow },
-        { id: 'styleOptions', icon: Sparkles },
-        { id: 'glassFixes', icon: SquareDashed },
+        { id: 'shuffle', icon: Shuffle },
+        { id: 'seamActions', icon: ListMusic },
+        { id: 'importSpeed', icon: Zap },
+        { id: 'collageFix', icon: SquareDashed },
     ],
 };

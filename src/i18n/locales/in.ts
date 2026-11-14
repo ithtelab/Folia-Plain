@@ -4244,6 +4244,25 @@ export default {
         "description": "Setelah masuk, playlist pribadi buatan Anda kini dapat memuat lagu dengan paging sungguhan. Backend yang di-host sendiri harus memakai qq-music-api 3.1.2 atau lebih baru; backend lama beralih otomatis, dan playlist yang tidak dapat dibaca kini menjelaskan bahwa playlist itu tidak publik, alih-alih tampil kosong tanpa keterangan."
       }
     },
+    "v0_9_0": {
+      "intro": "Putar acak sekarang ada di samping putar semua, aksi bilah seam cukup sekali klik, dan folder lokal besar tidak lagi membuat aplikasi tertahan setengah jam setelah impor.",
+      "shuffle": {
+        "title": "Putar acak, dan putaran tanpa pengulangan",
+        "description": "“Putar semua” kini dua bagian: kiri berurutan, kanan mengacak kumpulan yang sama. Halaman koleksi dan artis juga mendapatkannya, untuk seluruh koleksi atau lagu teratas seorang artis. Setelan baru “Acak per putaran” menaruh lagu yang sudah terdengar di putaran ini setelah yang belum; mengacak kumpulan yang sama lagi melanjutkan putaran sebelumnya, dan pada ulang daftar putaran yang selesai diacak ulang sendiri tanpa memberi tahu."
+      },
+      "seamActions": {
+        "title": "Bilah seam mendahulukan aksi",
+        "description": "Putar semua, acak dan tambah ke antrean berada dalam satu baris; di bawahnya bintang dan daftar menempati sel tetap dan sisanya mengisi ruang menurut prioritas — tambah ke playlist, simpan ke buku catatan, ganti nama, atur sampul, impor ulang, info entitas, ekspor, rapikan. Yang tidak muat, bersama hapus dan melipat bilah, tetap di bawah ⋯. Bagian lokal di halaman utama kini punya barisnya sendiri: folder, impor, segarkan dan impor berkas playlist."
+      },
+      "importSpeed": {
+        "title": "Folder lokal besar kembali cepat diimpor",
+        "description": "Mengisi metadata setelah impor dulu membaca ulang seluruh pustaka setiap 25 lagu; dengan sepuluh ribu lagu itu berarti hampir setengah jam menunggu, dengan semua hal lain mengantre di belakangnya. Sekarang hanya data yang dibutuhkan batch ini yang dicari. Peluncuran pertama setelah pembaruan memigrasikan lagu yang ada sekali."
+      },
+      "collageFix": {
+        "title": "Playlist kolase bisa membuka pemutar lagi",
+        "description": "Saat playlist dibuka sebagai kolase, mengklik lagu menggambar kontrol pemutaran ke dinding yang tidak punya pemutaran di belakangnya, dan jendela menjadi hitam. Kolase kini menampilkan tombol putar dan tambah ke antrean miliknya sendiri, sebagaimana mestinya."
+      }
+    },
     "v0_8_1": {
       "intro": "Rilis ini benar-benar memasukkan 0.7.28 dari proyek asal: gaya lirik baru, scene bioskop, penempatan tombol jendela, dan sejumlah perbaikan kaca serta ikon.",
       "scenes": {

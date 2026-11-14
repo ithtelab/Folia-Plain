@@ -4198,6 +4198,25 @@ export default {
         "description": "Sau khi đăng nhập, danh sách phát riêng tư của bạn nay có thể tải bài hát với phân trang thực tế. Máy chủ tự lưu trữ cần chạy qq-music-api 3.1.2 trở lên; phiên bản cũ hơn sẽ tự động quay về cơ chế dự phòng, và danh sách phát không đọc được sẽ báo rõ là danh sách không công khai thay vì hiển thị trống."
       }
     },
+    "v0_9_0": {
+      "intro": "Phát ngẫu nhiên nằm cạnh phát tất cả, thao tác trên thanh seam chỉ một cú nhấp, và thư mục cục bộ lớn không còn giữ ứng dụng hàng nửa giờ sau khi nhập.",
+      "shuffle": {
+        "title": "Phát ngẫu nhiên, và vòng không lặp lại",
+        "description": "“Phát tất cả” giờ chia hai nửa: bên trái phát theo thứ tự, bên phải xáo trộn cùng tập đó. Trang bộ sưu tập và nghệ sĩ cũng có, cho cả bộ sưu tập hoặc các bài nổi bật của nghệ sĩ. Cài đặt mới “Xáo theo vòng” đặt những bài đã nghe trong vòng này sau những bài chưa nghe; xáo lại cùng tập sẽ tiếp tục vòng trước, và ở chế độ lặp danh sách một vòng đã xong sẽ tự xáo lại lặng lẽ."
+      },
+      "seamActions": {
+        "title": "Thanh seam ưu tiên thao tác",
+        "description": "Phát tất cả, xáo trộn và thêm vào hàng đợi nằm trên một hàng; bên dưới, ngôi sao và danh sách giữ ô cố định, phần còn lại lấp chỗ theo ưu tiên — thêm vào playlist, lưu vào sổ, đổi tên, đặt bìa, nhập lại, thông tin thực thể, xuất, sắp xếp. Phần không vừa, cùng xoá và thu gọn thanh, nằm dưới ⋯. Mục cục bộ ở trang chủ giờ có hàng riêng: thư mục, nhập, làm mới và nhập tệp playlist."
+      },
+      "importSpeed": {
+        "title": "Thư mục cục bộ lớn nhập nhanh trở lại",
+        "description": "Việc điền metadata sau khi nhập trước đây đọc lại toàn bộ thư viện mỗi 25 bài; với mười nghìn bài thì phải chờ gần nửa giờ, mọi thứ khác xếp hàng phía sau. Giờ chỉ tra đúng dữ liệu mà lô hiện tại cần. Lần khởi động đầu sau khi cập nhật sẽ chuyển đổi các bài hiện có một lần."
+      },
+      "collageFix": {
+        "title": "Playlist dạng cắt dán mở lại được trình phát",
+        "description": "Khi playlist mở dưới dạng cắt dán, nhấp vào bài hát vẽ thanh điều khiển phát vào một bức tường không có phát nhạc phía sau, và cửa sổ thành màu đen. Giờ bản cắt dán hiển thị nút phát và thêm vào hàng đợi của riêng nó, đúng như thiết kế."
+      }
+    },
     "v0_8_1": {
       "intro": "Bản này đưa 0.7.28 từ dự án gốc vào thật sự: kiểu lời bài hát mới, cảnh rạp chiếu phim, vị trí nút cửa sổ, cùng một loạt sửa lỗi kính và biểu tượng.",
       "scenes": {
