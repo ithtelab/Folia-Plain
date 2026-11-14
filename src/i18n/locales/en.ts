@@ -1170,7 +1170,7 @@ export default {
       "settings-language-zh-TW": { "title": "Switch language to Traditional Chinese", "description": "Use Traditional Chinese in the interface" },
       "settings-language-en": { "title": "Switch language to English", "description": "Use English in the interface" },
       "settings-language-in": { "title": "Switch language to Indonesian", "description": "Use Bahasa Indonesia in the interface" },
-      "settings-language-vi": { "title": "Switch language to Vietnamese", "description": "Use Vietnamese in the interface" }
+      "settings-language-vi": { "title": "Switch language to Vietnamese", "description": "Use Vietnamese in the interface" },
       "download-update-mirror": {
         "title": "Download update with China relay",
         "description": "Download this project’s new installer through GH-Proxy"
@@ -1186,7 +1186,7 @@ export default {
       "listening-report": {
         "title": "Listening report",
         "description": "What you listened to over the last thirty days: totals, a calendar and your most played songs"
-      }
+      },
       "playlist-view-grid": {
         "title": "Open playlists as cover grids",
         "description": "Browse playlists as cover grids in the grid library interface"
